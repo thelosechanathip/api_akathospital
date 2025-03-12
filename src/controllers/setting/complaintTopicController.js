@@ -98,6 +98,13 @@ exports.removeDataComplaintTopic = async (req, res) => {
         });
         if (!checkIdComplaintTopic) return msg(res, 404, { message: 'ไม่มี complaint_topic_id อยู่ในระบบ!' });
 
+        const checkFkComplaint = await pm.complaints.findFirst({
+            where: {
+                complaint_topic_id: Number(id)
+            }
+        });
+        if (!checkFkComplaint) return msg(res, 400, { message: 'ไม่สามารถลบข้อมูลหัวข้อร้องเรียนได้ เนื่องจากมีการเรียกใช้งานหัวข้อร้องเรียนแล้ว!' });
+
         // ลบข้อมูล
         await pm.complaint_topics.delete({
             where: {

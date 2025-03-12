@@ -372,6 +372,22 @@
               }
             }
           },
+          "400": {
+            "description": "Server ไม่สามารถประมวลผลคำร้องขอเนื่องจากข้อผิดพลาดของ Client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่สามารถลบข้อมูลหัวข้อร้องเรียนได้ เนื่องจากมีการเรียกใช้งานหัวข้อร้องเรียนแล้ว!"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "404": {
             "description": "Resource ไม่พบ",
             "content": {
