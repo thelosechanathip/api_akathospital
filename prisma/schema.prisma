@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model complaint_topics {
+  complaint_topic_id   Int          @id @default(autoincrement())
+  complaint_topic_name String       @db.VarChar(100)
+  created_at           DateTime     @default(now()) @db.Timestamp(0)
+  created_by           String       @db.VarChar(100)
+  updated_at           DateTime     @default(now()) @db.Timestamp(0)
+  updated_by           String       @db.VarChar(100)
+  complaints           complaints[]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model complaints {
+  complaint_id       Int              @id @default(autoincrement())
+  fullname           String           @db.VarChar(100)
+  email              String           @db.VarChar(100)
+  telephone_number   String           @db.VarChar(50)
+  complaint_topic_id Int
+  detail             String           @db.LongText
+  created_at         DateTime         @default(now()) @db.Timestamp(0)
+  created_by         String           @db.VarChar(100)
+  updated_at         DateTime         @default(now()) @db.Timestamp(0)
+  updated_by         String           @db.VarChar(100)
+  complaint_topics   complaint_topics @relation(fields: [complaint_topic_id], references: [complaint_topic_id], onUpdate: Restrict, map: "complaints_ibfk_1")
+
+  @@index([complaint_topic_id], map: "complaints_ibfk_1")
+}

@@ -1,0 +1,339 @@
+{
+  "openapi": "1.0.0",
+  "info": {
+    "title": "Akathospital API Documentation",
+    "version": "0.0.1",
+    "description": "เอกสาร API สำหรับการจัดการ Akathospital API แอปพลิเคชันที่ช่วยในการจัดระเบียบงานและติดตามงานที่ต้องทำ สามารถเพิ่ม, แก้ไข, ลบ และเรียกดูรายการงานได้"
+  },
+  "servers": [
+    {
+      "url": "http://10.10.10.25:1112/",
+      "description": "เซิร์ฟเวอร์หลัก"
+    },
+    {
+      "url": "http://localhost:1112/",
+      "description": "เซิร์ฟเวอร์ทดสอบในเครื่อง (localhost)"
+    }
+  ],
+  "tags": [
+    {
+      "name": "ComplaintTopic",
+      "description": "Endpoints สำหรับการจัดการข้อมูลของหัวข้อเรื่องร้องเรียน"
+    }
+  ],
+  "paths": {
+    "akatApi/setting/getComplaintTopics": {
+      "get": {
+        "tags": [
+          "ComplaintTopic"
+        ],
+        "summary": "สำหรับดึงข้อมูล ComplaintTopic",
+        "description": "สำหรับดึงข้อมูลทั้งหมดของ ComplaintTopic",
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "complaint_topic_id": {
+                            "type": "integer",
+                            "example": 1
+                          },
+                          "complaint_topic_name": {
+                            "type": "string",
+                            "example": "ร้องเรียนเจ้าหน้าที่"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2025-02-19T08:55:57.000Z"
+                          },
+                          "created_by": {
+                            "type": "string",
+                            "example": "admin"
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2025-02-19T08:55:57.000Z"
+                          },
+                          "updated_by": {
+                            "type": "string",
+                            "example": "admin"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีข้อมูลบน Database!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "akatApi/setting/insertComplaintTopics": {
+      "post": {
+        "tags": [
+          "ComplaintTopic"
+        ],
+        "summary": "สำหรับดึงข้อมูล ComplaintTopic",
+        "description": "สำหรับดึงข้อมูลทั้งหมดของ ComplaintTopic",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "complaint_topic_name": {
+                    "type": "string",
+                    "example": "ร้องเรียนเจ้าหน้าที่"
+                  },
+                  "created_by": {
+                    "type": "string",
+                    "example": "admin"
+                  },
+                  "updated_by": {
+                    "type": "string",
+                    "example": "admin"
+                  }
+                },
+                "required": [
+                  "complaint_topic_name",
+                  "created_by",
+                  "updated_by"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Insert data successfully!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ข้อมูลจาก Client ไม่ถูกต้อง",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "กรุณากรอกข้อมูลให้ครบถ้วน"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "มี (complaint_topic_name) อยู่ในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "akatApi/setting/updateComplaintTopics/{id}": {
+      "put": {
+        "tags": [
+          "ComplaintTopic"
+        ],
+        "summary": "สำหรับดึงข้อมูล ComplaintTopic",
+        "description": "สำหรับดึงข้อมูลทั้งหมดของ ComplaintTopic",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            },
+            "description": "ID ของ ComplaintTopic ที่ต้องการอัพเดท"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "complaint_topic_name": {
+                    "type": "string",
+                    "example": "ร้องเรียนเจ้าหน้าที่"
+                  },
+                  "updated_by": {
+                    "type": "string",
+                    "example": "admin"
+                  }
+                },
+                "required": [
+                  "complaint_topic_name",
+                  "updated_by"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Insert data successfully!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ข้อมูลจาก Client ไม่ถูกต้อง",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "กรุณากรอกข้อมูลให้ครบถ้วน"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "มี (complaint_topic_name) อยู่ในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}
