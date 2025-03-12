@@ -1,7 +1,7 @@
 const pm = require('../../config/prisma');
 const { msg } = require('../../utils/message');
 
-// Function สำหรับ Fetch ข้อมูลจาก Database
+// Function สำหรับ FetchAll ข้อมูลจาก Database
 exports.getAllDataComplaintTopics = async (req, res) => {
     try {
         const resultData = await pm.complaint_topics.findMany();
@@ -96,10 +96,7 @@ exports.removeDataComplaintTopic = async (req, res) => {
                 complaint_topic_id: Number(id)
             }
         });
-
-        if (!checkIdComplaintTopic) {
-            return msg(res, 400, { message: 'ไม่มี complaint_topic_id อยู่ในระบบ!' });
-        }
+        if (!checkIdComplaintTopic) return msg(res, 404, { message: 'ไม่มี complaint_topic_id อยู่ในระบบ!' });
 
         // ลบข้อมูล
         await pm.complaint_topics.delete({

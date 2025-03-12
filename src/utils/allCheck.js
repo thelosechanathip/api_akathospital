@@ -13,3 +13,15 @@ exports.isEnglishOnly = async (text) => {
 exports.isBoolean = async(value) => {
     return typeof(value) === 'boolean';
 }
+
+// Function ในการตรวจสอบรูปแบบของ Email
+exports.validateEmail = async(email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+// Function ในการตรวจสอบรูปแบบของเบอร์โทรศัพท์
+exports.validatePhoneNumber = async(telephone_number) => {
+    const phoneRegex = /^0[6-9][0-9]{8}$/; // เบอร์ไทย เช่น 0812345678
+    return phoneRegex.test(telephone_number);
+}
