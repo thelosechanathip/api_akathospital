@@ -103,7 +103,7 @@ exports.removeDataComplaintTopic = async (req, res) => {
                 complaint_topic_id: Number(id)
             }
         });
-        if (!checkFkComplaint) return msg(res, 400, { message: 'ไม่สามารถลบข้อมูลหัวข้อร้องเรียนได้ เนื่องจากมีการเรียกใช้งานหัวข้อร้องเรียนแล้ว!' });
+        if (checkFkComplaint) return msg(res, 400, { message: 'ไม่สามารถลบข้อมูลหัวข้อร้องเรียนได้ เนื่องจากมีการเรียกใช้งานหัวข้อร้องเรียนแล้ว!' });
 
         // ลบข้อมูล
         await pm.complaint_topics.delete({
