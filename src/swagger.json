@@ -555,7 +555,7 @@
         }
       }
     },
-    "/akatApi/setting/insertComplaint": {
+    "/akatApi/publicAPI/insertComplaint": {
       "post": {
         "tags": [
           "Complaint"
@@ -653,7 +653,7 @@
         }
       }
     },
-    "/akatApi/setting/removeComplaint/{id}": {
+    "/akatApi/publicAPI/removeComplaint/{id}": {
       "delete": {
         "tags": [
           "Complaint"
