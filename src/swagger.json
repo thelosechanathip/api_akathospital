@@ -116,8 +116,8 @@
         "tags": [
           "ComplaintTopic"
         ],
-        "summary": "สำหรับดึงข้อมูล ComplaintTopic",
-        "description": "สำหรับดึงข้อมูลทั้งหมดของ ComplaintTopic",
+        "summary": "สำหรับบันทึกข้อมูล ComplaintTopic",
+        "description": "สำหรับบันทึกข้อมูลทั้งหมดของ ComplaintTopic",
         "requestBody": {
           "required": true,
           "content": {
@@ -220,8 +220,8 @@
         "tags": [
           "ComplaintTopic"
         ],
-        "summary": "สำหรับดึงข้อมูล ComplaintTopic",
-        "description": "สำหรับดึงข้อมูลทั้งหมดของ ComplaintTopic",
+        "summary": "สำหรับอัพเดทข้อมูล ComplaintTopic",
+        "description": "สำหรับอัพเดทข้อมูลทั้งหมดของ ComplaintTopic",
         "parameters": [
           {
             "name": "id",
