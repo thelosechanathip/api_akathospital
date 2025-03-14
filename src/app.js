@@ -1,7 +1,5 @@
 // การนำเข้าโมดูลที่จำเป็นสำหรับการทำงานของแอปพลิเคชัน
 const express = require("express");
-// const swaggerUi = require("swagger-ui-express");
-// const swaggerDocument = require("./swagger.json");
 const morgan = require("morgan");
 const cors = require("cors");
 const schedule = require("node-schedule");

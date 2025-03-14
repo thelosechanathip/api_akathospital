@@ -2,7 +2,7 @@ const pm = require('../../config/prisma');
 const { msg } = require('../../utils/message');
 const { validateEmail, validatePhoneNumber } = require('../../utils/allCheck');
 const TelegramBot = require('node-telegram-bot-api');
-const token = '7311914937:AAE0NsaVaxBPVsYD-IYcgK8soNGP3VYT8n0';
+const token = process.env.TELEGRAM_BOT_TOKEN;
 const chatId = '-4756441671';
 
 // สร้างอินสแตนซ์ของบอท

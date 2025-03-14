@@ -17,6 +17,10 @@
   ],
   "tags": [
     {
+      "name": "Auth",
+      "description": "Endpoints สำหรับการจัดการ Login, Register, Verify, OTP และ Logout"
+    },
+    {
       "name": "ComplaintTopic",
       "description": "Endpoints สำหรับการจัดการข้อมูลของหัวข้อเรื่องร้องเรียน"
     },
@@ -26,6 +30,651 @@
     }
   ],
   "paths": {
+    "/akatApi/auth/authRegister": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "authRegister",
+        "description": "สำหรับ generate ข้อมูลจากระบบ BackOffice มายังระบบ Akathospital",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "national_id": {
+                    "type": "string",
+                    "example": "1234567891234"
+                  }
+                },
+                "required": [
+                  "national_id"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Update successfully! || Generate users successfully!!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Server ไม่สามารถประมวลผลคำร้องขอเนื่องจากข้อผิดพลาดของ Client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่สามารถ Generate User ได้เนื่องจากไม่ใช่เจ้าหน้าที่ของโรงพยาบาล!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/auth/authLogin": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "authLogin",
+        "description": "ตรวจสอบ username และ password",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "example": "admin"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "@PaSsW0rD"
+                  }
+                },
+                "required": [
+                  "username",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Server ไม่สามารถประมวลผลคำร้องขอเนื่องจากข้อผิดพลาดของ Client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "กรุณากรอกข้อมูลให้ครบถ้วน! || รหัสผ่านไม่ถูกต้องกรุณาตรวจสอบรหัสผ่าน! || ไม่มี telegramChatId อยู่ใน User ของท่านกรุณาติดต่อ Admin เพื่อทำการเพิ่มข้อมูลก่อนใช้งานระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ( Not found )",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มี User นี้อยู่ในระบบกรุณา Register ก่อนใช้งานระบบขอบคุณครับ/คะ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/auth/authVerifyOtp": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "authVerifyOtp",
+        "description": "ตรวจสอบ Token และ OTP เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header และ OTP ส่งผ่าน Body",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "otpCode": {
+                    "type": "string",
+                    "example": "123456",
+                    "description": "รหัส OTP 6 หลักจากอีเมล"
+                  }
+                },
+                "required": [
+                  "otp"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Login successfully!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Server ไม่สามารถประมวลผลคำร้องขอเนื่องจากข้อผิดพลาดของ Client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มี Token ถูกส่งมา! || OTP หมดอายุหรือไม่ถูกต้อง || OTP ไม่ถูกต้อง"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || ไม่มี Chat ID ใน Token || Token ไม่ถูกต้อง"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ( Not found )",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มี User นี้อยู่ในระบบกรุณา Register ก่อนใช้งานระบบขอบคุณครับ/คะ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/auth/authVerifyToken": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "authVerifyToken",
+        "description": "ตรวจสอบ Token เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header และดึงข้อมูล User ที่ Login ส่งกลับไปให้ FrontEnd",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "fullname_thai": {
+                          "type": "string",
+                          "example": "นายดำ ขำแห้ง"
+                        },
+                        "fullname_english": {
+                          "type": "string",
+                          "example": "Dum KamHang"
+                        },
+                        "position": {
+                          "type": "string",
+                          "example": "ตำแหน่งนักดำน้ำใต้โลก"
+                        },
+                        "department": {
+                          "type": "string",
+                          "example": "แผนกรักป่ารักเขา"
+                        },
+                        "status": {
+                          "type": "string",
+                          "example": "ADMIN"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Server ไม่สามารถประมวลผลคำร้องขอเนื่องจากข้อผิดพลาดของ Client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มี Token ถูกส่งมา!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ! || Tokenไม่อนุญาติให้ใช้งาน!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ( Not found )",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Data not found!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/auth/authRemoveUser/{id}": {
+      "delete": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "authRemoveUser",
+        "description": "ลบข้อมูล User และมีการตรวจสอบ Token เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header ว่าต้องเป็น ADMIN เท่านั้นก่อนที่จะมีการลบข้อมูล",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            },
+            "description": "ID ของ User ที่ต้องการลบข้อมูล"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "example": "P@ssw0rd!",
+                    "description": "รหัสผ่านต้องมีตัวพิมพ์ใหญ่ พิมพ์เล็ก ตัวเลข และอักขระพิเศษ"
+                  }
+                },
+                "required": [
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "object",
+                      "example": "ลบข้อมูลเสร็จสิ้น!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ข้อมูลจาก Client ไม่ถูกต้อง",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มี Token ถูกส่งมา! || กรุณากรอกรหัสผ่านเพื่อยืนยันการลบข้อมูล! || ไม่สามารถลบ User ตัวเราเองในขณะที่อยู่ในระบบได้! || รหัสผ่านไม่ถูกต้อง!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ! || Tokenไม่อนุญาติให้ใช้งาน!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ( Not found )",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มี User นี้ในระบบกรุณาตรวจสอบ!!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/auth/authLogout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "authLogout",
+        "description": "Logout ออกจากระบบ และมีการตรวจสอบ Token เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header และบันทึก Token ไปยัง token_blacklist",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "object",
+                      "example": "Logout successfully!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ข้อมูลจาก Client ไม่ถูกต้อง",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "เกิดข้อผิดพลาดระหว่างการทำงานกรุณาติดต่อ Admin ของระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ! || Tokenไม่อนุญาติให้ใช้งาน!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/akatApi/setting/getComplaintTopics": {
       "get": {
         "tags": [
