@@ -9,6 +9,7 @@ const fs = require("fs");
 const path = require("path");
 const { authAdminDoc } = require("./middleware/auth/authAdmin");
 const { msg } = require("../src/utils/message");
+const pm = require('../src/config/prisma');
 require("dotenv").config();
 
 // สร้าง instance ของ Express application
@@ -65,6 +66,107 @@ if (fs.existsSync(routesRootPath)) {
 } else {
   console.error(`Routes folder not found at path: ${routesRootPath}`);
 }
+
+// Function ในการตรวจสอบ expires_at บน Table token_blacklist
+async function checkBlackListTokensExpired() {
+  try {
+    const fetchAllTokenBlacklist = await pm.token_blacklist.findMany({
+      select: {
+        token: true,
+        expires_at: true
+      }
+    });
+    if (fetchAllTokenBlacklist.length === 0) {
+        console.log('TokenBlacklistErrors : No tokens found in database');
+    }
+
+    for(const tokenBlacklist of fetchAllTokenBlacklist) {
+      const expiresAtIso = tokenBlacklist.expires_at;
+      const expiresAt = moment(expiresAtIso).format('YYYY-MM-DD HH:mm:ss');
+
+      const date = new Date();
+      const dateNow = moment(date).format('YYYY-MM-DD HH:mm:ss');
+      
+      if(dateNow === expiresAt || dateNow > expiresAt) {
+        const deleteTokenBlacklist = await pm.token_blacklist.delete({
+          where: {
+            token: tokenBlacklist.token
+          }
+        });
+
+        if (deleteTokenBlacklist.count > 0) {
+          // ดึงค่า MAX(token_blacklist_id)
+          const maxIdResult = await pm.$queryRaw`SELECT COALESCE(MAX(token_blacklist_id), 0) + 1 AS nextId FROM token_blacklist`;
+
+          // รีเซ็ตค่า AUTO_INCREMENT
+          await pm.$executeRawUnsafe(`ALTER TABLE token_blacklist AUTO_INCREMENT = ${maxIdResult[0].nextId}`);
+          console.log('Remove Token AuthTokens ที่หมดเวลาเสร็จสิ้น!!');
+        }
+      }
+    }
+  } catch (error) {
+      console.error("Error checkBlackListTokensExpired: ", error.message);
+      process.exit(1);
+  }
+}
+
+// Function ในการตรวจสอบ is_active, expires_at บน Table auth_tokens
+async function checkAuthTokensExpired() {
+  try {
+      const fetchAllAuthTokens = await pm.auth_tokens.findMany({
+        select: {
+          token: true,
+          expires_at: true
+        }
+      });
+      if (fetchAllAuthTokens.length === 0) {
+          console.log('AuthTokenErrors : No tokens found in database');
+      }
+
+      for(const authTokens of fetchAllAuthTokens) {
+        const expiresAtIso = authTokens.expires_at;
+        const expiresAt = moment(expiresAtIso).format('YYYY-MM-DD HH:mm:ss');
+
+        const date = new Date();
+        const dateNow = moment(date).format('YYYY-MM-DD HH:mm:ss');
+        
+        if(dateNow === expiresAt || dateNow > expiresAt) {
+          const deleteAuthToken = await pm.auth_tokens.delete({
+            where: {
+              token: authTokens.token
+            }
+          });
+
+          if (deleteAuthToken.count > 0) {
+            // ดึงค่า MAX(auth_token_id)
+            const maxIdResult = await pm.$queryRaw`SELECT COALESCE(MAX(auth_token_id), 0) + 1 AS nextId FROM auth_tokens`;
+
+            // รีเซ็ตค่า AUTO_INCREMENT
+            await pm.$executeRawUnsafe(`ALTER TABLE auth_tokens AUTO_INCREMENT = ${maxIdResult[0].nextId}`);
+            console.log('Remove Token AuthTokens ที่หมดเวลาเสร็จสิ้น!!');
+          }
+        }
+      }     
+  } catch (error) {
+      console.error("Error checkAuthTokensExpired: ", error.message);
+      process.exit(1);
+  }
+}
+
+// เริ่มการตรวจสอบ
+function startBlacklistScheduler() {
+  // เรียกครั้งแรก
+  checkAuthTokensExpired();
+  checkBlackListTokensExpired();
+
+  schedule.scheduleJob('0 * * * *', async () => {
+      console.log('Scheduled blacklist update starting...');
+      await checkAuthTokensExpired();
+      await checkBlackListTokensExpired();
+  });
+}
+
+startBlacklistScheduler();
 
 app.use("*", (req, res) => {
   if (req.accepts("html")) {
