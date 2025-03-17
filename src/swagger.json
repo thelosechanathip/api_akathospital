@@ -36,7 +36,7 @@
           "Auth"
         ],
         "summary": "authRegister",
-        "description": "สำหรับ generate ข้อมูลจากระบบ BackOffice มายังระบบ Akathospital",
+        "description": "สำหรับ generate ข้อมูลจากระบบ BackOffice มายังระบบ Akathospital ",
         "requestBody": {
           "required": true,
           "content": {
@@ -46,7 +46,8 @@
                 "properties": {
                   "national_id": {
                     "type": "string",
-                    "example": "1234567891234"
+                    "example": "U2FsdGVkX19oboP",
+                    "description": "ก่อนส่งข้อมูลต้องแปลงในรูปแบบของ cryptoJS ก่อนส่งข้อมูลมา"
                   }
                 },
                 "required": [
