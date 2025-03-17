@@ -38,7 +38,15 @@
     },
     {
       "name": "Holiday",
-      "description": "Endpoints สำหรับการจัดการข้อมูล วันหยุดต่าๆง"
+      "description": "Endpoints สำหรับการจัดการข้อมูล วันหยุดต่างๆ"
+    },
+    {
+      "name": "ShiftType",
+      "description": "Endpoints สำหรับการจัดการข้อมูล ประเภทของกะการทำงาน"
+    },
+    {
+      "name": "Shift",
+      "description": "Endpoints สำหรับการจัดการข้อมูล กะการทำงาน"
     }
   ],
   "paths": {
@@ -2665,7 +2673,7 @@
                   "properties": {
                     "message": {
                       "type": "string",
-                      "example": "การเข้าถึงถูกปฏิเสธ! || กรุณากรอกข้อมูลให้ครบถ้วน"
+                      "example": "การเข้าถึงถูกปฏิเสธ! || กรุณากรอกข้อมูลให้ครบถ้วน || รูปแบบวันที่ไม่ถูกต้อง! กรุณาใช้รูปแบบ YYYY-MM-DD! || วันที่ไม่ถูกต้อง! กรุณาตรวจสอบวันที่!"
                     }
                   }
                 }
@@ -2859,6 +2867,1224 @@
                     "message": {
                       "type": "string",
                       "example": "ไม่มี holiday_id อยู่ในระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/setting/getAllDataShiftTypes": {
+      "get": {
+        "tags": [
+          "ShiftType"
+        ],
+        "summary": "สำหรับดึงข้อมูล ShiftType",
+        "description": "สำหรับดึงข้อมูลทั้งหมดของ ShiftType และตรวจสอบ Token เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "shift_type_id": {
+                            "type": "integer",
+                            "example": 1
+                          },
+                          "shift_type_name": {
+                            "type": "string",
+                            "example": "วันปกติ"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2025-02-19T08:55:57.000Z"
+                          },
+                          "created_by": {
+                            "type": "string",
+                            "example": "admin"
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2025-02-19T08:55:57.000Z"
+                          },
+                          "updated_by": {
+                            "type": "string",
+                            "example": "admin"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Server ไม่สามารถประมวลผลคำร้องขอเนื่องจากข้อผิดพลาดของ Client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "การเข้าถึงถูกปฏิเสธ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Server ปฏิเสธการร้องขอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีข้อมูลบน Database!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/setting/insertDataShiftType": {
+      "post": {
+        "tags": [
+          "ShiftType"
+        ],
+        "summary": "สำหรับบันทึกข้อมูล ShiftType",
+        "description": "สำหรับบันทึกข้อมูลทั้งหมดของ ShiftType และตรวจสอบ Token เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "shift_type_name": {
+                    "type": "string",
+                    "example": "นอกเวลาราชการ"
+                  },
+                  "created_by": {
+                    "type": "string",
+                    "example": "admin"
+                  },
+                  "updated_by": {
+                    "type": "string",
+                    "example": "admin"
+                  }
+                },
+                "required": [
+                  "shift_type_name",
+                  "created_by",
+                  "updated_by"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Insert data successfully!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ข้อมูลจาก Client ไม่ถูกต้อง",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "การเข้าถึงถูกปฏิเสธ! || กรุณากรอกข้อมูลให้ครบถ้วน"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Server ปฏิเสธการร้องขอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "คำร้องขอไม่สามารถดำเนินการได้เนื่องจากขัดแย้งกับสถานะปัจจุบันของทรัพยากรที่ต้องการอัพเดท",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "มี (shift_type_name) อยู่ในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/setting/updateDataShiftType/{id}": {
+      "put": {
+        "tags": [
+          "ShiftType"
+        ],
+        "summary": "สำหรับอัพเดทข้อมูล ShiftType",
+        "description": "สำหรับอัพเดทข้อมูลทั้งหมดของ ShiftType และตรวจสอบ Token เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            },
+            "description": "ID ของ ShiftType ที่ต้องการอัพเดท"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "shift_type_name": {
+                    "type": "string",
+                    "example": "วันสงกรานต์"
+                  },
+                  "updated_by": {
+                    "type": "string",
+                    "example": "admin"
+                  }
+                },
+                "required": [
+                  "shift_type_name",
+                  "updated_by"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Updated successfully!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ข้อมูลจาก Client ไม่ถูกต้อง",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "การเข้าถึงถูกปฏิเสธ! || กรุณากรอกข้อมูลให้ครบถ้วน"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Server ปฏิเสธการร้องขอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ( Not found )",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มี shift_type_id อยู่ในระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "คำร้องขอไม่สามารถดำเนินการได้เนื่องจากขัดแย้งกับสถานะปัจจุบันของทรัพยากรที่ต้องการอัพเดท",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "มี (shift_type_name) อยู่ในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/setting/removeShiftType/{id}": {
+      "delete": {
+        "tags": [
+          "ShiftType"
+        ],
+        "summary": "สำหรับลบข้อมูล ShiftType",
+        "description": "สำหรับลบข้อมูลทั้งหมดของ ShiftType และตรวจสอบ Token เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            },
+            "description": "ID ของ ShiftType ที่ต้องการอัพเดท"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Deleted successfully!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Server ไม่สามารถประมวลผลคำร้องขอเนื่องจากข้อผิดพลาดของ Client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "การเข้าถึงถูกปฏิเสธ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Server ปฏิเสธการร้องขอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มี shift_type_id อยู่ในระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/setting/getAllDataShifts": {
+      "get": {
+        "tags": [
+          "Shift"
+        ],
+        "summary": "สำหรับดึงข้อมูล Shift",
+        "description": "สำหรับดึงข้อมูลทั้งหมดของ Shift และตรวจสอบ Token เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "shift_id": {
+                            "type": "integer",
+                            "example": 1
+                          },
+                          "shift_name": {
+                            "type": "string",
+                            "example": "เช้า"
+                          },
+                          "shift_starting": {
+                            "type": "string",
+                            "example": "08:00:00"
+                          },
+                          "shift_ending": {
+                            "type": "string",
+                            "example": "16:30:00"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2025-02-19T08:55:57.000Z"
+                          },
+                          "created_by": {
+                            "type": "string",
+                            "example": "admin"
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2025-02-19T08:55:57.000Z"
+                          },
+                          "updated_by": {
+                            "type": "string",
+                            "example": "admin"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Server ไม่สามารถประมวลผลคำร้องขอเนื่องจากข้อผิดพลาดของ Client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "การเข้าถึงถูกปฏิเสธ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Server ปฏิเสธการร้องขอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีข้อมูลบน Database!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/setting/insertDataShift": {
+      "post": {
+        "tags": [
+          "Shift"
+        ],
+        "summary": "สำหรับบันทึกข้อมูล Shift",
+        "description": "สำหรับบันทึกข้อมูลทั้งหมดของ Shift และตรวจสอบ Token เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "shift_name": {
+                    "type": "string",
+                    "example": "เช้า"
+                  },
+                  "shift_starting": {
+                    "type": "string",
+                    "example": "08:00:00"
+                  },
+                  "shift_ending": {
+                    "type": "string",
+                    "example": "16:30:00"
+                  },
+                  "created_by": {
+                    "type": "string",
+                    "example": "admin"
+                  },
+                  "updated_by": {
+                    "type": "string",
+                    "example": "admin"
+                  }
+                },
+                "required": [
+                  "shift_name",
+                  "shift_starting",
+                  "shift_ending",
+                  "created_by",
+                  "updated_by"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Insert data successfully!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ข้อมูลจาก Client ไม่ถูกต้อง",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "การเข้าถึงถูกปฏิเสธ! || กรุณากรอกข้อมูลให้ครบถ้วน || รูปแบบเวลาเริ่มต้น (shift_starting) ไม่ถูกต้อง! กรุณาใช้รูปแบบ HH:mm:ss! || รูปแบบเวลาสิ้นสุด (shift_ending) ไม่ถูกต้อง! กรุณาใช้รูปแบบ HH:mm:ss! || ค่าเวลาเริ่มต้น (shift_starting) ต้องอยู่ในช่วงที่ถูกต้อง (HH: 00-23, mm: 00-59, ss: 00-59)! || ค่าเวลาสิ้นสุด (shift_ending) ต้องอยู่ในช่วงที่ถูกต้อง (HH: 00-23, mm: 00-59, ss: 00-59)!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Server ปฏิเสธการร้องขอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "คำร้องขอไม่สามารถดำเนินการได้เนื่องจากขัดแย้งกับสถานะปัจจุบันของทรัพยากรที่ต้องการอัพเดท",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "มี (shift_name) อยู่ในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/setting/updateDataShift/{id}": {
+      "put": {
+        "tags": [
+          "Shift"
+        ],
+        "summary": "สำหรับอัพเดทข้อมูล Shift",
+        "description": "สำหรับอัพเดทข้อมูลทั้งหมดของ Shift และตรวจสอบ Token เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            },
+            "description": "ID ของ Shift ที่ต้องการอัพเดท"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "shift_name": {
+                    "type": "string",
+                    "example": "บ่าย"
+                  },
+                  "shift_starting": {
+                    "type": "string",
+                    "example": "16:30:00"
+                  },
+                  "shift_ending": {
+                    "type": "string",
+                    "example": "00:30:00"
+                  },
+                  "updated_by": {
+                    "type": "string",
+                    "example": "admin"
+                  }
+                },
+                "required": [
+                  "shift_name",
+                  "shift_starting",
+                  "shift_ending",
+                  "updated_by"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Updated successfully!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ข้อมูลจาก Client ไม่ถูกต้อง",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "การเข้าถึงถูกปฏิเสธ! || กรุณากรอกข้อมูลให้ครบถ้วน || รูปแบบเวลาเริ่มต้น (shift_starting) ไม่ถูกต้อง! กรุณาใช้รูปแบบ HH:mm:ss! || รูปแบบเวลาสิ้นสุด (shift_ending) ไม่ถูกต้อง! กรุณาใช้รูปแบบ HH:mm:ss! || ค่าเวลาเริ่มต้น (shift_starting) ต้องอยู่ในช่วงที่ถูกต้อง (HH: 00-23, mm: 00-59, ss: 00-59)! || ค่าเวลาสิ้นสุด (shift_ending) ต้องอยู่ในช่วงที่ถูกต้อง (HH: 00-23, mm: 00-59, ss: 00-59)!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Server ปฏิเสธการร้องขอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ( Not found )",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มี shift_id อยู่ในระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "คำร้องขอไม่สามารถดำเนินการได้เนื่องจากขัดแย้งกับสถานะปัจจุบันของทรัพยากรที่ต้องการอัพเดท",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "มี (shift_name) อยู่ในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/setting/removeShift/{id}": {
+      "delete": {
+        "tags": [
+          "Shift"
+        ],
+        "summary": "สำหรับลบข้อมูล Shift",
+        "description": "สำหรับลบข้อมูลทั้งหมดของ Shift และตรวจสอบ Token เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            },
+            "description": "ID ของ Shift ที่ต้องการอัพเดท"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Deleted successfully!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Server ไม่สามารถประมวลผลคำร้องขอเนื่องจากข้อผิดพลาดของ Client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "การเข้าถึงถูกปฏิเสธ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Server ปฏิเสธการร้องขอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มี shift_id อยู่ในระบบ!"
                     }
                   }
                 }

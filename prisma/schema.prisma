@@ -72,8 +72,8 @@ model complaints {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model holidays {
   holiday_id   Int      @id @default(autoincrement())
-  holiday_name String   @unique(map: "holiday_name") @db.VarChar(100)
-  holiday_date String   @db.VarChar(50)
+  holiday_name String   @db.LongText
+  holiday_date String   @unique(map: "holiday_date") @default("0000-00-00") @db.VarChar(50)
   created_at   DateTime @default(now()) @db.Timestamp(0)
   created_by   String   @db.VarChar(100)
   updated_at   DateTime @default(now()) @db.Timestamp(0)
@@ -94,8 +94,8 @@ model shift_types {
 model shifts {
   shift_id       Int      @id @default(autoincrement())
   shift_name     String   @unique(map: "shift_name") @db.VarChar(100)
-  shift_starting DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.Timestamp(0)
-  shift_ending   DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.Timestamp(0)
+  shift_starting String   @default("00:00:00") @db.VarChar(50)
+  shift_ending   String   @default("00:00:00") @db.VarChar(50)
   created_at     DateTime @default(now()) @db.Timestamp(0)
   created_by     String   @db.VarChar(100)
   updated_at     DateTime @default(now()) @db.Timestamp(0)

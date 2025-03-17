@@ -4,8 +4,9 @@ const { authCheckToken, authCheckTokenAdmin } = require('../../middleware/auth/a
 const { getAllDataComplaintTopics, insertDataComplaintTopic, updateDataComplaintTopic, removeDataComplaintTopic } = require('../../controllers/setting/complaintTopicController');
 const { getAllDataCheckInStatus, insertDataCheckInStatus, updateDataCheckInStatus, removeDataCheckInStatus } = require('../../controllers/setting/checkInStatusController');
 const { getAllDataCheckOutStatus, insertDataCheckOutStatus, updateDataCheckOutStatus, removeDataCheckOutStatus } = require('../../controllers/setting/checkOutStatusController');
-const { getAllDataHolidays, insertDataHoliday, updateDataHoliday, removeDataHoliday } = require('../../controllers/setting/holidayController');
+const { getAllDataHolidays, syncDataHoliday, insertDataHoliday, updateDataHoliday, removeDataHoliday } = require('../../controllers/setting/holidayController');
 const { getAllDataShiftTypes, insertDataShiftType, updateDataShiftType, removeDataShiftType } = require('../../controllers/setting/shiftTypeController');
+const { getAllDataShifts, insertDataShift, updateDataShift, removeDataShift } = require('../../controllers/setting/shiftController');
 
 // ComplaintTopics
 router.get('/getComplaintTopics', getAllDataComplaintTopics);
@@ -27,14 +28,21 @@ router.delete('/removeCheckOutStatus/:id', authCheckTokenAdmin, removeDataCheckO
 
 // Holiday
 router.get('/getHolidays', authCheckTokenAdmin, getAllDataHolidays);
-router.post('/insertHoliday', authCheckTokenAdmin, insertDataHoliday);
-router.put('/updateHoliday/:id', authCheckTokenAdmin, updateDataHoliday);
+router.post('/syncHolidays', authCheckTokenAdmin, syncDataHoliday);
+// router.post('/insertHoliday', authCheckTokenAdmin, insertDataHoliday);
+// router.put('/updateHoliday/:id', authCheckTokenAdmin, updateDataHoliday);
 router.delete('/removeHoliday/:id', authCheckTokenAdmin, removeDataHoliday);
 
 // ShiftType
 router.get('/getShiftTypes', authCheckTokenAdmin, getAllDataShiftTypes);
 router.post('/insertShiftType', authCheckTokenAdmin, insertDataShiftType);
 router.put('/updateShiftType/:id', authCheckTokenAdmin, updateDataShiftType);
-// router.delete('/removeShiftType/:id', authCheckTokenAdmin, removeDataShiftType);
+router.delete('/removeShiftType/:id', authCheckTokenAdmin, removeDataShiftType);
+
+// Shift
+router.get('/getShifts', authCheckTokenAdmin, getAllDataShifts);
+router.post('/insertShift', authCheckTokenAdmin, insertDataShift);
+router.put('/updateShift/:id', authCheckTokenAdmin, updateDataShift);
+router.delete('/removeShift/:id', authCheckTokenAdmin, removeDataShift);
 
 module.exports = router;

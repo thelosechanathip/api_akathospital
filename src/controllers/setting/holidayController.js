@@ -1,5 +1,7 @@
 const pm = require('../../config/prisma');
+const moment = require("moment");
 const { msg } = require('../../utils/message');
+const { fetchAllDataHolidyOnHoSXP } = require('../../models/setting/holidayModel');
 
 // Function สำหรับ FetchAll ข้อมูลจาก Database
 exports.getAllDataHolidays = async (req, res) => {
@@ -14,6 +16,43 @@ exports.getAllDataHolidays = async (req, res) => {
         return msg(res, 500, { message: err.message });
     }
 }
+
+// Function Sync ข้อมูลจากระบบ HoSXP มาบันทึกในระบบ Akathospital
+exports.syncDataHoliday = async (req, res) => {
+    try {
+        const fullname = req.user.fullname_thai;
+        const fetchData = await fetchAllDataHolidyOnHoSXP();
+
+        if (!fetchData || fetchData.length === 0) return msg(res, 404, { message: 'ไม่พบข้อมูลวันหยุดจากระบบ HoSXP' });
+
+        // const date = new Date();
+        // const dateNow = moment(date).format('YYYY');
+
+        for (const holidayHos of fetchData) {
+            const { day_name, holiday_date } = holidayHos;
+            const formattedDate = moment(holiday_date).format('YYYY-MM-DD');
+
+            await pm.holidays.upsert({
+                where: { holiday_date: formattedDate }, // ถ้ามี holiday_date แล้วให้อัปเดต
+                update: {
+                    holiday_name: day_name,
+                    updated_by: fullname
+                },
+                create: {
+                    holiday_name: day_name,
+                    holiday_date: formattedDate,
+                    created_by: fullname,
+                    updated_by: fullname
+                }
+            });
+        }
+
+        return msg(res, 200, { message: 'Sync successfully!' });
+    } catch (err) {
+        console.log('SyncDataHoliday : ', err);
+        return msg(res, 500, { message: err.message });
+    }
+};
 
 // Function สำหรับ Insert ข้อมูลไปยัง Database
 exports.insertDataHoliday = async (req, res) => {
