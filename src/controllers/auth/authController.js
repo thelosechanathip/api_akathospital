@@ -8,7 +8,7 @@ require("dotenv").config();
 const CryptoJS = require("crypto-js");
 const axios = require("axios"); // เพิ่ม axios สำหรับเรียก Telegram API
 const NodeCache = require("node-cache");
-const otpCache = new NodeCache({ stdTTL: 30 }); // รหัส OTP หมดอายุใน 5 นาที (300 วินาที)
+const otpCache = new NodeCache({ stdTTL: 15 }); // รหัส OTP หมดอายุใน 5 นาที (300 วินาที)
 const moment = require('moment');
 const pm = require('../../config/prisma');
 
