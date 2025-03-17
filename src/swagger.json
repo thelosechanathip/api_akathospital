@@ -35,6 +35,10 @@
     {
       "name": "CheckOutStatus",
       "description": "Endpoints สำหรับการจัดการข้อมูล ห้วข้อของเวลาออกงาน"
+    },
+    {
+      "name": "Holiday",
+      "description": "Endpoints สำหรับการจัดการข้อมูล วันหยุดต่าๆง"
     }
   ],
   "paths": {
@@ -281,7 +285,7 @@
                   "properties": {
                     "message": {
                       "type": "string",
-                      "example": "ไม่มี Token ถูกส่งมา! || OTP หมดอายุหรือไม่ถูกต้อง || OTP ไม่ถูกต้อง"
+                      "example": "การเข้าถึงถูกปฏิเสธ! || OTP หมดอายุหรือไม่ถูกต้อง || OTP ไม่ถูกต้อง"
                     }
                   }
                 }
@@ -405,7 +409,7 @@
                   "properties": {
                     "message": {
                       "type": "string",
-                      "example": "ไม่มี Token ถูกส่งมา!"
+                      "example": "การเข้าถึงถูกปฏิเสธ!"
                     }
                   }
                 }
@@ -539,7 +543,7 @@
                   "properties": {
                     "message": {
                       "type": "string",
-                      "example": "ไม่มี Token ถูกส่งมา! || กรุณากรอกรหัสผ่านเพื่อยืนยันการลบข้อมูล! || ไม่สามารถลบ User ตัวเราเองในขณะที่อยู่ในระบบได้! || รหัสผ่านไม่ถูกต้อง!"
+                      "example": "การเข้าถึงถูกปฏิเสธ! || กรุณากรอกรหัสผ่านเพื่อยืนยันการลบข้อมูล! || ไม่สามารถลบ User ตัวเราเองในขณะที่อยู่ในระบบได้! || รหัสผ่านไม่ถูกต้อง!"
                     }
                   }
                 }
@@ -1156,7 +1160,7 @@
                   "properties": {
                     "message": {
                       "type": "string",
-                      "example": "ไม่มี Token ถูกส่งมา!"
+                      "example": "การเข้าถึงถูกปฏิเสธ!"
                     }
                   }
                 }
@@ -1304,7 +1308,7 @@
                   "properties": {
                     "message": {
                       "type": "string",
-                      "example": "ไม่มี Token ถูกส่งมา! || กรุณากรอกข้อมูลให้ครบถ้วน"
+                      "example": "การเข้าถึงถูกปฏิเสธ! || กรุณากรอกข้อมูลให้ครบถ้วน"
                     }
                   }
                 }
@@ -1457,7 +1461,7 @@
                   "properties": {
                     "message": {
                       "type": "string",
-                      "example": "ไม่มี Token ถูกส่งมา! || กรุณากรอกข้อมูลให้ครบถ้วน"
+                      "example": "การเข้าถึงถูกปฏิเสธ! || กรุณากรอกข้อมูลให้ครบถ้วน"
                     }
                   }
                 }
@@ -1602,7 +1606,7 @@
                   "properties": {
                     "message": {
                       "type": "string",
-                      "example": "ไม่มี Token ถูกส่งมา!"
+                      "example": "การเข้าถึงถูกปฏิเสธ!"
                     }
                   }
                 }
@@ -1751,7 +1755,7 @@
                   "properties": {
                     "message": {
                       "type": "string",
-                      "example": "ไม่มี Token ถูกส่งมา!"
+                      "example": "การเข้าถึงถูกปฏิเสธ!"
                     }
                   }
                 }
@@ -1899,7 +1903,7 @@
                   "properties": {
                     "message": {
                       "type": "string",
-                      "example": "ไม่มี Token ถูกส่งมา! || กรุณากรอกข้อมูลให้ครบถ้วน"
+                      "example": "การเข้าถึงถูกปฏิเสธ! || กรุณากรอกข้อมูลให้ครบถ้วน"
                     }
                   }
                 }
@@ -2052,7 +2056,7 @@
                   "properties": {
                     "message": {
                       "type": "string",
-                      "example": "ไม่มี Token ถูกส่งมา! || กรุณากรอกข้อมูลให้ครบถ้วน"
+                      "example": "การเข้าถึงถูกปฏิเสธ! || กรุณากรอกข้อมูลให้ครบถ้วน"
                     }
                   }
                 }
@@ -2197,7 +2201,7 @@
                   "properties": {
                     "message": {
                       "type": "string",
-                      "example": "ไม่มี Token ถูกส่งมา!"
+                      "example": "การเข้าถึงถูกปฏิเสธ!"
                     }
                   }
                 }
@@ -2246,6 +2250,615 @@
                     "message": {
                       "type": "string",
                       "example": "ไม่มี check_out_status_id อยู่ในระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/setting/getAllDataHolidays": {
+      "get": {
+        "tags": [
+          "Holiday"
+        ],
+        "summary": "สำหรับดึงข้อมูล Holiday",
+        "description": "สำหรับดึงข้อมูลทั้งหมดของ Holiday และตรวจสอบ Token เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "holiday_id": {
+                            "type": "integer",
+                            "example": 1
+                          },
+                          "holiday_name": {
+                            "type": "string",
+                            "example": "วันหยุดชดเชยวันจักรี"
+                          },
+                          "holiday_date": {
+                            "type": "string",
+                            "example": "2025-04-07"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2025-02-19T08:55:57.000Z"
+                          },
+                          "created_by": {
+                            "type": "string",
+                            "example": "admin"
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2025-02-19T08:55:57.000Z"
+                          },
+                          "updated_by": {
+                            "type": "string",
+                            "example": "admin"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Server ไม่สามารถประมวลผลคำร้องขอเนื่องจากข้อผิดพลาดของ Client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "การเข้าถึงถูกปฏิเสธ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Server ปฏิเสธการร้องขอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีข้อมูลบน Database!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/setting/insertDataHoliday": {
+      "post": {
+        "tags": [
+          "Holiday"
+        ],
+        "summary": "สำหรับบันทึกข้อมูล Holiday",
+        "description": "สำหรับบันทึกข้อมูลทั้งหมดของ Holiday และตรวจสอบ Token เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "holiday_name": {
+                    "type": "string",
+                    "example": "วันหยุดชดเชยวันจักรี"
+                  },
+                  "holiday_date": {
+                    "type": "string",
+                    "example": "2025-04-07"
+                  },
+                  "created_by": {
+                    "type": "string",
+                    "example": "admin"
+                  },
+                  "updated_by": {
+                    "type": "string",
+                    "example": "admin"
+                  }
+                },
+                "required": [
+                  "holiday_name",
+                  "holiday_date",
+                  "created_by",
+                  "updated_by"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Insert data successfully!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ข้อมูลจาก Client ไม่ถูกต้อง",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "การเข้าถึงถูกปฏิเสธ! || กรุณากรอกข้อมูลให้ครบถ้วน || รูปแบบวันที่ไม่ถูกต้อง! กรุณาใช้รูปแบบ YYYY-MM-DD! || วันที่ไม่ถูกต้อง! กรุณาตรวจสอบวันที่!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Server ปฏิเสธการร้องขอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "คำร้องขอไม่สามารถดำเนินการได้เนื่องจากขัดแย้งกับสถานะปัจจุบันของทรัพยากรที่ต้องการอัพเดท",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "มี (holiday_name) อยู่ในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/setting/updateDataHoliday/{id}": {
+      "put": {
+        "tags": [
+          "Holiday"
+        ],
+        "summary": "สำหรับอัพเดทข้อมูล Holiday",
+        "description": "สำหรับอัพเดทข้อมูลทั้งหมดของ Holiday และตรวจสอบ Token เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            },
+            "description": "ID ของ Holiday ที่ต้องการอัพเดท"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "holiday_name": {
+                    "type": "string",
+                    "example": "วันสงกรานต์"
+                  },
+                  "holiday_date": {
+                    "type": "string",
+                    "example": "2025-04-14"
+                  },
+                  "updated_by": {
+                    "type": "string",
+                    "example": "admin"
+                  }
+                },
+                "required": [
+                  "holiday_name",
+                  "holiday_date",
+                  "updated_by"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Updated successfully!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ข้อมูลจาก Client ไม่ถูกต้อง",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "การเข้าถึงถูกปฏิเสธ! || กรุณากรอกข้อมูลให้ครบถ้วน"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Server ปฏิเสธการร้องขอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ( Not found )",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มี holiday_id อยู่ในระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "คำร้องขอไม่สามารถดำเนินการได้เนื่องจากขัดแย้งกับสถานะปัจจุบันของทรัพยากรที่ต้องการอัพเดท",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "มี (holiday_name) อยู่ในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/setting/removeHoliday/{id}": {
+      "delete": {
+        "tags": [
+          "Holiday"
+        ],
+        "summary": "สำหรับลบข้อมูล Holiday",
+        "description": "สำหรับลบข้อมูลทั้งหมดของ Holiday และตรวจสอบ Token เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            },
+            "description": "ID ของ Holiday ที่ต้องการอัพเดท"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Deleted successfully!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Server ไม่สามารถประมวลผลคำร้องขอเนื่องจากข้อผิดพลาดของ Client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "การเข้าถึงถูกปฏิเสธ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Server ปฏิเสธการร้องขอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มี holiday_id อยู่ในระบบ!"
                     }
                   }
                 }

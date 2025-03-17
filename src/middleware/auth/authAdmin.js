@@ -29,7 +29,7 @@ exports.authAdminDoc = async (req, res, next) => {
 // สำหรับตรวจสอบสิทธิ์การเข้าใช้งานระบบโดยทั่วไป
 exports.authCheckToken = async (req, res, next) => {
     const authHeader = req.headers.authorization;
-    if (!authHeader) return msg(res, 400, { message: 'ไม่มี Token ถูกส่งมา!' });
+    if (!authHeader) return msg(res, 400, { message: 'การเข้าถึงถูกปฏิเสธ!' });
 
     const token = authHeader.split(' ')[1];
     try {
@@ -93,7 +93,7 @@ exports.authCheckToken = async (req, res, next) => {
 // สำหรับตรวจสอบสิทธิ์การเข้าใช้งานระบบโดยทั่วไป
 exports.authCheckTokenAdmin = async (req, res, next) => {
     const authHeader = req.headers.authorization;
-    if (!authHeader) return msg(res, 400, { message: 'ไม่มี Token ถูกส่งมา!' });
+    if (!authHeader) return msg(res, 400, { message: 'การเข้าถึงถูกปฏิเสธ!' });
 
     const token = authHeader.split(' ')[1];
     try {

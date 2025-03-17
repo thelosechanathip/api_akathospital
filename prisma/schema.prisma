@@ -22,17 +22,6 @@ model auth_tokens {
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model auth_tokens_pin {
-  auth_token_pin Int      @id @default(autoincrement())
-  token          String   @unique(map: "token") @db.VarChar(255)
-  national_id    String   @unique(map: "national_id") @db.VarChar(20)
-  pin_verified   Boolean? @default(false)
-  created_at     DateTime @default(now()) @db.Timestamp(0)
-  expires_at     DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.Timestamp(0)
-  is_active      Boolean? @default(true)
-}
-
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model check_in_status {
   check_in_status_id   Int      @id @default(autoincrement())
   check_in_status_name String   @unique(map: "check_in_status_name") @db.VarChar(100)
@@ -84,6 +73,7 @@ model complaints {
 model holidays {
   holiday_id   Int      @id @default(autoincrement())
   holiday_name String   @unique(map: "holiday_name") @db.VarChar(100)
+  holiday_date String   @db.VarChar(50)
   created_at   DateTime @default(now()) @db.Timestamp(0)
   created_by   String   @db.VarChar(100)
   updated_at   DateTime @default(now()) @db.Timestamp(0)

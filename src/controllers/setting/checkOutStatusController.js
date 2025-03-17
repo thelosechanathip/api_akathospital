@@ -29,7 +29,7 @@ exports.insertDataCheckOutStatus = async (req, res) => {
                 check_out_status_name: check_out_status_name
             }
         });
-        if(checkCheckOutStatusNameResult) return msg(res, 404, 'มี (check_out_status_name) อยู่ในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!');
+        if(checkCheckOutStatusNameResult) return msg(res, 409, 'มี (check_out_status_name) อยู่ในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!');
 
         await pm.check_out_status.create({
             data: {
