@@ -72,86 +72,91 @@ async function checkBlackListTokensExpired() {
   try {
     const fetchAllTokenBlacklist = await pm.token_blacklist.findMany({
       select: {
+        token_blacklist_id: true,  // เพิ่ม ID เพื่อใช้ในการคำนวณค่า MAX
         token: true,
         expires_at: true
       }
     });
+
     if (fetchAllTokenBlacklist.length === 0) {
-        console.log('TokenBlacklistErrors : No tokens found in database');
+      console.log('TokenBlacklistErrors: No tokens found in database');
+      return;
     }
 
-    for(const tokenBlacklist of fetchAllTokenBlacklist) {
-      const expiresAtIso = tokenBlacklist.expires_at;
-      const expiresAt = moment(expiresAtIso).format('YYYY-MM-DD HH:mm:ss');
+    for (const tokenBlacklist of fetchAllTokenBlacklist) {
+      const expiresAt = moment(tokenBlacklist.expires_at).format('YYYY-MM-DD HH:mm:ss');
+      const dateNow = moment(new Date()).format('YYYY-MM-DD HH:mm:ss');
 
-      const date = new Date();
-      const dateNow = moment(date).format('YYYY-MM-DD HH:mm:ss');
-      
-      if(dateNow === expiresAt || dateNow > expiresAt) {
-        const deleteTokenBlacklist = await pm.token_blacklist.delete({
-          where: {
-            token: tokenBlacklist.token
-          }
+      if (dateNow >= expiresAt) {
+        // ลบ Token ที่หมดอายุ
+        await pm.token_blacklist.delete({
+          where: { token: tokenBlacklist.token }
         });
 
-        if (deleteTokenBlacklist.count > 0) {
-          // ดึงค่า MAX(token_blacklist_id)
-          const maxIdResult = await pm.$queryRaw`SELECT COALESCE(MAX(token_blacklist_id), 0) + 1 AS nextId FROM token_blacklist`;
-
-          // รีเซ็ตค่า AUTO_INCREMENT
-          await pm.$executeRawUnsafe(`ALTER TABLE token_blacklist AUTO_INCREMENT = ${maxIdResult[0].nextId}`);
-          console.log('Remove Token AuthTokens ที่หมดเวลาเสร็จสิ้น!!');
-        }
+        console.log(`Removed expired token: ${tokenBlacklist.token}`);
       }
     }
+
+    // หาค่า MAX(token_blacklist_id) ที่เหลืออยู่
+    const maxIdResult = await pm.$queryRaw`SELECT COALESCE(MAX(token_blacklist_id), 0) + 1 AS nextId FROM token_blacklist`;
+
+    const nextId = maxIdResult[0].nextId || 1; // ตั้งเป็น 1 ถ้าตารางว่าง
+
+    // รีเซ็ต AUTO_INCREMENT
+    await pm.$executeRawUnsafe(`ALTER TABLE token_blacklist AUTO_INCREMENT = ${nextId}`);
+    console.log(`AUTO_INCREMENT has been reset to ${nextId}`);
+
   } catch (error) {
-      console.error("Error checkBlackListTokensExpired: ", error.message);
-      process.exit(1);
+    console.error("Error checkBlackListTokensExpired: ", error.message);
+    process.exit(1);
   }
 }
 
 // Function ในการตรวจสอบ is_active, expires_at บน Table auth_tokens
 async function checkAuthTokensExpired() {
   try {
-      const fetchAllAuthTokens = await pm.auth_tokens.findMany({
-        select: {
-          token: true,
-          expires_at: true
-        }
-      });
-      if (fetchAllAuthTokens.length === 0) {
-          console.log('AuthTokenErrors : No tokens found in database');
+    const fetchAllAuthTokens = await pm.auth_tokens.findMany({
+      select: {
+        auth_token_id: true,  // เพิ่ม auth_token_id เพื่อใช้ในการหา MAX ID
+        token: true,
+        expires_at: true
       }
+    });
 
-      for(const authTokens of fetchAllAuthTokens) {
-        const expiresAtIso = authTokens.expires_at;
-        const expiresAt = moment(expiresAtIso).format('YYYY-MM-DD HH:mm:ss');
+    if (fetchAllAuthTokens.length === 0) {
+      console.log('AuthTokenErrors: No tokens found in database');
+      return;
+    }
 
-        const date = new Date();
-        const dateNow = moment(date).format('YYYY-MM-DD HH:mm:ss');
-        
-        if(dateNow === expiresAt || dateNow > expiresAt) {
-          const deleteAuthToken = await pm.auth_tokens.delete({
-            where: {
-              token: authTokens.token
-            }
-          });
+    for (const authTokens of fetchAllAuthTokens) {
+      const expiresAt = moment(authTokens.expires_at).format('YYYY-MM-DD HH:mm:ss');
+      const dateNow = moment(new Date()).format('YYYY-MM-DD HH:mm:ss');
 
-          if (deleteAuthToken.count > 0) {
-            // ดึงค่า MAX(auth_token_id)
-            const maxIdResult = await pm.$queryRaw`SELECT COALESCE(MAX(auth_token_id), 0) + 1 AS nextId FROM auth_tokens`;
+      if (dateNow >= expiresAt) {
+        // ลบ Token ที่หมดอายุ
+        await pm.auth_tokens.delete({
+          where: { token: authTokens.token }
+        });
 
-            // รีเซ็ตค่า AUTO_INCREMENT
-            await pm.$executeRawUnsafe(`ALTER TABLE auth_tokens AUTO_INCREMENT = ${maxIdResult[0].nextId}`);
-            console.log('Remove Token AuthTokens ที่หมดเวลาเสร็จสิ้น!!');
-          }
-        }
-      }     
+        console.log(`Removed expired token: ${authTokens.token}`);
+      }
+    }
+
+    // หาค่า MAX(auth_token_id) ที่เหลืออยู่
+    const maxIdResult = await pm.$queryRaw`SELECT COALESCE(MAX(auth_token_id), 0) + 1 AS nextId FROM auth_tokens`;
+
+    const nextId = maxIdResult[0].nextId || 1; // ตั้งเป็น 1 ถ้าตารางว่าง
+
+    // รีเซ็ต AUTO_INCREMENT
+    await pm.$executeRawUnsafe(`ALTER TABLE auth_tokens AUTO_INCREMENT = ${nextId}`);
+    console.log(`AUTO_INCREMENT has been reset to ${nextId}`);
+
   } catch (error) {
-      console.error("Error checkAuthTokensExpired: ", error.message);
-      process.exit(1);
+    console.error("Error checkAuthTokensExpired: ", error.message);
+    process.exit(1);
   }
 }
+
 
 // เริ่มการตรวจสอบ
 function startBlacklistScheduler() {

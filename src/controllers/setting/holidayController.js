@@ -20,162 +20,58 @@ exports.getAllDataHolidays = async (req, res) => {
 // Function Sync ข้อมูลจากระบบ HoSXP มาบันทึกในระบบ Akathospital
 exports.syncDataHoliday = async (req, res) => {
     try {
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+
         const fullname = req.user.fullname_thai;
         const fetchData = await fetchAllDataHolidyOnHoSXP();
-
-        if (!fetchData || fetchData.length === 0) return msg(res, 404, { message: 'ไม่พบข้อมูลวันหยุดจากระบบ HoSXP' });
-
-        // const date = new Date();
-        // const dateNow = moment(date).format('YYYY');
-
+  
+        if (!fetchData || fetchData.length === 0) {
+            res.write(`data: {"status": 404, "progress": "error", "message": "ไม่พบข้อมูลวันหยุดจากระบบ HoSXP"}\n\n`);
+            return res.end();
+        }
+  
+        const dateNow = moment().startOf('year').format('YYYY-MM-DD');
+  
+        await pm.holidays.deleteMany({
+            where: { holiday_date: { lt: dateNow } }
+        });
+  
+        const maxIdResult = await pm.$queryRaw`SELECT COALESCE(MAX(holiday_id), 0) + 1 AS nextId FROM holidays`;
+        const nextId = maxIdResult[0].nextId || 1;
+  
+        await pm.$executeRawUnsafe(`ALTER TABLE holidays AUTO_INCREMENT = ${nextId}`);
+  
+        // ** นับจำนวนทั้งหมด **
+        const totalRecords = fetchData.length;
+        let currentProgress = 0;
+  
         for (const holidayHos of fetchData) {
             const { day_name, holiday_date } = holidayHos;
             const formattedDate = moment(holiday_date).format('YYYY-MM-DD');
-
+  
             await pm.holidays.upsert({
-                where: { holiday_date: formattedDate }, // ถ้ามี holiday_date แล้วให้อัปเดต
-                update: {
-                    holiday_name: day_name,
-                    updated_by: fullname
-                },
-                create: {
-                    holiday_name: day_name,
-                    holiday_date: formattedDate,
-                    created_by: fullname,
-                    updated_by: fullname
-                }
+                where: { holiday_date: formattedDate }, 
+                update: { holiday_name: day_name, updated_by: fullname },
+                create: { holiday_name: day_name, holiday_date: formattedDate, created_by: fullname, updated_by: fullname }
             });
+
+            // ** เพิ่มค่า Progress และส่งอัปเดตกลับไปที่ Frontend **
+            currentProgress++;
+            console.log(`Syncing: ${currentProgress}/${totalRecords}`);
+
+            // ** ส่งค่า Progress กลับไปที่ Frontend **
+            res.write(`data: {"status": 200, "progress": "${currentProgress}/${totalRecords}"}\n\n`);
         }
 
-        return msg(res, 200, { message: 'Sync successfully!' });
+        // ** เมื่อเสร็จแล้วให้ส่งข้อความสุดท้าย และปิดการเชื่อมต่อ **
+        res.write(`data: {"status": 200, "progress": "complete", "message": "Sync data successfully!"}\n\n`);
+        res.end();
+  
     } catch (err) {
         console.log('SyncDataHoliday : ', err);
-        return msg(res, 500, { message: err.message });
-    }
-};
-
-// Function สำหรับ Insert ข้อมูลไปยัง Database
-exports.insertDataHoliday = async (req, res) => {
-    try {
-        const { holiday_name, holiday_date } = req.body;
-        const fullname = req.user.fullname_thai;
-
-        if(!holiday_name || !holiday_date) return msg(res, 400, 'กรุณากรอกข้อมูลให้ครบถ้วน!');
-
-        // ตรวจสอบรูปแบบวันที่ (YYYY-MM-DD)
-        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-        if (!dateRegex.test(holiday_date)) return msg(res, 400, 'รูปแบบวันที่ไม่ถูกต้อง! กรุณาใช้รูปแบบ YYYY-MM-DD!');
-
-        // ตรวจสอบว่าเป็นวันที่ที่ถูกต้องหรือไม่ (เช่น 2025-02-30 ไม่ถูกต้อง)
-        const date = new Date(holiday_date);
-        if (isNaN(date.getTime()) || date.toISOString().split('T')[0] !== holiday_date) return msg(res, 400, 'วันที่ไม่ถูกต้อง! กรุณาตรวจสอบวันที่!');
-
-        // Check holiday_name ว่ามีซ้ำอยู่ใน Database หรือไม่?
-        const checkHolidayNameResult = await pm.holidays.findFirst({
-            where: {
-                holiday_name: holiday_name
-            }
-        });
-        if(checkHolidayNameResult) return msg(res, 409, 'มี (holiday_name) อยู่ในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!');
-
-        await pm.holidays.create({
-            data: {
-                holiday_name: holiday_name,
-                holiday_date: holiday_date,
-                created_by: fullname,
-                updated_by: fullname
-            }
-        });
-
-        return msg(res, 200, { message: 'Insert data successfully!' });
-    } catch(err) {
-        console.log('insertDataHoliday : ', err);
-        return msg(res, 500, { message: err.message });
-    }
-}
-
-// Function สำหรับ Update ข้อมูลไปยัง Database
-exports.updateDataHoliday = async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        // Check id ที่ส่งมาว่ามีข้อมูลใน holidays หรือไม่?
-        const checkIdHoliday = await pm.holidays.findFirst({
-            where: {
-                holiday_id: Number(id)
-            }
-        });
-        if(!checkIdHoliday) return msg(res, 404, { message: 'ไม่มี holiday_id อยู่ในระบบ!' });
-
-        const { holiday_name, holiday_date } = req.body;
-        const fullname = req.user.fullname_thai;
-
-        if(!holiday_name || !holiday_date) return msg(res, 400, 'กรุณากรอกข้อมูลให้ครบถ้วน!');
-
-        // ตรวจสอบรูปแบบวันที่ (YYYY-MM-DD)
-        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-        if (!dateRegex.test(holiday_date)) return msg(res, 400, 'รูปแบบวันที่ไม่ถูกต้อง! กรุณาใช้รูปแบบ YYYY-MM-DD!');
-
-        // ตรวจสอบว่าเป็นวันที่ที่ถูกต้องหรือไม่ (เช่น 2025-02-30 ไม่ถูกต้อง)
-        const date = new Date(holiday_date);
-        if (isNaN(date.getTime()) || date.toISOString().split('T')[0] !== holiday_date) return msg(res, 400, 'วันที่ไม่ถูกต้อง! กรุณาตรวจสอบวันที่!');
-
-        // Check holiday_name ว่ามีซ้ำอยู่ใน Database หรือไม่?
-        const checkHolidayNameResult = await pm.holidays.findFirst({
-            where: {
-                holiday_name: holiday_name
-            }
-        });
-        if(checkHolidayNameResult) return msg(res, 409, 'มี (holiday_name) อยู่ในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!');
-
-        await pm.holidays.update({
-            where: {
-                holiday_id: Number(id)
-            },
-            data: {
-                holiday_name: holiday_name,
-                holiday_date: holiday_date,
-                updated_by: fullname
-            }
-        });
-
-        return msg(res, 200, { message: 'Updated successfully!' });
-    } catch(err) {
-        console.log('updateDataHoliday : ', err);
-        return msg(res, 500, { message: err.message });
-    }
-}
-
-// Function สำหรับ Delete ข้อมูลจาก Database
-exports.removeDataHoliday = async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        // ตรวจสอบว่า ID มีอยู่จริงหรือไม่
-        const checkIdHoliday = await pm.holidays.findFirst({
-            where: {
-                holiday_id: Number(id)
-            }
-        });
-        if (!checkIdHoliday) return msg(res, 404, { message: 'ไม่มี holiday_id อยู่ในระบบ!' });
-
-        // ลบข้อมูล
-        await pm.holidays.delete({
-            where: {
-                holiday_id: Number(id)
-            }
-        });
-
-        // ดึงค่า MAX(holiday_id)
-        const maxIdResult = await pm.$queryRaw`SELECT COALESCE(MAX(holiday_id), 0) + 1 AS nextId FROM holidays`;
-
-        // รีเซ็ตค่า AUTO_INCREMENT
-        await pm.$executeRawUnsafe(`ALTER TABLE holidays AUTO_INCREMENT = ${maxIdResult[0].nextId}`);
-
-        return msg(res, 200, { message: 'Deleted successfully!' });
-
-    } catch (err) {
-        console.log('removeDataHoliday : ', err);
-        return msg(res, 500, { message: err.message });
+        res.write(`data: {"status": 500, "progress": "error", "message": "${err.message}"}\n\n`);
+        res.end();
     }
 };

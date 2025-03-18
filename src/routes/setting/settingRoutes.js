@@ -29,9 +29,6 @@ router.delete('/removeCheckOutStatus/:id', authCheckTokenAdmin, removeDataCheckO
 // Holiday
 router.get('/getHolidays', authCheckTokenAdmin, getAllDataHolidays);
 router.post('/syncHolidays', authCheckTokenAdmin, syncDataHoliday);
-// router.post('/insertHoliday', authCheckTokenAdmin, insertDataHoliday);
-// router.put('/updateHoliday/:id', authCheckTokenAdmin, updateDataHoliday);
-router.delete('/removeHoliday/:id', authCheckTokenAdmin, removeDataHoliday);
 
 // ShiftType
 router.get('/getShiftTypes', authCheckTokenAdmin, getAllDataShiftTypes);
