@@ -2441,8 +2441,8 @@
         "tags": [
           "Holiday"
         ],
-        "summary": "สำหรับดึงข้อมูล Holiday",
-        "description": "สำหรับดึงข้อมูลทั้งหมดของ Holiday และตรวจสอบ Token เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header",
+        "summary": "สำหรับ Sync ข้อมูล Holiday จากระบบ HoSXP",
+        "description": "สำหรับ Sync ข้อมูลทั้งหมดของ Holiday จากระบบ HoSXP และตรวจสอบ Token เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header",
         "parameters": [
           {
             "name": "Authorization",

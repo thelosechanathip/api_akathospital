@@ -28,7 +28,7 @@ exports.syncDataHoliday = async (req, res) => {
         const fetchData = await fetchAllDataHolidyOnHoSXP();
   
         if (!fetchData || fetchData.length === 0) {
-            res.write(`data: {"status": 404, "progress": "error", "message": "ไม่พบข้อมูลวันหยุดจากระบบ HoSXP"}\n\n`);
+            res.write(`data: {"status": 404, "progress": "error", "message": "ไม่พบข้อมูลวันหยุดจากระบบ HoSXP!"}\n\n`);
             return res.end();
         }
   
