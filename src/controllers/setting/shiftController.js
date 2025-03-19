@@ -18,33 +18,49 @@ exports.getAllDataShifts = async (req, res) => {
 // Function สำหรับ Insert ข้อมูลไปยัง Database
 exports.insertDataShift = async (req, res) => {
     try {
-        const { shift_name, shift_starting, shift_ending } = req.body;
+        const { shift_name, shift_starting, shift_late, shift_ending, shift_early } = req.body;
         const fullname = req.user.fullname_thai;
 
         // ตรวจสอบว่ากรอกข้อมูลครบถ้วนหรือไม่
-        if (!shift_name || !shift_starting || !shift_ending)  return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน!' });
+        if (!shift_name || !shift_starting || !shift_ending || !shift_late || !shift_early)  return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน!' });
 
         // ตรวจสอบรูปแบบเวลา (HH:mm:ss) สำหรับ shift_starting และ shift_ending
         const timeRegex = /^([0-1]?[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$/;
         
         if (!timeRegex.test(shift_starting)) return msg(res, 400, { message: 'รูปแบบเวลาเริ่มต้น (shift_starting) ไม่ถูกต้อง! กรุณาใช้รูปแบบ HH:mm:ss!' });
+        if (!timeRegex.test(shift_late)) return msg(res, 400, { message: 'รูปแบบเวลาเริ่มต้น (shift_late) ไม่ถูกต้อง! กรุณาใช้รูปแบบ HH:mm:ss!' });
         if (!timeRegex.test(shift_ending)) return msg(res, 400, { message: 'รูปแบบเวลาสิ้นสุด (shift_ending) ไม่ถูกต้อง! กรุณาใช้รูปแบบ HH:mm:ss!' });
+        if (!timeRegex.test(shift_early)) return msg(res, 400, { message: 'รูปแบบเวลาสิ้นสุด (shift_early) ไม่ถูกต้อง! กรุณาใช้รูปแบบ HH:mm:ss!' });
 
         // ตรวจสอบเพิ่มเติมว่าเวลาเป็นไปได้จริงหรือไม่
         const [startHours, startMinutes, startSeconds] = shift_starting.split(':').map(Number);
+        const [lateHours, lateMinutes, lateSeconds] = shift_late.split(':').map(Number);
         const [endHours, endMinutes, endSeconds] = shift_ending.split(':').map(Number);
+        const [earlyHours, earlyMinutes, earlySeconds] = shift_early.split(':').map(Number);
 
         if (
             startHours < 0 || startHours > 23 ||
             startMinutes < 0 || startMinutes > 59 ||
             startSeconds < 0 || startSeconds > 59
         ) return msg(res, 400, { message: 'ค่าเวลาเริ่มต้น (shift_starting) ต้องอยู่ในช่วงที่ถูกต้อง (HH: 00-23, mm: 00-59, ss: 00-59)!' });
+        
+        if (
+            lateHours < 0 || lateHours > 23 ||
+            lateMinutes < 0 || lateMinutes > 59 ||
+            lateSeconds < 0 || lateSeconds > 59
+        ) return msg(res, 400, { message: 'ค่าเวลาเริ่มต้น (shift_late) ต้องอยู่ในช่วงที่ถูกต้อง (HH: 00-23, mm: 00-59, ss: 00-59)!' });
 
         if (
             endHours < 0 || endHours > 23 ||
             endMinutes < 0 || endMinutes > 59 ||
             endSeconds < 0 || endSeconds > 59
         ) return msg(res, 400, { message: 'ค่าเวลาสิ้นสุด (shift_ending) ต้องอยู่ในช่วงที่ถูกต้อง (HH: 00-23, mm: 00-59, ss: 00-59)!' });
+        
+        if (
+            earlyHours < 0 || earlyHours > 23 ||
+            earlyMinutes < 0 || earlyMinutes > 59 ||
+            earlySeconds < 0 || earlySeconds > 59
+        ) return msg(res, 400, { message: 'ค่าเวลาสิ้นสุด (shift_early) ต้องอยู่ในช่วงที่ถูกต้อง (HH: 00-23, mm: 00-59, ss: 00-59)!' });
 
         // Check shift_name ว่ามีซ้ำอยู่ใน Database หรือไม่
         const checkShiftNameResult = await pm.shifts.findFirst({
@@ -59,7 +75,9 @@ exports.insertDataShift = async (req, res) => {
             data: {
                 shift_name: shift_name,
                 shift_starting: shift_starting,
+                shift_late: shift_late,
                 shift_ending: shift_ending,
+                shift_early: shift_early,
                 created_by: fullname,
                 updated_by: fullname
             }
@@ -85,33 +103,49 @@ exports.updateDataShift = async (req, res) => {
         });
         if(!checkIdShift) return msg(res, 404, { message: 'ไม่มี shift_id อยู่ในระบบ!' });
 
-        const { shift_name, shift_starting, shift_ending } = req.body;
+        const { shift_name, shift_starting, shift_late, shift_ending, shift_early } = req.body;
         const fullname = req.user.fullname_thai;
 
         // ตรวจสอบว่ากรอกข้อมูลครบถ้วนหรือไม่
-        if (!shift_name || !shift_starting || !shift_ending)  return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน!' });
+        if (!shift_name || !shift_starting || !shift_ending || !shift_late || !shift_early)  return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน!' });
 
         // ตรวจสอบรูปแบบเวลา (HH:mm:ss) สำหรับ shift_starting และ shift_ending
         const timeRegex = /^([0-1]?[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$/;
         
         if (!timeRegex.test(shift_starting)) return msg(res, 400, { message: 'รูปแบบเวลาเริ่มต้น (shift_starting) ไม่ถูกต้อง! กรุณาใช้รูปแบบ HH:mm:ss!' });
+        if (!timeRegex.test(shift_late)) return msg(res, 400, { message: 'รูปแบบเวลาเริ่มต้น (shift_late) ไม่ถูกต้อง! กรุณาใช้รูปแบบ HH:mm:ss!' });
         if (!timeRegex.test(shift_ending)) return msg(res, 400, { message: 'รูปแบบเวลาสิ้นสุด (shift_ending) ไม่ถูกต้อง! กรุณาใช้รูปแบบ HH:mm:ss!' });
+        if (!timeRegex.test(shift_early)) return msg(res, 400, { message: 'รูปแบบเวลาสิ้นสุด (shift_early) ไม่ถูกต้อง! กรุณาใช้รูปแบบ HH:mm:ss!' });
 
         // ตรวจสอบเพิ่มเติมว่าเวลาเป็นไปได้จริงหรือไม่
         const [startHours, startMinutes, startSeconds] = shift_starting.split(':').map(Number);
+        const [lateHours, lateMinutes, lateSeconds] = shift_late.split(':').map(Number);
         const [endHours, endMinutes, endSeconds] = shift_ending.split(':').map(Number);
+        const [earlyHours, earlyMinutes, earlySeconds] = shift_early.split(':').map(Number);
 
         if (
             startHours < 0 || startHours > 23 ||
             startMinutes < 0 || startMinutes > 59 ||
             startSeconds < 0 || startSeconds > 59
         ) return msg(res, 400, { message: 'ค่าเวลาเริ่มต้น (shift_starting) ต้องอยู่ในช่วงที่ถูกต้อง (HH: 00-23, mm: 00-59, ss: 00-59)!' });
+        
+        if (
+            lateHours < 0 || lateHours > 23 ||
+            lateMinutes < 0 || lateMinutes > 59 ||
+            lateSeconds < 0 || lateSeconds > 59
+        ) return msg(res, 400, { message: 'ค่าเวลาเริ่มต้น (shift_late) ต้องอยู่ในช่วงที่ถูกต้อง (HH: 00-23, mm: 00-59, ss: 00-59)!' });
 
         if (
             endHours < 0 || endHours > 23 ||
             endMinutes < 0 || endMinutes > 59 ||
             endSeconds < 0 || endSeconds > 59
         ) return msg(res, 400, { message: 'ค่าเวลาสิ้นสุด (shift_ending) ต้องอยู่ในช่วงที่ถูกต้อง (HH: 00-23, mm: 00-59, ss: 00-59)!' });
+        
+        if (
+            earlyHours < 0 || earlyHours > 23 ||
+            earlyMinutes < 0 || earlyMinutes > 59 ||
+            earlySeconds < 0 || earlySeconds > 59
+        ) return msg(res, 400, { message: 'ค่าเวลาสิ้นสุด (shift_early) ต้องอยู่ในช่วงที่ถูกต้อง (HH: 00-23, mm: 00-59, ss: 00-59)!' });
 
         // Check shift_name ว่ามีซ้ำอยู่ใน Database หรือไม่
         const checkShiftNameResult = await pm.shifts.findFirst({
@@ -128,7 +162,9 @@ exports.updateDataShift = async (req, res) => {
             data: {
                 shift_name: shift_name,
                 shift_starting: shift_starting,
+                shift_late: shift_late,
                 shift_ending: shift_ending,
+                shift_early: shift_early,
                 updated_by: fullname
             }
         });

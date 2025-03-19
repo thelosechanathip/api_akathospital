@@ -47,6 +47,10 @@
     {
       "name": "Shift",
       "description": "Endpoints สำหรับการจัดการข้อมูล กะการทำงาน"
+    },
+    {
+      "name": "AttendanceRecord",
+      "description": "Endpoints สำหรับการจัดการข้อมูล บันทึกเวลาเข้าออกการทำงาน"
     }
   ],
   "paths": {
@@ -4067,6 +4071,341 @@
                     "message": {
                       "type": "string",
                       "example": "ไม่มี complaint_id อยู่ในระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/publicAPI/checkIn": {
+      "get": {
+        "tags": [
+          "AttendanceRecord"
+        ],
+        "summary": "สำหรับ CheckIn หรือลงชื่อเข้างาน",
+        "description": "สำหรับ CheckIn หรือลงชื่อเข้างานเมื่อลงสำเร็จจะต้องมี OTP 6 หลักส่งไปยัง Application Telegram เพื่อนำไปยืนยันตัวตน OTP จะมีเวลาใช้งานได้แค่ 20 วินาที และ Generate Token เพื่อยืนยันตัวตนแบบ 2FA",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "national_id": {
+                    "type": "string",
+                    "example": "L5vFjTdZFX8LG+hvejyrG97+5BdbGeY0=",
+                    "description": "เลขบัตรประจำตัวประชาชนที่มีการเข้ารหัสในรูปแบบของ CryptoJS"
+                  },
+                  "shift_type_id": {
+                    "type": "int",
+                    "example": 1,
+                    "description": "Foreign Key ของประเภทกะการทำงาน ( ตัวอย่าง: ปกติ, นอกเวลาราชการ, OnCall )"
+                  }
+                },
+                "required": [
+                  "national_id",
+                  "shift_type_id"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Server ไม่สามารถประมวลผลคำร้องขอเนื่องจากข้อผิดพลาดของ Client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "กรุณากรอกข้อมูลให้ครบถ้วน || ไม่มี TelegramChatId ใน User กรุณาติดต่อ Admin เพื่อเพิ่มข้อมูล! || ไม่มีข้อมูลประเภทกะการทำงาน กรุณาเพิ่มข้อมูลก่อน! || ไม่พบกะการทำงานที่ตรงกับเวลาปัจจุบัน || เกิดข้อผิดพลาดในการดึงข้อมูลกะการทำงานหรือสถานะเช็คอิน"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มี User นี้อยู่ในระบบ กรุณา Register ก่อนใช้งาน!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "คำร้องขอไม่สามารถดำเนินการได้เนื่องจากขัดแย้งกับสถานะปัจจุบันของทรัพยากรที่ต้องการอัพเดท",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "มีข้อมูลซ้ำที่ยังไม่ได้ Check Out กรุณา Check Out ก่อน!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/publicAPI/checkInVerifyOtp": {
+      "post": {
+        "tags": [
+          "AttendanceRecord"
+        ],
+        "summary": "checkInVerifyOtp",
+        "description": "ตรวจสอบ Token เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header และตรวจสอบ OTP ที่เจ้าหน้าที่กรอกข้อมูลเข้ามาว่าถูกต้องและตรงกันกับ telegram หรือไม่",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "otpCode": {
+                    "type": "string",
+                    "example": "123456",
+                    "description": "รหัส OTP 6 หลักจาก Application Telegram"
+                  }
+                },
+                "required": [
+                  "otp"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ลงทะเบียนเข้างานเสร็จสิ้น!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Server ไม่สามารถประมวลผลคำร้องขอเนื่องจากข้อผิดพลาดของ Client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "OTP หมดอายุหรือไม่ถูกต้อง || OTP ไม่ถูกต้อง"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "การเข้าถึงถูกปฏิเสธ! || Token ไม่ถูกต้อง || ไม่มี Chat ID ใน Token"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ( Not found )",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Data not found!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/publicAPI/checkOut": {
+      "get": {
+        "tags": [
+          "AttendanceRecord"
+        ],
+        "summary": "สำหรับ checkOut หรือลงชื่อออกงาน",
+        "description": "สำหรับ checkOut หรือลงชื่อออกงาน",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "national_id": {
+                    "type": "string",
+                    "example": "L5vFjTdZFX8LG+hvejyrG97+5BdbGeY0=",
+                    "description": "เลขบัตรประจำตัวประชาชนที่มีการเข้ารหัสในรูปแบบของ CryptoJS"
+                  }
+                },
+                "required": [
+                  "national_id"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ลงเวลาออกงานเสร็จสิ้น"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Server ไม่สามารถประมวลผลคำร้องขอเนื่องจากข้อผิดพลาดของ Client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "กรุณากรอกข้อมูลให้ครบถ้วน"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มี User นี้อยู่ในระบบ กรุณา Register ก่อนใช้งาน! || User นี้ไม่มีการ CheckIn เข้าทำงาน! || ไม่มีข้อมูล (สถานะการออกงาน) กรุณาเพิ่มข้อมูลก่อน!"
                     }
                   }
                 }
