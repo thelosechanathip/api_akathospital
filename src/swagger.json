@@ -4096,6 +4096,138 @@
         }
       }
     },
+    "/akatApi/publicAPI/fetchDataAllAttendanceRecord": {
+      "get": {
+        "tags": [
+          "AttendanceRecord"
+        ],
+        "summary": "สำหรับดึงข้อมูล AttendanceRecord",
+        "description": "สำหรับดึงข้อมูลทั้งหมดของ AttendanceRecord",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "attendance_record_id": {
+                            "type": "integer",
+                            "example": 1
+                          },
+                          "users": {
+                            "type": "object",
+                            "items": {
+                              "fullname_thai": {
+                                "type": "string",
+                                "example": "นายดำ ขำแห้ง"
+                              }
+                            }
+                          },
+                          "shift_types": {
+                            "type": "object",
+                            "items": {
+                              "shift_type_name": {
+                                "type": "string",
+                                "example": "OnCall"
+                              }
+                            }
+                          },
+                          "shifts": {
+                            "type": "object",
+                            "items": {
+                              "shift_name": {
+                                "type": "string",
+                                "example": "เช้า"
+                              }
+                            }
+                          },
+                          "starting": {
+                            "type": "string",
+                            "example": "10:33:35"
+                          },
+                          "check_in_status": {
+                            "type": "object",
+                            "items": {
+                              "check_in_status_name": {
+                                "type": "string",
+                                "example": "เข้างาน"
+                              }
+                            }
+                          },
+                          "ending": {
+                            "type": "string",
+                            "example": "10:34:00"
+                          },
+                          "check_out_status": {
+                            "type": "object",
+                            "items": {
+                              "check_out_status_name": {
+                                "type": "string",
+                                "example": "ออกก่อนเวลา"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีข้อมูลบน Database!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/akatApi/publicAPI/checkIn": {
       "get": {
         "tags": [

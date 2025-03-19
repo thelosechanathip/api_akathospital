@@ -33,6 +33,50 @@ const sendTelegramMessage = async (chatId, otpCode) => {
     }
 };
 
+exports.fetchDataAllAttendanceRecord = async (req, res) => {
+    try {
+        const resultData = await pm.attendance_records.findMany({
+            select: {
+                attendance_record_id: true,
+                users: {
+                    select: {
+                        fullname_thai: true
+                    }
+                },
+                shift_types: {
+                    select: {
+                        shift_type_name: true
+                    }
+                },
+                shifts: {
+                    select: {
+                        shift_name: true
+                    }
+                },
+                starting: true,
+                check_in_status: {
+                    select: {
+                        check_in_status_name: true
+                    }
+                },
+                ending: true,
+                check_out_status: {
+                    select: {
+                        check_out_status_name: true
+                    }
+                }
+            }
+        });
+
+        if(resultData.length === 0) return msg(res, 404, { message: 'ไม่มีข้อมูลบน Database!' });
+
+        return msg(res, 200, { data: resultData });
+    } catch (error) {
+        console.error("Error fetchDataAllAttendanceRecord:", error.message);
+        return msg(res, 500, { message: "Internal Server Error" });
+    }
+}
+
 exports.checkIn = async (req, res) => {
     try {
         let timeNow = moment().format('HH:mm:ss'); // ดึงเวลาปัจจุบัน
@@ -46,10 +90,20 @@ exports.checkIn = async (req, res) => {
             where: { national_id },
             select: { user_id: true, telegram_chat_id: true }
         });
-
         if(!checkUser) return msg(res, 404, { message: 'ไม่มี User นี้อยู่ในระบบ กรุณา Register ก่อนใช้งาน!' });
-
         if(!checkUser.telegram_chat_id) return msg(res, 400, { message: 'ไม่มี TelegramChatId ใน User กรุณาติดต่อ Admin เพื่อเพิ่มข้อมูล!' });
+
+        const checkDataAttendanceRecord = await pm.attendance_records.findFirst({
+            where: {
+                user_id: checkUser.user_id,
+                ending: null,
+                check_out_status_id: null
+            },
+            select: {
+                attendance_record_id: true
+            }
+        });
+        if(checkDataAttendanceRecord) return msg(res, 409, { message: 'มีข้อมูลซ้ำที่ยังไม่ได้ Check Out กรุณา Check Out ก่อน!' });
 
         // ตรวจสอบว่า shift_type_id มีอยู่จริงหรือไม่
         const checkShiftTypeId = await pm.shift_types.findFirst({
@@ -62,7 +116,7 @@ exports.checkIn = async (req, res) => {
         let fetchDataOneShift = null;
 
         if(req.body.shift_type_id === 1) { // เวลาปกติ
-            fetchDataOneShift = await pm.shifts.findFirst({
+            const fetchDataOneShiftResult = await pm.shifts.findFirst({
                 where: {
                     shift_starting: { lte: timeNow },
                     shift_ending: { gte: timeNow }
@@ -74,22 +128,9 @@ exports.checkIn = async (req, res) => {
                     shift_starting: true,
                     shift_ending: true
                 }
-            });
-
-            const checkDataAttendanceRecord = await pm.attendance_records.findFirst({
-                where: {
-                    shift_id: fetchDataOneShift.shift_id,
-                    user_id: checkUser.user_id,
-                    ending: null,
-                    check_out_status_id: null
-                },
-                select: {
-                    attendance_record_id: true
-                }
-            });
-            if(checkDataAttendanceRecord) return msg(res, 409, { message: 'มีข้อมูลซ้ำที่ยังไม่ได้ Check Out กรุณา Check Out ก่อน!' });
-
-            if (!fetchDataOneShift) return msg(res, 400, { message: "ไม่พบกะการทำงานที่ตรงกับเวลาปัจจุบัน" });
+            });            
+            if (!fetchDataOneShiftResult) return msg(res, 400, { message: "ไม่พบกะการทำงานที่ตรงกับเวลาปัจจุบัน" });
+            fetchDataOneShift = fetchDataOneShiftResult.shift_id
 
             fetchDataOneCheckInStatus = await pm.check_in_status.findFirst({
                 where: {
@@ -101,12 +142,46 @@ exports.checkIn = async (req, res) => {
                 }
             });
         } else if(req.body.shift_type_id === 2) {
-            return msg(res, 200, { message: 'นอกเวลาราชการ' });
+            const fetchDataOneShiftResult = await pm.shifts.findFirst({
+                where: {
+                    shift_starting: { lte: timeNow },
+                    shift_ending: { gte: timeNow }
+                },
+                select: {
+                    shift_id: true,
+                    shift_name: true,
+                    shift_late: true,
+                    shift_starting: true,
+                    shift_ending: true
+                }
+            });            
+            if (!fetchDataOneShiftResult) return msg(res, 400, { message: "ไม่พบกะการทำงานที่ตรงกับเวลาปัจจุบัน" });
+            fetchDataOneShift = fetchDataOneShiftResult.shift_id
+
+            fetchDataOneCheckInStatus = await pm.check_in_status.findFirst({
+                where: {
+                    check_in_status_id: timeNow > fetchDataOneShift.shift_late ? 2 : 1
+                },
+                select: {
+                    check_in_status_id: true,
+                    check_in_status_name: true
+                }
+            });
         } else if(req.body.shift_type_id === 3) {
-            return msg(res, 200, { message: 'OnCall' });
+            fetchDataOneShift = null;
+
+            fetchDataOneCheckInStatus = await pm.check_in_status.findFirst({
+                where: {
+                    check_in_status_id: Number(1)
+                },
+                select: {
+                    check_in_status_id: true,
+                    check_in_status_name: true
+                }
+            });
         }
 
-        if (!fetchDataOneShift || !fetchDataOneCheckInStatus) return msg(res, 400, { message: "เกิดข้อผิดพลาดในการดึงข้อมูลกะการทำงานหรือสถานะเช็คอิน" });
+        if (!fetchDataOneCheckInStatus) return msg(res, 400, { message: "เกิดข้อผิดพลาดในการดึงข้อมูลกะการทำงานหรือสถานะเช็คอิน" });
 
         const { user_id, telegram_chat_id } = checkUser;
 
@@ -114,7 +189,7 @@ exports.checkIn = async (req, res) => {
             data: {
                 user_id: user_id,
                 shift_type_id: Number(req.body.shift_type_id),
-                shift_id: fetchDataOneShift.shift_id,
+                shift_id: fetchDataOneShift,
                 starting: timeNow,
                 check_in_status_id: fetchDataOneCheckInStatus.check_in_status_id
             }
@@ -218,19 +293,11 @@ exports.checkOut = async (req, res) => {
             }
         });
         if(!checkDataAttendanceRecord) return msg(res, 404, { message: "User นี้ไม่มีการ CheckIn เข้าทำงาน!" });
-
-        if(timeNow < checkDataAttendanceRecord.shifts.shift_early) {
-            const data = {
-                "text": "ออกก่อนเวลา",
-                checkDataAttendanceRecord: checkDataAttendanceRecord.shifts,
-                "time": timeNow
-            }
-    
-            return msg(res, 200, { message: data });
-        } else if(timeNow > checkDataAttendanceRecord.shifts.shift_ending) {
+        
+        if(checkDataAttendanceRecord.shift_id === null) {
             const fetchOneCheckOutStatus = await pm.check_out_status.findFirst({
                 where: {
-                    check_out_status_name: "ไม่มีการเช็คออกงาน"
+                    check_out_status_name: "ออกงาน"
                 },
                 select: {
                     check_out_status_id: true
@@ -247,16 +314,48 @@ exports.checkOut = async (req, res) => {
                     check_out_status_id: fetchOneCheckOutStatus.check_out_status_id 
                 }
             });
-    
-            
         } else {
-            const data = {
-                "text": "ออกงาน",
-                checkDataAttendanceRecord: checkDataAttendanceRecord.shifts,
-                "time": timeNow
-            }
+            if(timeNow < checkDataAttendanceRecord.shifts.shift_early) {
+                const fetchOneCheckOutStatus = await pm.check_out_status.findFirst({
+                    where: {
+                        check_out_status_name: "ออกก่อนเวลา"
+                    },
+                    select: {
+                        check_out_status_id: true
+                    }
+                });
+                if(!fetchOneCheckOutStatus) return msg(res, 404, { message: 'ไม่มีข้อมูล (สถานะการออกงาน) กรุณาเพิ่มข้อมูลก่อน!' });
     
-            return msg(res, 200, { message: data });
+                await pm.attendance_records.update({
+                    where: {
+                        attendance_record_id: checkDataAttendanceRecord.attendance_record_id
+                    },
+                    data: {
+                        ending: timeNow,
+                        check_out_status_id: fetchOneCheckOutStatus.check_out_status_id 
+                    }
+                });
+            } else {
+                const fetchOneCheckOutStatus = await pm.check_out_status.findFirst({
+                    where: {
+                        check_out_status_name: "ออกงาน"
+                    },
+                    select: {
+                        check_out_status_id: true
+                    }
+                });
+                if(!fetchOneCheckOutStatus) return msg(res, 404, { message: 'ไม่มีข้อมูล (สถานะการออกงาน) กรุณาเพิ่มข้อมูลก่อน!' });
+    
+                await pm.attendance_records.update({
+                    where: {
+                        attendance_record_id: checkDataAttendanceRecord.attendance_record_id
+                    },
+                    data: {
+                        ending: timeNow,
+                        check_out_status_id: fetchOneCheckOutStatus.check_out_status_id 
+                    }
+                });
+            }
         }
 
         return msg(res, 200, { message: "ลงเวลาออกงานเสร็จสิ้น" });
