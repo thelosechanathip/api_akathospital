@@ -64,7 +64,11 @@ exports.fetchDataAllAttendanceRecord = async (req, res) => {
                     select: {
                         check_out_status_name: true
                     }
-                }
+                },
+                created_at: true,
+                created_by:true,
+                updated_at: true,
+                updated_by:true
             }
         });
 
@@ -76,6 +80,64 @@ exports.fetchDataAllAttendanceRecord = async (req, res) => {
         return msg(res, 500, { message: "Internal Server Error" });
     }
 }
+
+exports.searchAttendanceRecords = async (req, res) => {
+    try {
+        const { keyword } = req.params; // รับ keyword จาก URL parameter
+
+        // ตรวจสอบว่า keyword เป็นตัวเลขหรือไม่
+        const isNumber = !isNaN(keyword);
+        const isDate = !isNaN(Date.parse(keyword)); // ตรวจสอบว่าเป็นวันที่หรือไม่
+        const isTime = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/.test(keyword); // ตรวจสอบว่าเป็นเวลาไหม (HH:mm:ss)
+
+        const resultData = await pm.attendance_records.findMany({
+            where: {
+                OR: [
+                    // ค้นหาแบบ LIKE เฉพาะฟิลด์ที่เป็น STRING
+                    { users: { fullname_thai: { contains: keyword } } },
+                    { shift_types: { shift_type_name: { contains: keyword } } },
+                    { shifts: { shift_name: { contains: keyword } } },
+                    { check_in_status: { check_in_status_name: { contains: keyword } } },
+                    { check_out_status: { check_out_status_name: { contains: keyword } } },
+
+                    // ค้นหาเฉพาะตัวเลขในฟิลด์ที่เป็น INT
+                    isNumber ? { attendance_record_id: parseInt(keyword) } : {},
+
+                    // ค้นหาด้วยเวลาในฟิลด์ starting / ending
+                    isTime ? { starting: { contains: keyword } } : {},
+                    isTime ? { ending: { contains: keyword } } : {},
+
+                    // ค้นหาด้วยวันที่ใน created_at / updated_at
+                    isDate ? { created_at: { gte: new Date(keyword), lte: new Date(keyword + "T23:59:59.999Z") } } : {},
+                    isDate ? { updated_at: { gte: new Date(keyword), lte: new Date(keyword + "T23:59:59.999Z") } } : {}
+                ]
+            },
+            select: {
+                attendance_record_id: true,
+                starting: true,
+                ending: true,
+                users: { select: { fullname_thai: true } },
+                shift_types: { select: { shift_type_name: true } },
+                shifts: { select: { shift_name: true } },
+                check_in_status: { select: { check_in_status_name: true } },
+                check_out_status: { select: { check_out_status_name: true } },
+                created_at: true,
+                created_by:true,
+                updated_at: true,
+                updated_by:true
+            }
+        });
+
+        if (resultData.length === 0) {
+            return res.status(404).json({ message: 'ไม่มีข้อมูลบน Database!' });
+        }
+
+        return res.status(200).json({ data: resultData });
+    } catch (error) {
+        console.error("Error searchAttendanceRecords:", error.message);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};
 
 exports.checkIn = async (req, res) => {
     try {
@@ -134,7 +196,7 @@ exports.checkIn = async (req, res) => {
 
             fetchDataOneCheckInStatus = await pm.check_in_status.findFirst({
                 where: {
-                    check_in_status_id: timeNow > fetchDataOneShift.shift_late ? 2 : 1
+                    check_in_status_id: timeNow > fetchDataOneShiftResult.shift_late ? 2 : 1
                 },
                 select: {
                     check_in_status_id: true,
@@ -160,7 +222,7 @@ exports.checkIn = async (req, res) => {
 
             fetchDataOneCheckInStatus = await pm.check_in_status.findFirst({
                 where: {
-                    check_in_status_id: timeNow > fetchDataOneShift.shift_late ? 2 : 1
+                    check_in_status_id: timeNow > fetchDataOneShiftResult.shift_late ? 2 : 1
                 },
                 select: {
                     check_in_status_id: true,
