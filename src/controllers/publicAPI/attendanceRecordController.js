@@ -38,33 +38,13 @@ exports.fetchDataAllAttendanceRecord = async (req, res) => {
         const resultData = await pm.attendance_records.findMany({
             select: {
                 attendance_record_id: true,
-                users: {
-                    select: {
-                        fullname_thai: true
-                    }
-                },
-                shift_types: {
-                    select: {
-                        shift_type_name: true
-                    }
-                },
-                shifts: {
-                    select: {
-                        shift_name: true
-                    }
-                },
+                users: { select: { prefix: true, fullname_thai: true } },
+                shift_types: { select: { shift_type_name: true } },
+                shifts: { select: { shift_name: true } },
                 starting: true,
-                check_in_status: {
-                    select: {
-                        check_in_status_name: true
-                    }
-                },
+                check_in_status: { select: { check_in_status_name: true } },
                 ending: true,
-                check_out_status: {
-                    select: {
-                        check_out_status_name: true
-                    }
-                },
+                check_out_status: { select: { check_out_status_name: true } },
                 created_at: true,
                 created_by:true,
                 updated_at: true,
@@ -116,7 +96,7 @@ exports.searchAttendanceRecords = async (req, res) => {
                 attendance_record_id: true,
                 starting: true,
                 ending: true,
-                users: { select: { fullname_thai: true } },
+                users: { select: { prefix: true, fullname_thai: true } },
                 shift_types: { select: { shift_type_name: true } },
                 shifts: { select: { shift_name: true } },
                 check_in_status: { select: { check_in_status_name: true } },
@@ -424,6 +404,18 @@ exports.checkOut = async (req, res) => {
 
     } catch (error) {
         console.error("Error checkOut:", error.message);
+        return msg(res, 500, { message: "Internal Server Error" });
+    }
+}
+
+exports.test = async (req, res) => {
+    try {
+        const { test_request } = req.body;
+        const headers = req.headers;
+
+        return msg(res, 200, headers);
+    } catch (error) {
+        console.error("Error test:", error.message);
         return msg(res, 500, { message: "Internal Server Error" });
     }
 }
