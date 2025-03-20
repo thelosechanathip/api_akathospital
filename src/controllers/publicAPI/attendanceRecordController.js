@@ -61,59 +61,6 @@ exports.fetchDataAllAttendanceRecord = async (req, res) => {
     }
 }
 
-// exports.searchAttendanceRecords = async (req, res) => {
-//     try {
-//         const { keyword } = req.params;
-
-//         const searchTerm = keyword.toLowerCase();
-
-//         const searchConditions = {
-//             OR: [
-//                 /^\d+$/.test(keyword) ? { attendance_record_id: parseInt(keyword) } : null,
-//                 { starting: { contains: searchTerm } },
-//                 { ending: { contains: searchTerm } },
-//                 { created_by: { contains: searchTerm } },
-//                 { updated_by: { contains: searchTerm } },
-//                 /^\d{4}-\d{2}-\d{2}$/.test(keyword) ? { created_at: { equals: new Date(keyword) } } : null,
-//                 /^\d{4}-\d{2}-\d{2}$/.test(keyword) ? { updated_at: { equals: new Date(keyword) } } : null,
-//                 { users: { fullname_thai: { contains: searchTerm } } },
-//                 { users: { prefix: { contains: searchTerm } } },
-//                 { shift_types: { shift_type_name: { contains: searchTerm } } },
-//                 { shifts: { shift_name: { contains: searchTerm } } },
-//                 { check_in_status: { check_in_status_name: { contains: searchTerm } } },
-//                 { check_out_status: { check_out_status_name: { contains: searchTerm } } },
-//             ].filter(Boolean)
-//         };
-
-//         const resultData = await pm.attendance_records.findMany({
-//             where: searchConditions,
-//             select: {
-//                 attendance_record_id: true,
-//                 starting: true,
-//                 ending: true,
-//                 users: { select: { prefix: true, fullname_thai: true } },
-//                 shift_types: { select: { shift_type_name: true } },
-//                 shifts: { select: { shift_name: true } },
-//                 check_in_status: { select: { check_in_status_name: true } },
-//                 check_out_status: { select: { check_out_status_name: true } },
-//                 created_at: true,
-//                 created_by: true,
-//                 updated_at: true,
-//                 updated_by: true
-//             }
-//         });
-
-//         if (resultData.length === 0) {
-//             return res.status(404).json({ message: 'ไม่มีข้อมูลบน Database!' });
-//         }
-
-//         return res.status(200).json({ data: resultData });
-//     } catch (error) {
-//         console.error("Error searchAttendanceRecords:", error.message);
-//         return res.status(500).json({ message: "Internal Server Error" });
-//     }
-// };
-
 exports.searchAttendanceRecords = async (req, res) => {
     try {
         const { keyword } = req.params;
