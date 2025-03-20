@@ -64,33 +64,36 @@ exports.fetchDataAllAttendanceRecord = async (req, res) => {
 exports.searchAttendanceRecords = async (req, res) => {
     try {
         const { keyword } = req.params; // รับ keyword จาก URL parameter
+        let dateFilter = {};
 
-        // ตรวจสอบว่า keyword เป็นตัวเลขหรือไม่
-        const isNumber = !isNaN(keyword);
-        const isDate = !isNaN(Date.parse(keyword)); // ตรวจสอบว่าเป็นวันที่หรือไม่
-        const isTime = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/.test(keyword); // ตรวจสอบว่าเป็นเวลาไหม (HH:mm:ss)
+        // ตรวจสอบว่า keyword เป็นวันที่ที่ถูกต้องหรือไม่
+        if (!isNaN(Date.parse(keyword)) && keyword.includes("-")) {
+            // ถ้า keyword เป็นวันที่ที่ถูกต้อง
+            const startDate = new Date(keyword);
+            const endDate = new Date(keyword + "T23:59:59.999Z");
+
+            dateFilter = {
+                OR: [
+                    { created_at: { gte: startDate, lte: endDate } },
+                    { updated_at: { gte: startDate, lte: endDate } }
+                ]
+            };
+        }
 
         const resultData = await pm.attendance_records.findMany({
             where: {
                 OR: [
-                    // ค้นหาแบบ LIKE เฉพาะฟิลด์ที่เป็น STRING
+                    // ถ้าเป็นตัวเลข ใช้ค้นหา id ได้
+                    !isNaN(keyword) ? { attendance_record_id: parseInt(keyword) } : null,
                     { users: { fullname_thai: { contains: keyword } } },
                     { shift_types: { shift_type_name: { contains: keyword } } },
                     { shifts: { shift_name: { contains: keyword } } },
                     { check_in_status: { check_in_status_name: { contains: keyword } } },
                     { check_out_status: { check_out_status_name: { contains: keyword } } },
-
-                    // ค้นหาเฉพาะตัวเลขในฟิลด์ที่เป็น INT
-                    isNumber ? { attendance_record_id: parseInt(keyword) } : {},
-
-                    // ค้นหาด้วยเวลาในฟิลด์ starting / ending
-                    isTime ? { starting: { contains: keyword } } : {},
-                    isTime ? { ending: { contains: keyword } } : {},
-
-                    // ค้นหาด้วยวันที่ใน created_at / updated_at
-                    isDate ? { created_at: { gte: new Date(keyword), lte: new Date(keyword + "T23:59:59.999Z") } } : {},
-                    isDate ? { updated_at: { gte: new Date(keyword), lte: new Date(keyword + "T23:59:59.999Z") } } : {}
-                ]
+                    { starting: { contains: keyword } },
+                    { ending: { contains: keyword } },
+                    dateFilter // เพิ่มเงื่อนไขวันที่ที่ตรวจสอบแล้ว
+                ].filter(Boolean) // ลบค่า null หรือ undefined ออกจากอาร์เรย์
             },
             select: {
                 attendance_record_id: true,
@@ -102,9 +105,9 @@ exports.searchAttendanceRecords = async (req, res) => {
                 check_in_status: { select: { check_in_status_name: true } },
                 check_out_status: { select: { check_out_status_name: true } },
                 created_at: true,
-                created_by:true,
+                created_by: true,
                 updated_at: true,
-                updated_by:true
+                updated_by: true
             }
         });
 
