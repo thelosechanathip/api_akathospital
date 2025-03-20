@@ -61,55 +61,100 @@ exports.fetchDataAllAttendanceRecord = async (req, res) => {
     }
 }
 
+// exports.searchAttendanceRecords = async (req, res) => {
+//     try {
+//         const { keyword } = req.params;
+
+//         const searchTerm = keyword.toLowerCase();
+
+//         const searchConditions = {
+//             OR: [
+//                 /^\d+$/.test(keyword) ? { attendance_record_id: parseInt(keyword) } : null,
+//                 { starting: { contains: searchTerm } },
+//                 { ending: { contains: searchTerm } },
+//                 { created_by: { contains: searchTerm } },
+//                 { updated_by: { contains: searchTerm } },
+//                 /^\d{4}-\d{2}-\d{2}$/.test(keyword) ? { created_at: { equals: new Date(keyword) } } : null,
+//                 /^\d{4}-\d{2}-\d{2}$/.test(keyword) ? { updated_at: { equals: new Date(keyword) } } : null,
+//                 { users: { fullname_thai: { contains: searchTerm } } },
+//                 { users: { prefix: { contains: searchTerm } } },
+//                 { shift_types: { shift_type_name: { contains: searchTerm } } },
+//                 { shifts: { shift_name: { contains: searchTerm } } },
+//                 { check_in_status: { check_in_status_name: { contains: searchTerm } } },
+//                 { check_out_status: { check_out_status_name: { contains: searchTerm } } },
+//             ].filter(Boolean)
+//         };
+
+//         const resultData = await pm.attendance_records.findMany({
+//             where: searchConditions,
+//             select: {
+//                 attendance_record_id: true,
+//                 starting: true,
+//                 ending: true,
+//                 users: { select: { prefix: true, fullname_thai: true } },
+//                 shift_types: { select: { shift_type_name: true } },
+//                 shifts: { select: { shift_name: true } },
+//                 check_in_status: { select: { check_in_status_name: true } },
+//                 check_out_status: { select: { check_out_status_name: true } },
+//                 created_at: true,
+//                 created_by: true,
+//                 updated_at: true,
+//                 updated_by: true
+//             }
+//         });
+
+//         if (resultData.length === 0) {
+//             return res.status(404).json({ message: 'ไม่มีข้อมูลบน Database!' });
+//         }
+
+//         return res.status(200).json({ data: resultData });
+//     } catch (error) {
+//         console.error("Error searchAttendanceRecords:", error.message);
+//         return res.status(500).json({ message: "Internal Server Error" });
+//     }
+// };
+
 exports.searchAttendanceRecords = async (req, res) => {
     try {
-        const { keyword } = req.params; // รับ keyword จาก URL parameter
-        let dateFilter = {};
+        const { keyword } = req.params;
+        const searchTerm = `%${keyword.toLowerCase()}%`;
 
-        // ตรวจสอบว่า keyword เป็นวันที่ที่ถูกต้องหรือไม่
-        if (!isNaN(Date.parse(keyword)) && keyword.includes("-")) {
-            // ถ้า keyword เป็นวันที่ที่ถูกต้อง
-            const startDate = new Date(keyword);
-            const endDate = new Date(keyword + "T23:59:59.999Z");
-
-            dateFilter = {
-                OR: [
-                    { created_at: { gte: startDate, lte: endDate } },
-                    { updated_at: { gte: startDate, lte: endDate } }
-                ]
-            };
-        }
-
-        const resultData = await pm.attendance_records.findMany({
-            where: {
-                OR: [
-                    // ถ้าเป็นตัวเลข ใช้ค้นหา id ได้
-                    !isNaN(keyword) ? { attendance_record_id: parseInt(keyword) } : null,
-                    { users: { fullname_thai: { contains: keyword } } },
-                    { shift_types: { shift_type_name: { contains: keyword } } },
-                    { shifts: { shift_name: { contains: keyword } } },
-                    { check_in_status: { check_in_status_name: { contains: keyword } } },
-                    { check_out_status: { check_out_status_name: { contains: keyword } } },
-                    { starting: { contains: keyword } },
-                    { ending: { contains: keyword } },
-                    dateFilter // เพิ่มเงื่อนไขวันที่ที่ตรวจสอบแล้ว
-                ].filter(Boolean) // ลบค่า null หรือ undefined ออกจากอาร์เรย์
-            },
-            select: {
-                attendance_record_id: true,
-                starting: true,
-                ending: true,
-                users: { select: { prefix: true, fullname_thai: true } },
-                shift_types: { select: { shift_type_name: true } },
-                shifts: { select: { shift_name: true } },
-                check_in_status: { select: { check_in_status_name: true } },
-                check_out_status: { select: { check_out_status_name: true } },
-                created_at: true,
-                created_by: true,
-                updated_at: true,
-                updated_by: true
-            }
-        });
+        const resultData = await pm.$queryRaw`
+            SELECT 
+                ar.attendance_record_id,
+                ar.starting,
+                ar.ending,
+                u.prefix,
+                u.fullname_thai,
+                st.shift_type_name,
+                s.shift_name,
+                cis.check_in_status_name,
+                cos.check_out_status_name,
+                ar.created_at,
+                ar.created_by,
+                ar.updated_at,
+                ar.updated_by
+            FROM attendance_records ar
+            LEFT JOIN users u ON ar.user_id = u.user_id  -- แก้จาก u.id เป็นคอลัมน์ที่ถูกต้อง
+            LEFT JOIN shift_types st ON ar.shift_type_id = st.shift_type_id
+            LEFT JOIN shifts s ON ar.shift_id = s.shift_id
+            LEFT JOIN check_in_status cis ON ar.check_in_status_id = cis.check_in_status_id
+            LEFT JOIN check_out_status cos ON ar.check_out_status_id = cos.check_out_status_id
+            WHERE 
+                ar.attendance_record_id = ${parseInt(keyword) || 0}
+                OR LOWER(ar.starting) LIKE ${searchTerm}
+                OR LOWER(ar.ending) LIKE ${searchTerm}
+                OR LOWER(ar.created_by) LIKE ${searchTerm}
+                OR LOWER(ar.updated_by) LIKE ${searchTerm}
+                OR LOWER(u.fullname_thai) LIKE ${searchTerm}
+                OR LOWER(u.prefix) LIKE ${searchTerm}
+                OR LOWER(st.shift_type_name) LIKE ${searchTerm}
+                OR LOWER(s.shift_name) LIKE ${searchTerm}
+                OR LOWER(cis.check_in_status_name) LIKE ${searchTerm}
+                OR LOWER(cos.check_out_status_name) LIKE ${searchTerm}
+                OR LOWER(CAST(ar.created_at AS CHAR)) LIKE ${searchTerm}
+                OR LOWER(CAST(ar.updated_at AS CHAR)) LIKE ${searchTerm}
+        `;
 
         if (resultData.length === 0) {
             return res.status(404).json({ message: 'ไม่มีข้อมูลบน Database!' });
