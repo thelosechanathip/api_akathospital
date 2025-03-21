@@ -91,9 +91,6 @@ exports.searchDateAttendanceRecord = async (req, res) => {
         // ปรับ endDate ให้ครอบคลุมทั้งวัน (ถึง 23:59:59.999)
         endDate.setHours(23, 59, 59, 999);
 
-        console.log("Start Date:", startDate.toISOString());
-        console.log("End Date:", endDate.toISOString());
-
         const resultData = await pm.attendance_records.findMany({
             where: {
                 created_at: {
@@ -469,18 +466,6 @@ exports.checkOut = async (req, res) => {
 
     } catch (error) {
         console.error("Error checkOut:", error.message);
-        return msg(res, 500, { message: "Internal Server Error" });
-    }
-}
-
-exports.test = async (req, res) => {
-    try {
-        const { test_request } = req.body;
-        const headers = req.headers;
-
-        return msg(res, 200, headers);
-    } catch (error) {
-        console.error("Error test:", error.message);
         return msg(res, 500, { message: "Internal Server Error" });
     }
 }
