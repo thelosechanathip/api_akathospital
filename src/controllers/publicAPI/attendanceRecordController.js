@@ -366,6 +366,7 @@ exports.checkInVerifyOtp = async (req, res) => {
 
 exports.checkOut = async (req, res) => {
     try {
+        let dateNow = moment().format('YYYY-MM-DD');
         let timeNow = moment().format('HH:mm:ss'); // ดึงเวลาปัจจุบัน
         // let timeNow = "15:30:01";
         if(!req.body.national_id) return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน!' });
@@ -397,6 +398,9 @@ exports.checkOut = async (req, res) => {
             }
         });
         if(!checkDataAttendanceRecord) return msg(res, 404, { message: "User นี้ไม่มีการ CheckIn เข้าทำงาน!" });
+
+        let attendanceRecordCreatedAt = checkDataAttendanceRecord.created_at;
+        let attendanceData = moment(attendanceRecordCreatedAt).format('YYYY-MM-DD');
         
         if(checkDataAttendanceRecord.shift_id === null) {
             const fetchOneCheckOutStatus = await pm.check_out_status.findFirst({
@@ -418,11 +422,51 @@ exports.checkOut = async (req, res) => {
                     check_out_status_id: fetchOneCheckOutStatus.check_out_status_id 
                 }
             });
+        } else if(attendanceData != dateNow) {
+            const fetchOneCheckOutStatus = await pm.check_out_status.findFirst({
+                where: {
+                    check_out_status_name: "ไม่มีการเช็คออกงาน"
+                },
+                select: {
+                    check_out_status_id: true
+                }
+            });
+            if(!fetchOneCheckOutStatus) return msg(res, 404, { message: 'ไม่มีข้อมูล (สถานะการออกงาน) กรุณาเพิ่มข้อมูลก่อน!' });
+
+            await pm.attendance_records.update({
+                where: {
+                    attendance_record_id: checkDataAttendanceRecord.attendance_record_id
+                },
+                data: {
+                    ending: timeNow,
+                    check_out_status_id: fetchOneCheckOutStatus.check_out_status_id 
+                }
+            });
         } else {
             if(timeNow < checkDataAttendanceRecord.shifts.shift_early) {
                 const fetchOneCheckOutStatus = await pm.check_out_status.findFirst({
                     where: {
                         check_out_status_name: "ออกก่อนเวลา"
+                    },
+                    select: {
+                        check_out_status_id: true
+                    }
+                });
+                if(!fetchOneCheckOutStatus) return msg(res, 404, { message: 'ไม่มีข้อมูล (สถานะการออกงาน) กรุณาเพิ่มข้อมูลก่อน!' });
+    
+                await pm.attendance_records.update({
+                    where: {
+                        attendance_record_id: checkDataAttendanceRecord.attendance_record_id
+                    },
+                    data: {
+                        ending: timeNow,
+                        check_out_status_id: fetchOneCheckOutStatus.check_out_status_id 
+                    }
+                });
+            } else if(timeNow > checkDataAttendanceRecord.shifts.shift_ending) {
+                const fetchOneCheckOutStatus = await pm.check_out_status.findFirst({
+                    where: {
+                        check_out_status_name: "ไม่มีการเช็คออกงาน"
                     },
                     select: {
                         check_out_status_id: true
