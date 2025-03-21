@@ -2,13 +2,14 @@ const express = require('express');
 const router = express.Router();
 const { authCheckToken, authCheckTokenAdmin } = require('../../middleware/auth/authAdmin');
 const { getAllDataComplaints, insertDataComplaint, removeDataComplaint } = require('../../controllers/publicAPI/complaintController');
-const { test, fetchDataAllAttendanceRecord, searchAttendanceRecords, checkIn, checkInVerifyOtp, checkOut } = require('../../controllers/publicAPI/attendanceRecordController');
+const { test, fetchDataAllAttendanceRecord, searchDateAttendanceRecord, searchAttendanceRecords, checkIn, checkInVerifyOtp, checkOut } = require('../../controllers/publicAPI/attendanceRecordController');
 
 router.get('/getComplaints', getAllDataComplaints);
 router.post('/insertComplaint', insertDataComplaint);
 router.delete('/removeComplaint/:id', removeDataComplaint);
 
 router.get('/fetchDataAllAttendanceRecord', authCheckToken, fetchDataAllAttendanceRecord);
+router.get('/searchDateAttendanceRecord/:date_start/:date_end', authCheckToken, searchDateAttendanceRecord);
 router.get('/searchAttendanceRecords/:keyword', authCheckToken, searchAttendanceRecords);
 router.get('/test', test);
 router.post('/checkIn', checkIn);

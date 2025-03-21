@@ -35,7 +35,18 @@ const sendTelegramMessage = async (chatId, otpCode) => {
 
 exports.fetchDataAllAttendanceRecord = async (req, res) => {
     try {
+        // คำนวณวันที่เริ่มต้นและสิ้นสุดของเดือนปัจจุบัน
+        const now = new Date(); // วันที่ปัจจุบัน (20 มี.ค. 2025)
+        const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1); // วันแรกของเดือนนี้
+        const endOfCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999); // วันสุดท้ายของเดือนนี้
+
         const resultData = await pm.attendance_records.findMany({
+            where: {
+                created_at: {
+                    gte: startOfCurrentMonth, // มากกว่าหรือเท่ากับวันแรกของเดือนปัจจุบัน
+                    lte: endOfCurrentMonth    // น้อยกว่าหรือเท่ากับวันสุดท้ายของเดือนปัจจุบัน
+                }
+            },
             select: {
                 attendance_record_id: true,
                 users: { select: { prefix: true, fullname_thai: true } },
@@ -46,62 +57,121 @@ exports.fetchDataAllAttendanceRecord = async (req, res) => {
                 ending: true,
                 check_out_status: { select: { check_out_status_name: true } },
                 created_at: true,
-                created_by:true,
+                created_by: true,
                 updated_at: true,
-                updated_by:true
+                updated_by: true
             }
         });
 
-        if(resultData.length === 0) return msg(res, 404, { message: 'ไม่มีข้อมูลบน Database!' });
+        if (resultData.length === 0) {
+            console.log("No data found for the specified range");
+            return msg(res, 404, { message: 'ไม่มีข้อมูลบน Database!' });
+        }
 
         return msg(res, 200, { data: resultData });
     } catch (error) {
         console.error("Error fetchDataAllAttendanceRecord:", error.message);
         return msg(res, 500, { message: "Internal Server Error" });
     }
-}
+};
+
+exports.searchDateAttendanceRecord = async (req, res) => {
+    try {
+        const { date_start, date_end } = req.params;
+
+        // แปลง date_start และ date_end ให้เป็น Date object
+        const startDate = new Date(date_start);
+        const endDate = new Date(date_end);
+
+        // ตรวจสอบว่าวันที่ถูกต้องหรือไม่
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+            return msg(res, 400, { message: 'วันที่ไม่ถูกต้อง กรุณาระบุในรูปแบบ YYYY-MM-DD!' });
+        }
+
+        // ปรับ endDate ให้ครอบคลุมทั้งวัน (ถึง 23:59:59.999)
+        endDate.setHours(23, 59, 59, 999);
+
+        console.log("Start Date:", startDate.toISOString());
+        console.log("End Date:", endDate.toISOString());
+
+        const resultData = await pm.attendance_records.findMany({
+            where: {
+                created_at: {
+                    gte: startDate, // มากกว่าหรือเท่ากับวันที่เริ่มต้น
+                    lte: endDate    // น้อยกว่าหรือเท่ากับวันที่สิ้นสุด
+                }
+            },
+            select: {
+                attendance_record_id: true,
+                users: { select: { prefix: true, fullname_thai: true } },
+                shift_types: { select: { shift_type_name: true } },
+                shifts: { select: { shift_name: true } },
+                starting: true,
+                check_in_status: { select: { check_in_status_name: true } },
+                ending: true,
+                check_out_status: { select: { check_out_status_name: true } },
+                created_at: true,
+                created_by: true,
+                updated_at: true,
+                updated_by: true
+            }
+        });
+
+        if (resultData.length === 0) {
+            console.log("No data found for the specified range");
+            return msg(res, 404, { message: 'ไม่มีข้อมูลบน Database!' });
+        }
+
+        return msg(res, 200, { data: resultData });
+    } catch (error) {
+        console.error("Error searchDateAttendanceRecord:", error.message);
+        return msg(res, 500, { message: "Internal Server Error" });
+    }
+};
 
 exports.searchAttendanceRecords = async (req, res) => {
     try {
         const { keyword } = req.params;
-        const searchTerm = `%${keyword.toLowerCase()}%`;
 
-        const resultData = await pm.$queryRaw`
-            SELECT 
-                ar.attendance_record_id,
-                ar.starting,
-                ar.ending,
-                u.prefix,
-                u.fullname_thai,
-                st.shift_type_name,
-                s.shift_name,
-                cis.check_in_status_name,
-                cos.check_out_status_name,
-                ar.created_at,
-                ar.created_by,
-                ar.updated_at,
-                ar.updated_by
-            FROM attendance_records ar
-            LEFT JOIN users u ON ar.user_id = u.user_id  -- แก้จาก u.id เป็นคอลัมน์ที่ถูกต้อง
-            LEFT JOIN shift_types st ON ar.shift_type_id = st.shift_type_id
-            LEFT JOIN shifts s ON ar.shift_id = s.shift_id
-            LEFT JOIN check_in_status cis ON ar.check_in_status_id = cis.check_in_status_id
-            LEFT JOIN check_out_status cos ON ar.check_out_status_id = cos.check_out_status_id
-            WHERE 
-                ar.attendance_record_id = ${parseInt(keyword) || 0}
-                OR LOWER(ar.starting) LIKE ${searchTerm}
-                OR LOWER(ar.ending) LIKE ${searchTerm}
-                OR LOWER(ar.created_by) LIKE ${searchTerm}
-                OR LOWER(ar.updated_by) LIKE ${searchTerm}
-                OR LOWER(u.fullname_thai) LIKE ${searchTerm}
-                OR LOWER(u.prefix) LIKE ${searchTerm}
-                OR LOWER(st.shift_type_name) LIKE ${searchTerm}
-                OR LOWER(s.shift_name) LIKE ${searchTerm}
-                OR LOWER(cis.check_in_status_name) LIKE ${searchTerm}
-                OR LOWER(cos.check_out_status_name) LIKE ${searchTerm}
-                OR LOWER(CAST(ar.created_at AS CHAR)) LIKE ${searchTerm}
-                OR LOWER(CAST(ar.updated_at AS CHAR)) LIKE ${searchTerm}
-        `;
+        // ตรวจสอบว่า keyword เป็นตัวเลขหรือไม่
+        const isNumeric = !isNaN(keyword) && !isNaN(parseInt(keyword));
+        const attendanceIdCondition = isNumeric ? { attendance_record_id: { equals: parseInt(keyword) } } : {};
+
+        const resultData = await pm.attendance_records.findMany({
+            where: {
+                OR: [
+                    ...(isNumeric ? [attendanceIdCondition] : []),
+                    {
+                        users: {
+                            OR: [
+                                { prefix: { contains: keyword } },
+                                { fullname_thai: { contains: keyword } }
+                            ]
+                        }
+                    },
+                    { shift_types: { shift_type_name: { contains: keyword } } },
+                    { shifts: { shift_name: { contains: keyword } } },
+                    { starting: { contains: keyword } },
+                    { check_in_status: { check_in_status_name: { contains: keyword } } },
+                    { ending: { contains: keyword } },
+                    { check_out_status: { check_out_status_name: { contains: keyword } } }
+                ]
+            },
+            select: {
+                attendance_record_id: true,
+                users: { select: { prefix: true, fullname_thai: true } },
+                shift_types: { select: { shift_type_name: true } },
+                shifts: { select: { shift_name: true } },
+                starting: true,
+                check_in_status: { select: { check_in_status_name: true } },
+                ending: true,
+                check_out_status: { select: { check_out_status_name: true } },
+                created_at: true,
+                created_by: true,
+                updated_at: true,
+                updated_by: true
+            }
+        });
 
         if (resultData.length === 0) {
             return res.status(404).json({ message: 'ไม่มีข้อมูลบน Database!' });
@@ -256,7 +326,7 @@ exports.checkIn = async (req, res) => {
 
 exports.checkInVerifyOtp = async (req, res) => {
     const authHeader = req.headers.authorization;
-    if (!authHeader) return msg(res, 401, { message: 'การเข้าถึงถูกปฏิเสธ!' });
+    if (!authHeader) return msg(res, 400, { message: 'การเข้าถึงถูกปฏิเสธ!' });
 
     const token = authHeader.split(' ')[1];
 
@@ -301,7 +371,7 @@ exports.checkOut = async (req, res) => {
     try {
         let timeNow = moment().format('HH:mm:ss'); // ดึงเวลาปัจจุบัน
         // let timeNow = "15:30:01";
-        if(!req.body.national_id) return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน' });
+        if(!req.body.national_id) return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน!' });
 
         const bytes = CryptoJS.AES.decrypt(req.body.national_id, process.env.PASS_KEY);
         const national_id = bytes.toString(CryptoJS.enc.Utf8);

@@ -4418,7 +4418,7 @@
             }
           },
           "400": {
-            "description": "Server ไม่สามารถประมวลผลคำร้องขอเนื่องจากข้อผิดพลาดของ Client",
+            "description": "ข้อมูลจาก Client ไม่ถูกต้อง",
             "content": {
               "application/json": {
                 "schema": {
@@ -4426,7 +4426,7 @@
                   "properties": {
                     "message": {
                       "type": "string",
-                      "example": "OTP หมดอายุหรือไม่ถูกต้อง || OTP ไม่ถูกต้อง"
+                      "example": "การเข้าถึงถูกปฏิเสธ! || กรุณากรอกข้อมูลให้ครบถ้วน!"
                     }
                   }
                 }
@@ -4442,7 +4442,23 @@
                   "properties": {
                     "message": {
                       "type": "string",
-                      "example": "การเข้าถึงถูกปฏิเสธ! || Token ไม่ถูกต้อง || ไม่มี Chat ID ใน Token"
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || ไม่มี Chat ID ใน Token || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Server ปฏิเสธการร้องขอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
                     }
                   }
                 }
@@ -4458,7 +4474,7 @@
                   "properties": {
                     "message": {
                       "type": "string",
-                      "example": "Data not found!"
+                      "example": "ไม่มีข้อมูลบน Database! || ไม่มี User นี้อยู่ในระบบ กรุณา Register ก่อนใช้งาน! || User นี้ไม่มีการ CheckIn เข้าทำงาน! || ไม่มีข้อมูล (สถานะการออกงาน) กรุณาเพิ่มข้อมูลก่อน!"
                     }
                   }
                 }
@@ -4529,7 +4545,7 @@
             }
           },
           "400": {
-            "description": "Server ไม่สามารถประมวลผลคำร้องขอเนื่องจากข้อผิดพลาดของ Client",
+            "description": "ข้อมูลจาก Client ไม่ถูกต้อง",
             "content": {
               "application/json": {
                 "schema": {
@@ -4537,7 +4553,39 @@
                   "properties": {
                     "message": {
                       "type": "string",
-                      "example": "กรุณากรอกข้อมูลให้ครบถ้วน"
+                      "example": "การเข้าถึงถูกปฏิเสธ! || กรุณากรอกข้อมูลให้ครบถ้วน!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Server ปฏิเสธการร้องขอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
                     }
                   }
                 }
@@ -4545,7 +4593,7 @@
             }
           },
           "404": {
-            "description": "Resource ไม่พบ",
+            "description": "Resource ไม่พบ( Not found )",
             "content": {
               "application/json": {
                 "schema": {
@@ -4553,7 +4601,7 @@
                   "properties": {
                     "message": {
                       "type": "string",
-                      "example": "ไม่มี User นี้อยู่ในระบบ กรุณา Register ก่อนใช้งาน! || User นี้ไม่มีการ CheckIn เข้าทำงาน! || ไม่มีข้อมูล (สถานะการออกงาน) กรุณาเพิ่มข้อมูลก่อน!"
+                      "example": "ไม่มีข้อมูลบน Database! || ไม่มี User นี้อยู่ในระบบ กรุณา Register ก่อนใช้งาน! || User นี้ไม่มีการ CheckIn เข้าทำงาน! || ไม่มีข้อมูล (สถานะการออกงาน) กรุณาเพิ่มข้อมูลก่อน!"
                     }
                   }
                 }
@@ -4605,7 +4653,7 @@
               "type": "integer",
               "example": 1
             },
-            "description": "Keyword ของ Complaint ที่ต้องการลบ"
+            "description": "Keyword ของ AttendanceRecord ที่ต้องการหาข้อมูล"
           }
         ],
         "responses": {
@@ -4702,8 +4750,272 @@
               }
             }
           },
+          "400": {
+            "description": "ข้อมูลจาก Client ไม่ถูกต้อง",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "การเข้าถึงถูกปฏิเสธ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Server ปฏิเสธการร้องขอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "404": {
-            "description": "Resource ไม่พบ",
+            "description": "Resource ไม่พบ( Not found )",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีข้อมูลบน Database!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/publicAPI/searchDateAttendanceRecord/{date_start}/{date_end}": {
+      "get": {
+        "tags": [
+          "AttendanceRecord"
+        ],
+        "summary": "สำหรับดึงข้อมูล AttendanceRecord",
+        "description": "สำหรับดึงข้อมูลทั้งหมดของ AttendanceRecord",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          },
+          {
+            "name": "date_start",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            },
+            "description": "date_start ของ AttendanceRecord ที่ต้องการหาข้อมูล"
+          },
+          {
+            "name": "date_end",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            },
+            "description": "date_end ของ AttendanceRecord ที่ต้องการหาข้อมูล"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "attendance_record_id": {
+                            "type": "integer",
+                            "example": 1
+                          },
+                          "users": {
+                            "type": "object",
+                            "items": {
+                              "fullname_thai": {
+                                "type": "string",
+                                "example": "นายดำ ขำแห้ง"
+                              }
+                            }
+                          },
+                          "shift_types": {
+                            "type": "object",
+                            "items": {
+                              "shift_type_name": {
+                                "type": "string",
+                                "example": "OnCall"
+                              }
+                            }
+                          },
+                          "shifts": {
+                            "type": "object",
+                            "items": {
+                              "shift_name": {
+                                "type": "string",
+                                "example": "เช้า"
+                              }
+                            }
+                          },
+                          "starting": {
+                            "type": "string",
+                            "example": "10:33:35"
+                          },
+                          "check_in_status": {
+                            "type": "object",
+                            "items": {
+                              "check_in_status_name": {
+                                "type": "string",
+                                "example": "เข้างาน"
+                              }
+                            }
+                          },
+                          "ending": {
+                            "type": "string",
+                            "example": "10:34:00"
+                          },
+                          "check_out_status": {
+                            "type": "object",
+                            "items": {
+                              "check_out_status_name": {
+                                "type": "string",
+                                "example": "ออกก่อนเวลา"
+                              }
+                            }
+                          },
+                          "created_at": {
+                            "type": "date",
+                            "example": "2025-03-19T05:34:20.000Z"
+                          },
+                          "created_by": {
+                            "type": "string",
+                            "example": "admin"
+                          },
+                          "updated_at": {
+                            "type": "date",
+                            "example": "2025-03-19T05:34:20.000Z"
+                          },
+                          "updated_by": {
+                            "type": "string",
+                            "example": "admin"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ข้อมูลจาก Client ไม่ถูกต้อง",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "การเข้าถึงถูกปฏิเสธ! || กรุณากรอกข้อมูลให้ครบถ้วน || วันที่ไม่ถูกต้อง กรุณาระบุในรูปแบบ YYYY-MM-DD!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Server ปฏิเสธการร้องขอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ( Not found )",
             "content": {
               "application/json": {
                 "schema": {
