@@ -7,6 +7,7 @@ const { getAllDataCheckOutStatus, insertDataCheckOutStatus, updateDataCheckOutSt
 const { getAllDataHolidays, syncDataHoliday, insertDataHoliday, updateDataHoliday, removeDataHoliday } = require('../../controllers/setting/holidayController');
 const { getAllDataShiftTypes, insertDataShiftType, updateDataShiftType, removeDataShiftType } = require('../../controllers/setting/shiftTypeController');
 const { getAllDataShifts, insertDataShift, updateDataShift, removeDataShift } = require('../../controllers/setting/shiftController');
+const { getAllDataActivityTopics, insertDataActivityTopic, updateDataActivityTopic, removeDataActivityTopic } = require('../../controllers/setting/activityTopicController');
 
 // ComplaintTopics
 router.get('/getComplaintTopics', getAllDataComplaintTopics);
@@ -41,5 +42,11 @@ router.get('/getShifts', authCheckTokenAdmin, getAllDataShifts);
 router.post('/insertShift', authCheckTokenAdmin, insertDataShift);
 router.put('/updateShift/:id', authCheckTokenAdmin, updateDataShift);
 router.delete('/removeShift/:id', authCheckTokenAdmin, removeDataShift);
+
+// ActivityTopic
+router.get('/getActivityTopics', authCheckTokenAdmin, getAllDataActivityTopics);
+router.post('/insertActivityTopic', authCheckTokenAdmin, insertDataActivityTopic);
+// router.put('/updateActivityTopic/:id', authCheckTokenAdmin, updateDataActivityTopic);
+// router.delete('/removeActivityTopic/:id', authCheckTokenAdmin, removeDataActivityTopic);
 
 module.exports = router;

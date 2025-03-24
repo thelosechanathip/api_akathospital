@@ -238,7 +238,7 @@ exports.checkIn = async (req, res) => {
 
             fetchDataOneCheckInStatus = await pm.check_in_status.findFirst({
                 where: {
-                    check_in_status_id: timeNow > fetchDataOneShiftResult.shift_late ? 2 : 1
+                    check_in_status_name: timeNow > fetchDataOneShiftResult.shift_late ? 'มาสาย' : 'เข้างาน'
                 },
                 select: {
                     check_in_status_id: true,
@@ -264,7 +264,7 @@ exports.checkIn = async (req, res) => {
 
             fetchDataOneCheckInStatus = await pm.check_in_status.findFirst({
                 where: {
-                    check_in_status_id: timeNow > fetchDataOneShiftResult.shift_late ? 2 : 1
+                    check_in_status_name: timeNow > fetchDataOneShiftResult.shift_late ? 'มาสาย' : 'เข้างาน'
                 },
                 select: {
                     check_in_status_id: true,
@@ -276,7 +276,7 @@ exports.checkIn = async (req, res) => {
 
             fetchDataOneCheckInStatus = await pm.check_in_status.findFirst({
                 where: {
-                    check_in_status_id: Number(1)
+                    check_in_status_name: 'เข้างาน'
                 },
                 select: {
                     check_in_status_id: true,
@@ -355,13 +355,47 @@ exports.checkInVerifyOtp = async (req, res) => {
         }
     } catch (err) {
         if (err.name === 'TokenExpiredError') {
+            const fetchDataOneAttendanceRecord = await pm.attendance_records.findMany({
+                where: {
+                    otp_verified: false
+                },
+                select: {
+                    attendance_record_id: true,
+                    starting: true
+                }
+            });
+    
+            const timeNow = new Date();
+            const nowInSeconds = timeNow.getHours() * 3600 + timeNow.getMinutes() * 60 + timeNow.getSeconds();
+    
+            for (const record of fetchDataOneAttendanceRecord) {
+                const [startHours, startMinutes, startSeconds] = record.starting.split(":").map(Number);
+                const startInSeconds = startHours * 3600 + startMinutes * 60 + startSeconds;
+                const diffInSeconds = Math.abs(nowInSeconds - startInSeconds);
+    
+                if (diffInSeconds >= 20) {
+                    // ลบข้อมูล
+                    await pm.attendance_records.delete({
+                        where: {
+                            attendance_record_id: record.attendance_record_id
+                        }
+                    });
+    
+                    // ดึงค่า MAX(attendance_record_id)
+                    const maxIdResult = await pm.$queryRaw`SELECT COALESCE(MAX(attendance_record_id), 0) + 1 AS nextId FROM attendance_records`;
+    
+                    // รีเซ็ตค่า AUTO_INCREMENT
+                    await pm.$executeRawUnsafe(`ALTER TABLE attendance_records AUTO_INCREMENT = ${maxIdResult[0].nextId}`);
+                }
+            }
+    
             return msg(res, 401, { message: 'TokenExpiredError!' });
         } else if (err.name === 'JsonWebTokenError') {
             return msg(res, 401, { message: 'JsonWebTokenError!' });
         }
         console.error('Error verifyToken :', err);
         return msg(res, 500, { message: 'Internal Server Error!' });
-    }
+    }    
 }
 
 exports.checkOut = async (req, res) => {

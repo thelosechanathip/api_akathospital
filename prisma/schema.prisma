@@ -132,6 +132,7 @@ model users {
   status             String?              @db.VarChar(50)
   created_at         DateTime             @default(now()) @db.Timestamp(0)
   updated_at         DateTime             @default(now()) @db.Timestamp(0)
+  activity_rooms     activity_rooms[]
   attendance_records attendance_records[]
   auth_tokens        auth_tokens[]
 }
@@ -162,4 +163,56 @@ model attendance_records {
   @@index([shift_type_id], map: "attendance_records_on_shift_types")
   @@index([shift_id], map: "attendance_records_on_shifts")
   @@index([user_id], map: "attendance_records_on_users")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model activity_rooms {
+  activity_room_id    Int             @id @default(autoincrement())
+  activity_topic_id   Int
+  user_id             Int
+  check_in_signature  Bytes           @db.Blob
+  check_in_status_id  Int
+  check_out_signature Bytes?          @db.Blob
+  check_out_status_id Int?
+  created_at          DateTime        @default(now()) @db.Timestamp(0)
+  created_by          String?         @db.VarChar(50)
+  updated_at          DateTime        @default(dbgenerated("('0000-00-00 00:00:00')")) @db.Timestamp(0)
+  updated_by          String?         @db.VarChar(50)
+  activity_topics     activity_topics @relation(fields: [activity_topic_id], references: [activity_topic_id], onUpdate: Restrict, map: "activity_rooms_on_activity_topics")
+  users               users           @relation(fields: [user_id], references: [user_id], onUpdate: Restrict, map: "activity_rooms_on_users")
+
+  @@index([activity_topic_id], map: "activity_rooms_on_activity_topics")
+  @@index([user_id], map: "activity_rooms_on_users")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model activity_topic_files {
+  activity_topic_file_id     Int             @id @default(autoincrement())
+  activity_topic_id          Int
+  activity_topic_file_name   String          @db.VarChar(50)
+  activity_topic_file        Bytes           @db.Blob
+  activity_topic_file_detail String?         @db.LongText
+  created_at                 DateTime        @default(now()) @db.Timestamp(0)
+  created_by                 String?         @default("admin") @db.VarChar(50)
+  updated_at                 DateTime        @default(now()) @db.Timestamp(0)
+  updated_by                 String?         @default("admin") @db.VarChar(50)
+  activity_topics            activity_topics @relation(fields: [activity_topic_id], references: [activity_topic_id], onUpdate: Restrict, map: "activity_topic_files_on_activity_topics")
+
+  @@index([activity_topic_id], map: "activity_topic_files_on_activity_topics")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model activity_topics {
+  activity_topic_id              Int                    @id @default(autoincrement())
+  activity_topic_name            String                 @db.VarChar(255)
+  activity_topic_date_time_start DateTime               @db.DateTime(0)
+  activity_topic_date_time_end   DateTime               @db.DateTime(0)
+  activity_topic_detail          String?                @db.LongText
+  activity_is_active             Boolean?               @default(true)
+  created_at                     DateTime               @default(now()) @db.Timestamp(0)
+  created_by                     String?                @default("admin") @db.VarChar(50)
+  updated_at                     DateTime               @default(now()) @db.Timestamp(0)
+  updated_by                     String?                @default("admin") @db.VarChar(50)
+  activity_rooms                 activity_rooms[]
+  activity_topic_files           activity_topic_files[]
 }
