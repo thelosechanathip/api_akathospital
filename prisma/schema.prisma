@@ -216,3 +216,120 @@ model activity_topics {
   activity_rooms                 activity_rooms[]
   activity_topic_files           activity_topic_files[]
 }
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model complaints_log {
+  complaint_log_id Int      @id @default(autoincrement())
+  ip_address       String   @db.VarChar(100)
+  name             String   @db.VarChar(100)
+  request_method   String   @db.VarChar(100)
+  endpoint         String   @db.VarChar(100)
+  execution_time   Float    @db.Float
+  row_count        Float    @db.Float
+  status           String   @db.VarChar(100)
+  created_at       DateTime @default(now()) @db.Timestamp(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model complaint_topics_log {
+  complaint_log_id Int      @id @default(autoincrement())
+  ip_address       String   @db.VarChar(100)
+  name             String   @db.VarChar(100)
+  request_method   String   @db.VarChar(100)
+  endpoint         String   @db.VarChar(100)
+  execution_time   Float    @db.Float
+  row_count        Float    @db.Float
+  status           String   @db.VarChar(100)
+  created_at       DateTime @default(now()) @db.Timestamp(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model check_in_status_log {
+  complaint_log_id Int      @id @default(autoincrement())
+  ip_address       String   @db.VarChar(100)
+  name             String   @db.VarChar(100)
+  request_method   String   @db.VarChar(100)
+  endpoint         String   @db.VarChar(100)
+  execution_time   Float    @db.Float
+  row_count        Float    @db.Float
+  status           String   @db.VarChar(100)
+  created_at       DateTime @default(now()) @db.Timestamp(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model check_out_status_log {
+  complaint_log_id Int      @id @default(autoincrement())
+  ip_address       String   @db.VarChar(100)
+  name             String   @db.VarChar(100)
+  request_method   String   @db.VarChar(100)
+  endpoint         String   @db.VarChar(100)
+  execution_time   Float    @db.Float
+  row_count        Float    @db.Float
+  status           String   @db.VarChar(100)
+  created_at       DateTime @default(now()) @db.Timestamp(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model holidays_log {
+  complaint_log_id Int      @id @default(autoincrement())
+  ip_address       String   @db.VarChar(100)
+  name             String   @db.VarChar(100)
+  request_method   String   @db.VarChar(100)
+  endpoint         String   @db.VarChar(100)
+  execution_time   Float    @db.Float
+  row_count        Float    @db.Float
+  status           String   @db.VarChar(100)
+  created_at       DateTime @default(now()) @db.Timestamp(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model shift_types_log {
+  complaint_log_id Int      @id @default(autoincrement())
+  ip_address       String   @db.VarChar(100)
+  name             String   @db.VarChar(100)
+  request_method   String   @db.VarChar(100)
+  endpoint         String   @db.VarChar(100)
+  execution_time   Float    @db.Float
+  row_count        Float    @db.Float
+  status           String   @db.VarChar(100)
+  created_at       DateTime @default(now()) @db.Timestamp(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model shifts_log {
+  complaint_log_id Int      @id @default(autoincrement())
+  ip_address       String   @db.VarChar(100)
+  name             String   @db.VarChar(100)
+  request_method   String   @db.VarChar(100)
+  endpoint         String   @db.VarChar(100)
+  execution_time   Float    @db.Float
+  row_count        Float    @db.Float
+  status           String   @db.VarChar(100)
+  created_at       DateTime @default(now()) @db.Timestamp(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model auth_log {
+  complaint_log_id Int      @id @default(autoincrement())
+  ip_address       String   @db.VarChar(100)
+  name             String   @db.VarChar(100)
+  request_method   String   @db.VarChar(100)
+  endpoint         String   @db.VarChar(100)
+  execution_time   Float    @db.Float
+  row_count        Float    @db.Float
+  status           String   @db.VarChar(100)
+  created_at       DateTime @default(now()) @db.Timestamp(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model attendance_records_log {
+  complaint_log_id Int      @id @default(autoincrement())
+  ip_address       String   @db.VarChar(100)
+  name             String   @db.VarChar(100)
+  request_method   String   @db.VarChar(100)
+  endpoint         String   @db.VarChar(100)
+  execution_time   Float    @db.Float
+  row_count        Float    @db.Float
+  status           String   @db.VarChar(100)
+  created_at       DateTime @default(now()) @db.Timestamp(0)
+}

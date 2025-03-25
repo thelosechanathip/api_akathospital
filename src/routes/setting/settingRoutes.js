@@ -10,10 +10,10 @@ const { getAllDataShifts, insertDataShift, updateDataShift, removeDataShift } = 
 const { getAllDataActivityTopics, insertDataActivityTopic, updateDataActivityTopic, removeDataActivityTopic } = require('../../controllers/setting/activityTopicController');
 
 // ComplaintTopics
-router.get('/getComplaintTopics', getAllDataComplaintTopics);
-router.post('/insertComplaintTopics', insertDataComplaintTopic);
-router.put('/updateComplaintTopics/:id', updateDataComplaintTopic);
-router.delete('/removeComplaintTopics/:id', removeDataComplaintTopic);
+router.get('/getComplaintTopics', authCheckTokenAdmin, getAllDataComplaintTopics);
+router.post('/insertComplaintTopics', authCheckTokenAdmin, insertDataComplaintTopic);
+router.put('/updateComplaintTopics/:id', authCheckTokenAdmin, updateDataComplaintTopic);
+router.delete('/removeComplaintTopics/:id', authCheckTokenAdmin, removeDataComplaintTopic);
 
 // CheckInStatus
 router.get('/getCheckInStatus', authCheckTokenAdmin, getAllDataCheckInStatus);

@@ -4,7 +4,24 @@ const { msg } = require('../../utils/message');
 // Function สำหรับ FetchAll ข้อมูลจาก Database
 exports.getAllDataShifts = async (req, res) => {
     try {
+        const fullname = req.user.fullname_thai;
+
+        const startTime = Date.now();
         const resultData = await pm.shifts.findMany();
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง shifts_log
+        await pm.shifts_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: resultData.length,
+                status: resultData.length > 0 ? 'Success' : 'No Data'
+            }
+        });
 
         if(resultData.length === 0) return msg(res, 404, { message: 'ไม่มีข้อมูลบน Database!' });
 
@@ -71,7 +88,8 @@ exports.insertDataShift = async (req, res) => {
         if (checkShiftNameResult) return msg(res, 409, { message: 'มี (shift_name) อยู่ในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!' });
 
         // บันทึกข้อมูล
-        await pm.shifts.create({
+        const startTime = Date.now();
+        const insertData = await pm.shifts.create({
             data: {
                 shift_name: shift_name,
                 shift_starting: shift_starting,
@@ -80,6 +98,20 @@ exports.insertDataShift = async (req, res) => {
                 shift_early: shift_early,
                 created_by: fullname,
                 updated_by: fullname
+            }
+        });
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง shifts_log
+        await pm.shifts_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: insertData ? 1 : 0,
+                status: insertData ? 'Success' : 'Failed'
             }
         });
 
@@ -155,7 +187,8 @@ exports.updateDataShift = async (req, res) => {
         });
         if (checkShiftNameResult) return msg(res, 409, { message: 'มี (shift_name) อยู่ในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!' });
 
-        await pm.shifts.update({
+        const startTime = Date.now();
+        const updateData = await pm.shifts.update({
             where: {
                 shift_id: Number(id)
             },
@@ -166,6 +199,20 @@ exports.updateDataShift = async (req, res) => {
                 shift_ending: shift_ending,
                 shift_early: shift_early,
                 updated_by: fullname
+            }
+        });
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง shifts_log
+        await pm.shifts_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: updateData ? 1 : 0,
+                status: updateData ? 'Success' : 'Failed'
             }
         });
 
@@ -180,6 +227,7 @@ exports.updateDataShift = async (req, res) => {
 exports.removeDataShift = async (req, res) => {
     try {
         const { id } = req.params;
+        const fullname = req.user.fullname_thai;
 
         // ตรวจสอบว่า ID มีอยู่จริงหรือไม่
         const checkIdShift = await pm.shifts.findFirst({
@@ -190,9 +238,24 @@ exports.removeDataShift = async (req, res) => {
         if (!checkIdShift) return msg(res, 404, { message: 'ไม่มี shift_id อยู่ในระบบ!' });
 
         // ลบข้อมูล
-        await pm.shifts.delete({
+        const startTime = Date.now();
+        const removeData = await pm.shifts.delete({
             where: {
                 shift_id: Number(id)
+            }
+        });
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง shifts_log
+        await pm.shifts_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: removeData ? 1 : 0,
+                status: removeData ? 'Success' : 'Failed'
             }
         });
 

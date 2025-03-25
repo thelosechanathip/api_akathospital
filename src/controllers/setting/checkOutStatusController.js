@@ -4,7 +4,24 @@ const { msg } = require('../../utils/message');
 // Function สำหรับ FetchAll ข้อมูลจาก Database
 exports.getAllDataCheckOutStatus = async (req, res) => {
     try {
+        const fullname = req.user.fullname_thai;
+
+        const startTime = Date.now();
         const resultData = await pm.check_out_status.findMany();
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง check_out_status_log
+        await pm.check_out_status_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: resultData.length,
+                status: resultData.length > 0 ? 'Success' : 'No Data'
+            }
+        });
 
         if(resultData.length === 0) return msg(res, 404, { message: 'ไม่มีข้อมูลบน Database!' });
 
@@ -31,11 +48,26 @@ exports.insertDataCheckOutStatus = async (req, res) => {
         });
         if(checkCheckOutStatusNameResult) return msg(res, 409, 'มี (check_out_status_name) อยู่ในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!');
 
-        await pm.check_out_status.create({
+        const startTime = Date.now();
+        const insertData = await pm.check_out_status.create({
             data: {
                 check_out_status_name: check_out_status_name,
                 created_by: fullname,
                 updated_by: fullname
+            }
+        });
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง check_out_status_log
+        await pm.check_out_status_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: insertData ? 1 : 0,
+                status: insertData ? 'Success' : 'Failed'
             }
         });
 
@@ -72,13 +104,28 @@ exports.updateDataCheckOutStatus = async (req, res) => {
         });
         if(checkCheckOutStatusNameResult) return msg(res, 409, 'มี (check_out_status_name) อยู่ในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!');
 
-        await pm.check_out_status.update({
+        const startTime = Date.now();
+        const updateData = await pm.check_out_status.update({
             where: {
                 check_out_status_id: Number(id)
             },
             data: {
                 check_out_status_name: check_out_status_name,
                 updated_by: fullname
+            }
+        });
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง check_out_status_log
+        await pm.check_out_status_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: updateData ? 1 : 0,
+                status: updateData ? 'Success' : 'Failed'
             }
         });
 
@@ -93,6 +140,7 @@ exports.updateDataCheckOutStatus = async (req, res) => {
 exports.removeDataCheckOutStatus = async (req, res) => {
     try {
         const { id } = req.params;
+        const fullname = req.user.fullname_thai;
 
         // ตรวจสอบว่า ID มีอยู่จริงหรือไม่
         const checkIdCheckOutStatus = await pm.check_out_status.findFirst({
@@ -103,9 +151,24 @@ exports.removeDataCheckOutStatus = async (req, res) => {
         if (!checkIdCheckOutStatus) return msg(res, 404, { message: 'ไม่มี check_out_status_id อยู่ในระบบ!' });
 
         // ลบข้อมูล
-        await pm.check_out_status.delete({
+        const startTime = Date.now();
+        const removeData = await pm.check_out_status.delete({
             where: {
                 check_out_status_id: Number(id)
+            }
+        });
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง check_out_status_log
+        await pm.check_out_status_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: removeData ? 1 : 0,
+                status: removeData ? 'Success' : 'Failed'
             }
         });
 

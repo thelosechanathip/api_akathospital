@@ -4,9 +4,9 @@ const { authCheckToken, authCheckTokenAdmin } = require('../../middleware/auth/a
 const { getAllDataComplaints, insertDataComplaint, removeDataComplaint } = require('../../controllers/publicAPI/complaintController');
 const { fetchDataAllAttendanceRecord, searchDateAttendanceRecord, searchAttendanceRecords, checkIn, checkInVerifyOtp, checkOut } = require('../../controllers/publicAPI/attendanceRecordController');
 
-router.get('/getComplaints', getAllDataComplaints);
+router.get('/getComplaints', authCheckToken, getAllDataComplaints);
 router.post('/insertComplaint', insertDataComplaint);
-router.delete('/removeComplaint/:id', removeDataComplaint);
+router.delete('/removeComplaint/:id', authCheckTokenAdmin, removeDataComplaint);
 
 router.get('/fetchDataAllAttendanceRecord', authCheckToken, fetchDataAllAttendanceRecord);
 router.get('/searchDateAttendanceRecord/:date_start/:date_end', authCheckToken, searchDateAttendanceRecord);

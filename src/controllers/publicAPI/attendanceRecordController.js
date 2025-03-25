@@ -9,14 +9,14 @@ const otpCache = new NodeCache({ stdTTL: 20 }); // รหัส OTP หมดอ
 const moment = require('moment');
 const pm = require('../../config/prisma');
 
-// ฟังก์ชันสร้างรหัส OTP (เฉพาะตัวเลข)
+// Function สร้างรหัส OTP (เฉพาะตัวเลข)
 const generateOtp = (identifier) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString(); // สร้างตัวเลข 6 หลัก
     otpCache.set(identifier, otp);
     return otp;
 };
 
-// ฟังก์ชันส่งข้อความผ่าน Telegram
+// Function ส่งข้อความผ่าน Telegram
 const sendTelegramMessage = async (chatId, otpCode) => {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const telegramApiUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
@@ -40,6 +40,9 @@ exports.fetchDataAllAttendanceRecord = async (req, res) => {
         const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1); // วันแรกของเดือนนี้
         const endOfCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999); // วันสุดท้ายของเดือนนี้
 
+        const fullname = req.user.fullname_thai;
+
+        const startTime = Date.now();
         const resultData = await pm.attendance_records.findMany({
             where: {
                 created_at: {
@@ -60,6 +63,20 @@ exports.fetchDataAllAttendanceRecord = async (req, res) => {
                 created_by: true,
                 updated_at: true,
                 updated_by: true
+            }
+        });
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง attendance_records_log
+        await pm.attendance_records_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: resultData.length,
+                status: resultData.length > 0 ? 'Fetch data success' : 'No Data'
             }
         });
 
@@ -91,6 +108,9 @@ exports.searchDateAttendanceRecord = async (req, res) => {
         // ปรับ endDate ให้ครอบคลุมทั้งวัน (ถึง 23:59:59.999)
         endDate.setHours(23, 59, 59, 999);
 
+        const fullname = req.user.fullname_thai;
+
+        const startTime = Date.now();
         const resultData = await pm.attendance_records.findMany({
             where: {
                 created_at: {
@@ -111,6 +131,20 @@ exports.searchDateAttendanceRecord = async (req, res) => {
                 created_by: true,
                 updated_at: true,
                 updated_by: true
+            }
+        });
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง attendance_records_log
+        await pm.attendance_records_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: resultData.length,
+                status: resultData.length > 0 ? 'Search data success' : 'No Data'
             }
         });
 
@@ -134,6 +168,9 @@ exports.searchAttendanceRecords = async (req, res) => {
         const isNumeric = !isNaN(keyword) && !isNaN(parseInt(keyword));
         const attendanceIdCondition = isNumeric ? { attendance_record_id: { equals: parseInt(keyword) } } : {};
 
+        const fullname = req.user.fullname_thai;
+
+        const startTime = Date.now();
         const resultData = await pm.attendance_records.findMany({
             where: {
                 OR: [
@@ -169,6 +206,20 @@ exports.searchAttendanceRecords = async (req, res) => {
                 updated_by: true
             }
         });
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง attendance_records_log
+        await pm.attendance_records_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: resultData.length,
+                status: resultData.length > 0 ? 'Search data success' : 'No Data'
+            }
+        });
 
         if (resultData.length === 0) {
             return res.status(404).json({ message: 'ไม่มีข้อมูลบน Database!' });
@@ -192,10 +243,12 @@ exports.checkIn = async (req, res) => {
 
         const checkUser = await pm.users.findFirst({
             where: { national_id },
-            select: { user_id: true, telegram_chat_id: true }
+            select: { user_id: true, fullname_thai: true, telegram_chat_id: true }
         });
         if(!checkUser) return msg(res, 404, { message: 'ไม่มี User นี้อยู่ในระบบ กรุณา Register ก่อนใช้งาน!' });
         if(!checkUser.telegram_chat_id) return msg(res, 400, { message: 'ไม่มี TelegramChatId ใน User กรุณาติดต่อ Admin เพื่อเพิ่มข้อมูล!' });
+
+        const fullname = checkUser.fullname_thai;
 
         const checkDataAttendanceRecord = await pm.attendance_records.findFirst({
             where: {
@@ -289,13 +342,30 @@ exports.checkIn = async (req, res) => {
 
         const { user_id, telegram_chat_id } = checkUser;
 
+        const startTime = Date.now();
         const insertAttendanceRecord = await pm.attendance_records.create({
             data: {
                 user_id: user_id,
                 shift_type_id: Number(req.body.shift_type_id),
                 shift_id: fetchDataOneShift,
                 starting: timeNow,
-                check_in_status_id: fetchDataOneCheckInStatus.check_in_status_id
+                check_in_status_id: fetchDataOneCheckInStatus.check_in_status_id,
+                created_by: fullname,
+                updated_by: fullname
+            }
+        });
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง attendance_records_log
+        await pm.attendance_records_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: insertAttendanceRecord ? 1 : 0,
+                status: insertAttendanceRecord ? 'Check in success' : 'Check in failed'
             }
         });
 
@@ -341,7 +411,18 @@ exports.checkInVerifyOtp = async (req, res) => {
         if (!cachedOtp) return msg(res, 400, { message: "OTP หมดอายุหรือไม่ถูกต้อง" });
 
         if (cachedOtp === otpCode) {
-            await pm.attendance_records.update({
+            const fetchOneUserData = await pm.users.findFirst({
+                where: {
+                    user_id: Number(decoded.userId)
+                },
+                select: {
+                    fullname_thai: true
+                }
+            });
+            const fullname = fetchOneUserData.fullname_thai;
+
+            const startTime = Date.now();
+            const updateData = await pm.attendance_records.update({
                 where: {
                     attendance_record_id: Number(decoded.attendance_record_id)
                 },
@@ -349,6 +430,21 @@ exports.checkInVerifyOtp = async (req, res) => {
                     otp_verified: true
                 }
             });
+            const endTime = Date.now() - startTime;
+
+            // บันทึกข้อมูลไปยัง attendance_records_log
+            await pm.attendance_records_log.create({
+                data: {
+                    ip_address: req.headers['x-forwarded-for'] || req.ip,
+                    name: fullname,
+                    request_method: req.method,
+                    endpoint: req.originalUrl,
+                    execution_time: endTime,
+                    row_count: insertData ? 1 : 0,
+                    status: insertData ? 'Verify OTP successfully' : 'Verify OTP failed'
+                }
+            });
+
             return msg(res, 200, { message: "ลงทะเบียนเข้างานเสร็จสิ้น!" });
         } else {
             return msg(res, 400, { message: "OTP ไม่ถูกต้อง" });
@@ -396,7 +492,7 @@ exports.checkInVerifyOtp = async (req, res) => {
         console.error('Error verifyToken :', err);
         return msg(res, 500, { message: 'Internal Server Error!' });
     }    
-}
+};
 
 exports.checkOut = async (req, res) => {
     try {
@@ -410,8 +506,9 @@ exports.checkOut = async (req, res) => {
 
         const checkUser = await pm.users.findFirst({
             where: { national_id },
-            select: { user_id: true }
+            select: { user_id: true, fullname_thai: true }
         });
+        const fullname = checkUser.fullname_thai;
         if(!checkUser) return msg(res, 404, { message: 'ไม่มี User นี้อยู่ในระบบ กรุณา Register ก่อนใช้งาน!' });
 
         const checkDataAttendanceRecord = await pm.attendance_records.findFirst({
@@ -447,13 +544,28 @@ exports.checkOut = async (req, res) => {
             });
             if(!fetchOneCheckOutStatus) return msg(res, 404, { message: 'ไม่มีข้อมูล (สถานะการออกงาน) กรุณาเพิ่มข้อมูลก่อน!' });
 
-            await pm.attendance_records.update({
+            const startTime_1 = Date.now();
+            const updateData_1 = await pm.attendance_records.update({
                 where: {
                     attendance_record_id: checkDataAttendanceRecord.attendance_record_id
                 },
                 data: {
                     ending: timeNow,
                     check_out_status_id: fetchOneCheckOutStatus.check_out_status_id 
+                }
+            });
+            const endTime_1 = Date.now() - startTime_1;
+
+            // บันทึกข้อมูลไปยัง attendance_records_log
+            await pm.attendance_records_log.create({
+                data: {
+                    ip_address: req.headers['x-forwarded-for'] || req.ip,
+                    name: fullname,
+                    request_method: req.method,
+                    endpoint: req.originalUrl,
+                    execution_time: endTime_1,
+                    row_count: updateData_1 ? 1 : 0,
+                    status: updateData_1 ? 'Check out successfully' : 'Check out failed'
                 }
             });
         } else if(attendanceData != dateNow) {
@@ -467,13 +579,28 @@ exports.checkOut = async (req, res) => {
             });
             if(!fetchOneCheckOutStatus) return msg(res, 404, { message: 'ไม่มีข้อมูล (สถานะการออกงาน) กรุณาเพิ่มข้อมูลก่อน!' });
 
-            await pm.attendance_records.update({
+            const startTime_2 = Date.now();
+            const updateData_2 = await pm.attendance_records.update({
                 where: {
                     attendance_record_id: checkDataAttendanceRecord.attendance_record_id
                 },
                 data: {
                     ending: timeNow,
                     check_out_status_id: fetchOneCheckOutStatus.check_out_status_id 
+                }
+            });
+            const endTime_2 = Date.now() - startTime_2;
+
+            // บันทึกข้อมูลไปยัง attendance_records_log
+            await pm.attendance_records_log.create({
+                data: {
+                    ip_address: req.headers['x-forwarded-for'] || req.ip,
+                    name: fullname,
+                    request_method: req.method,
+                    endpoint: req.originalUrl,
+                    execution_time: endTime_2,
+                    row_count: updateData_2 ? 1 : 0,
+                    status: updateData_2 ? 'Check out successfully' : 'Check out failed'
                 }
             });
         } else {
@@ -488,13 +615,28 @@ exports.checkOut = async (req, res) => {
                 });
                 if(!fetchOneCheckOutStatus) return msg(res, 404, { message: 'ไม่มีข้อมูล (สถานะการออกงาน) กรุณาเพิ่มข้อมูลก่อน!' });
     
-                await pm.attendance_records.update({
+                const startTime_3 = Date.now();
+                const updateData_3 = await pm.attendance_records.update({
                     where: {
                         attendance_record_id: checkDataAttendanceRecord.attendance_record_id
                     },
                     data: {
                         ending: timeNow,
                         check_out_status_id: fetchOneCheckOutStatus.check_out_status_id 
+                    }
+                });
+                const endTime_3 = Date.now() - startTime_3;
+
+                // บันทึกข้อมูลไปยัง attendance_records_log
+                await pm.attendance_records_log.create({
+                    data: {
+                        ip_address: req.headers['x-forwarded-for'] || req.ip,
+                        name: fullname,
+                        request_method: req.method,
+                        endpoint: req.originalUrl,
+                        execution_time: endTime_3,
+                        row_count: updateData_3 ? 1 : 0,
+                        status: updateData_3 ? 'Check out successfully' : 'Check out failed'
                     }
                 });
             } else if(timeNow > checkDataAttendanceRecord.shifts.shift_ending) {
@@ -508,13 +650,28 @@ exports.checkOut = async (req, res) => {
                 });
                 if(!fetchOneCheckOutStatus) return msg(res, 404, { message: 'ไม่มีข้อมูล (สถานะการออกงาน) กรุณาเพิ่มข้อมูลก่อน!' });
     
-                await pm.attendance_records.update({
+                const startTime_4 = Date.now();
+                const updateData_4 = await pm.attendance_records.update({
                     where: {
                         attendance_record_id: checkDataAttendanceRecord.attendance_record_id
                     },
                     data: {
                         ending: timeNow,
                         check_out_status_id: fetchOneCheckOutStatus.check_out_status_id 
+                    }
+                });
+                const endTime_4 = Date.now() - startTime_4;
+
+                // บันทึกข้อมูลไปยัง attendance_records_log
+                await pm.attendance_records_log.create({
+                    data: {
+                        ip_address: req.headers['x-forwarded-for'] || req.ip,
+                        name: fullname,
+                        request_method: req.method,
+                        endpoint: req.originalUrl,
+                        execution_time: endTime_4,
+                        row_count: updateData_4 ? 1 : 0,
+                        status: updateData_4 ? 'Check out successfully' : 'Check out failed'
                     }
                 });
             } else {
@@ -528,13 +685,28 @@ exports.checkOut = async (req, res) => {
                 });
                 if(!fetchOneCheckOutStatus) return msg(res, 404, { message: 'ไม่มีข้อมูล (สถานะการออกงาน) กรุณาเพิ่มข้อมูลก่อน!' });
     
-                await pm.attendance_records.update({
+                const startTime_5 = Date.now();
+                const updateData_5 = await pm.attendance_records.update({
                     where: {
                         attendance_record_id: checkDataAttendanceRecord.attendance_record_id
                     },
                     data: {
                         ending: timeNow,
                         check_out_status_id: fetchOneCheckOutStatus.check_out_status_id 
+                    }
+                });
+                const endTime_5 = Date.now() - startTime_5;
+
+                // บันทึกข้อมูลไปยัง attendance_records_log
+                await pm.attendance_records_log.create({
+                    data: {
+                        ip_address: req.headers['x-forwarded-for'] || req.ip,
+                        name: fullname,
+                        request_method: req.method,
+                        endpoint: req.originalUrl,
+                        execution_time: endTime_5,
+                        row_count: updateData_5 ? 1 : 0,
+                        status: updateData_5 ? 'Check out successfully' : 'Check out failed'
                     }
                 });
             }
@@ -546,4 +718,4 @@ exports.checkOut = async (req, res) => {
         console.error("Error checkOut:", error.message);
         return msg(res, 500, { message: "Internal Server Error" });
     }
-}
+};

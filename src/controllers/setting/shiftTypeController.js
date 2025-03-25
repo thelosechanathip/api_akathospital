@@ -4,7 +4,24 @@ const { msg } = require('../../utils/message');
 // Function สำหรับ FetchAll ข้อมูลจาก Database
 exports.getAllDataShiftTypes = async (req, res) => {
     try {
+        const fullname = req.user.fullname_thai;
+
+        const startTime = Date.now();
         const resultData = await pm.shift_types.findMany();
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง shift_types_log
+        await pm.shift_types_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: resultData.length,
+                status: resultData.length > 0 ? 'Success' : 'No Data'
+            }
+        });
 
         if(resultData.length === 0) return msg(res, 404, { message: 'ไม่มีข้อมูลบน Database!' });
 
@@ -31,11 +48,26 @@ exports.insertDataShiftType = async (req, res) => {
         });
         if(checkShiftTypeNameResult) return msg(res, 409, 'มี (shift_type_name) อยู่ในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!');
 
-        await pm.shift_types.create({
+        const startTime = Date.now();
+        const insertData = await pm.shift_types.create({
             data: {
                 shift_type_name: shift_type_name,
                 created_by: fullname,
                 updated_by: fullname
+            }
+        });
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง shift_types_log
+        await pm.shift_types_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: insertData ? 1 : 0,
+                status: insertData ? 'Success' : 'Failed'
             }
         });
 
@@ -72,13 +104,28 @@ exports.updateDataShiftType = async (req, res) => {
         });
         if(checkShiftTypeNameResult) return msg(res, 409, 'มี (shift_type_name) อยู่ในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!');
 
-        await pm.shift_types.update({
+        const startTime = Date.now();
+        const updateData = await pm.shift_types.update({
             where: {
                 shift_type_id: Number(id)
             },
             data: {
                 shift_type_name: shift_type_name,
                 updated_by: fullname
+            }
+        });
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง shift_types_log
+        await pm.shift_types_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: updateData ? 1 : 0,
+                status: updateData ? 'Success' : 'Failed'
             }
         });
 
@@ -93,6 +140,7 @@ exports.updateDataShiftType = async (req, res) => {
 exports.removeDataShiftType = async (req, res) => {
     try {
         const { id } = req.params;
+        const fullname = req.user.fullname_thai;
 
         // ตรวจสอบว่า ID มีอยู่จริงหรือไม่
         const checkIdShiftType = await pm.shift_types.findFirst({
@@ -103,9 +151,24 @@ exports.removeDataShiftType = async (req, res) => {
         if (!checkIdShiftType) return msg(res, 404, { message: 'ไม่มี shift_type_id อยู่ในระบบ!' });
 
         // ลบข้อมูล
-        await pm.shift_types.delete({
+        const startTime = Date.now();
+        const removeData = await pm.shift_types.delete({
             where: {
                 shift_type_id: Number(id)
+            }
+        });
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง shift_types_log
+        await pm.shift_types_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: removeData ? 1 : 0,
+                status: removeData ? 'Success' : 'Failed'
             }
         });
 

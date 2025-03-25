@@ -21,9 +21,26 @@ async function sendToTelegram(message) {
 // Function สำหรับ FetchAll ข้อมูลจาก Database
 exports.getAllDataComplaints = async (req, res) => {
     try {
+        const fullname = req.user.fullname_thai;
+
+        const startTime = Date.now();
         const resultData = await pm.complaints.findMany({
             include: {
                 complaint_topics: true
+            }
+        });
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง complaints_log
+        await pm.complaints_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: resultData.length,
+                status: resultData.length > 0 ? 'Success' : 'No Data'
             }
         });
 
@@ -50,7 +67,8 @@ exports.insertDataComplaint = async (req, res) => {
         // Function ในการตรวจสอบรูปแบบของเบอร์โทรศัพท์
         const checkTelephoneNumber = await validatePhoneNumber(telephone_number);
         if(!checkTelephoneNumber) return msg(res, 400, { message: 'รูปแบบเบอร์โทรศัพท์ไม่ถูกต้องกรุณาตรวจสอบ!' });
-
+        
+        const startTime = Date.now();
         const insertData = await pm.complaints.create({
             data: {
                 fullname: fullname,
@@ -60,6 +78,20 @@ exports.insertDataComplaint = async (req, res) => {
                 detail: detail,
                 created_by: fullname,
                 updated_by: fullname
+            }
+        });
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง complaints_log
+        await pm.complaints_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: insertData ? 1 : 0,
+                status: insertData ? 'Success' : 'Failed'
             }
         });
         
@@ -100,10 +132,25 @@ exports.removeDataComplaint = async (req, res) => {
         });
         if (!checkIdComplaint) return msg(res, 404, { message: 'ไม่มี complaint_id อยู่ในระบบ!' });
 
+        const startTime = Date.now();
         // ลบข้อมูล
-        await pm.complaints.delete({
+        const removeData = await pm.complaints.delete({
             where: {
                 complaint_id: Number(id)
+            }
+        });
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง complaints_log
+        await pm.complaints_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: req.user.fullname_thai,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: removeData ? 1 : 0,
+                status: removeData ? 'Success' : 'Failed'
             }
         });
 

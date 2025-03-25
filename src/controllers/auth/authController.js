@@ -131,6 +131,7 @@ exports.authLogin = async (req, res) => {
             },
             select: {
                 user_id: true,
+                fullname_thai: true,
                 password: true,
                 telegram_chat_id: true
             }
@@ -141,7 +142,8 @@ exports.authLogin = async (req, res) => {
         if(!isMath) return msg(res, 400, { message: 'รหัสผ่านไม่ถูกต้องกรุณาตรวจสอบรหัสผ่าน!' });
 
         if(!checkUsername.telegram_chat_id) return msg(res, 400, { message: 'ไม่มี telegramChatId อยู่ใน User ของท่านกรุณาติดต่อ Admin เพื่อทำการเพิ่มข้อมูลก่อนใช้งานระบบ!' });
-
+        
+        const fullname = checkUsername.fullname_thai;
         const userId = checkUsername.user_id;
         const telegramChatId = checkUsername.telegram_chat_id;
 
@@ -159,11 +161,26 @@ exports.authLogin = async (req, res) => {
                 const dataToken = await jwt.verify(token, process.env.SECRET_KEY);
                 const exp = new Date(dataToken.exp * 1000); // คูณ 1000 เพราะ timestamp เป็นวินาที แต่ Date ใช้มิลลิวินาที
 
+                const startTime = Date.now();
                 const insertDataToauthToken = await pm.auth_tokens.create({
                     data: {
                         token: token,
                         user_id: userId,
                         expires_at: exp
+                    }
+                });
+                const endTime = Date.now() - startTime;
+
+                // บันทึกข้อมูลไปยัง auth_log
+                await pm.auth_log.create({
+                    data: {
+                        ip_address: req.headers['x-forwarded-for'] || req.ip,
+                        name: fullname,
+                        request_method: req.method,
+                        endpoint: req.originalUrl,
+                        execution_time: endTime,
+                        row_count: insertDataToauthToken ? 1 : 0,
+                        status: insertDataToauthToken ? 'Login success' : 'Login failed'
                     }
                 });
 
@@ -200,8 +217,20 @@ exports.authVerifyOtp = async (req, res) => {
         if (!cachedOtp) return msg(res, 400, { message: "OTP หมดอายุหรือไม่ถูกต้อง" });
 
         if (cachedOtp === otpCode) {
+            const userId = decoded.userId;
+            const fetchOneUserData = await pm.users.findFirst({
+                where: {
+                    user_id: Number(userId)
+                },
+                select: {
+                    fullname_thai: true
+                }
+            });
+            const fullname = fetchOneUserData.fullname_thai;
+
             // OTP ถูกต้อง, อาจจะทำการสร้าง JWT หรือทำงานต่อ
-            await pm.auth_tokens.update({
+            const startTime = Date.now();
+            const updateData = await pm.auth_tokens.update({
                 where: {
                     token: token
                 },
@@ -209,6 +238,21 @@ exports.authVerifyOtp = async (req, res) => {
                     otp_verified: true
                 }
             });
+            const endTime = Date.now() - startTime;
+
+            // บันทึกข้อมูลไปยัง auth_log
+            await pm.auth_log.create({
+                data: {
+                    ip_address: req.headers['x-forwarded-for'] || req.ip,
+                    name: fullname,
+                    request_method: req.method,
+                    endpoint: req.originalUrl,
+                    execution_time: endTime,
+                    row_count: updateData ? 1 : 0,
+                    status: updateData ? 'Verify OTP successfully' : 'Verify OTP failed'
+                }
+            });
+
             return msg(res, 200, { message: "Login successfully!" });
         } else {
             return msg(res, 400, { message: "OTP ไม่ถูกต้อง" });
@@ -227,6 +271,7 @@ exports.authVerifyOtp = async (req, res) => {
 // Function ยืนยันตัวตนด้วย Token
 exports.authVerifyToken = async (req, res) => {
     try {
+        const startTime = Date.now();
         const fetchOneDataUser = await pm.users.findFirst({
             where: {
                 user_id: Number(req.user.user_id)
@@ -239,7 +284,23 @@ exports.authVerifyToken = async (req, res) => {
                 status: true
             }
         });
+        const endTime = Date.now() - startTime;
         if(!fetchOneDataUser) return msg(res, 404, { message: 'Data not found!' });
+
+        const fullname = fetchOneDataUser.fullname_thai;
+
+        // บันทึกข้อมูลไปยัง auth_log
+        await pm.auth_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: fetchOneDataUser ? 1 : 0,
+                status: fetchOneDataUser ? 'Verify Token successfully' : 'Verify Token failed'
+            }
+        });
 
         return msg(res, 200, { data: fetchOneDataUser });
     } catch (error) {
@@ -263,7 +324,8 @@ exports.authRemoveUser = async (req, res) => {
                 user_id: req.user.user_id,
             },
             select: {
-                user_id: true
+                user_id: true,
+                fullname_thai: true
             }
         });
         if(!fetchOneDataUser) return msg(res, 404, { message: "ไม่มี User นี้ในระบบกรุณาตรวจสอบ!!" });
@@ -271,9 +333,26 @@ exports.authRemoveUser = async (req, res) => {
         const isMath = await bcrypt.compare(password, req.user.password);
         if (!isMath) return msg(res, 400, "รหัสผ่านไม่ถูกต้อง!");
 
-        await pm.users.delete({
+        const fullname = req.user.fullname_thai;
+
+        const startTime = Date.now();
+        const removeData = await pm.users.delete({
             where: {
                 user_id: id
+            }
+        });
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง auth_log
+        await pm.auth_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: removeData ? 1 : 0,
+                status: removeData ? 'Remove successfully' : 'Remove failed'
             }
         });
 
@@ -294,6 +373,8 @@ exports.authRemoveUser = async (req, res) => {
 // Function สำหรับการ Logout ออกจากระบบ
 exports.authLogout = async (req, res) => {
     try {
+        const fullname = req.user.fullname_thai;
+
         const exp = new Date(req.data.expires_at * 1000); // คูณ 1000 เพราะ timestamp เป็นวินาที แต่ Date ใช้มิลลิวินาที
         const addDataTokenBlackList = await pm.token_blacklist.create({
             data: {
@@ -303,6 +384,7 @@ exports.authLogout = async (req, res) => {
         });
         if(!addDataTokenBlackList) return msg(res, 400, { message: 'เกิดข้อผิดพลาดระหว่างการทำงานกรุณาติดต่อ Admin ของระบบ!' });
 
+        const startTime = Date.now();
         const updateDataAuthToken = await pm.auth_tokens.update({
             where: {
                 token: req.data.token
@@ -312,6 +394,21 @@ exports.authLogout = async (req, res) => {
             }
         });
         if(!updateDataAuthToken) return msg(res, 400, { message: 'เกิดข้อผิดพลาดระหว่างการทำงานกรุณาติดต่อ Admin ของระบบ!' });
+
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง auth_log
+        await pm.auth_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: updateDataAuthToken ? 1 : 0,
+                status: updateDataAuthToken ? 'Logout successfuly' : 'Logout failed'
+            }
+        });
 
         return msg(res, 200, { message: "Logout successfully!" });
     } catch (err) {

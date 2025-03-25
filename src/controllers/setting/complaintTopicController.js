@@ -4,7 +4,24 @@ const { msg } = require('../../utils/message');
 // Function สำหรับ FetchAll ข้อมูลจาก Database
 exports.getAllDataComplaintTopics = async (req, res) => {
     try {
+        const fullname = req.user.fullname_thai;
+
+        const startTime = Date.now();
         const resultData = await pm.complaint_topics.findMany();
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง complaint_topics_log
+        await pm.complaint_topics_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: resultData.length,
+                status: resultData.length > 0 ? 'Success' : 'No Data'
+            }
+        });
 
         if(resultData.length === 0) return msg(res, 404, { message: 'ไม่มีข้อมูลบน Database!' });
 
@@ -18,9 +35,10 @@ exports.getAllDataComplaintTopics = async (req, res) => {
 // Function สำหรับ Insert ข้อมูลไปยัง Database
 exports.insertDataComplaintTopic = async (req, res) => {
     try {
-        const { complaint_topic_name, created_by, updated_by } = req.body;
+        const { complaint_topic_name } = req.body;
+        const fullname = req.user.fullname_thai;
 
-        if(!complaint_topic_name || !created_by || !updated_by) return msg(res, 400, 'กรุณากรอกข้อมูลให้ครบถ้วน!');
+        if(!complaint_topic_name) return msg(res, 400, 'กรุณากรอกข้อมูลให้ครบถ้วน!');
 
         // Check complaint_topic_name ว่ามีซ้ำอยู่ใน Database หรือไม่?
         const checkComplaintTopicNameResult = await pm.complaint_topics.findFirst({
@@ -30,11 +48,26 @@ exports.insertDataComplaintTopic = async (req, res) => {
         });
         if(checkComplaintTopicNameResult) return msg(res, 404, 'มี (complaint_topic_name) อยู่ในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!');
 
-        await pm.complaint_topics.create({
+        const startTime = Date.now();
+        const insertData = await pm.complaint_topics.create({
             data: {
                 complaint_topic_name: complaint_topic_name,
-                created_by: created_by,
-                updated_by: updated_by
+                created_by: fullname,
+                updated_by: fullname
+            }
+        });
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง complaint_topics_log
+        await pm.complaint_topics_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: insertData ? 1 : 0,
+                status: insertData ? 'Success' : 'Failed'
             }
         });
 
@@ -58,7 +91,8 @@ exports.updateDataComplaintTopic = async (req, res) => {
         });
         if(!checkIdComplaintTopic) return msg(res, 400, { message: 'ไม่มี complaint_topic_id อยู่ในระบบ!' });
 
-        const { complaint_topic_name, updated_by } = req.body;
+        const { complaint_topic_name } = req.body;
+        const fullname = req.user.fullname_thai;
 
         // Check complaint_topic_name ว่ามีซ้ำอยู่ใน Database หรือไม่?
         const checkComplaintTopicNameResult = await pm.complaint_topics.findFirst({
@@ -68,13 +102,28 @@ exports.updateDataComplaintTopic = async (req, res) => {
         });
         if(checkComplaintTopicNameResult) return msg(res, 404, 'มี (complaint_topic_name) อยู่ในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!');
 
-        await pm.complaint_topics.update({
+        const startTime = Date.now();
+        const updateData = await pm.complaint_topics.update({
             where: {
                 complaint_topic_id: Number(id)
             },
             data: {
                 complaint_topic_name: complaint_topic_name,
-                updated_by: updated_by
+                updated_by: fullname
+            }
+        });
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง complaint_topics_log
+        await pm.complaint_topics_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: updateData ? 1 : 0,
+                status: updateData ? 'Success' : 'Failed'
             }
         });
 
@@ -89,6 +138,7 @@ exports.updateDataComplaintTopic = async (req, res) => {
 exports.removeDataComplaintTopic = async (req, res) => {
     try {
         const { id } = req.params;
+        const fullname = req.user.fullname_thai;
 
         // ตรวจสอบว่า ID มีอยู่จริงหรือไม่
         const checkIdComplaintTopic = await pm.complaint_topics.findFirst({
@@ -106,9 +156,24 @@ exports.removeDataComplaintTopic = async (req, res) => {
         if (checkFkComplaint) return msg(res, 400, { message: 'ไม่สามารถลบข้อมูลหัวข้อร้องเรียนได้ เนื่องจากมีการเรียกใช้งานหัวข้อร้องเรียนแล้ว!' });
 
         // ลบข้อมูล
-        await pm.complaint_topics.delete({
+        const startTime = Date.now();
+        const removeData = await pm.complaint_topics.delete({
             where: {
                 complaint_topic_id: Number(id)
+            }
+        });
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง complaint_topics_log
+        await pm.complaint_topics_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: removeData ? 1 : 0,
+                status: removeData ? 'Success' : 'Failed'
             }
         });
 
