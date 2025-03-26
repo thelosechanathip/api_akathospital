@@ -1,13 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const { authCheckToken, authCheckTokenAdmin } = require('../../middleware/auth/authAdmin');
+
+// Attendance Record Setting
 const { getAllDataComplaintTopics, insertDataComplaintTopic, updateDataComplaintTopic, removeDataComplaintTopic } = require('../../controllers/setting/complaintTopicController');
 const { getAllDataCheckInStatus, insertDataCheckInStatus, updateDataCheckInStatus, removeDataCheckInStatus } = require('../../controllers/setting/checkInStatusController');
 const { getAllDataCheckOutStatus, insertDataCheckOutStatus, updateDataCheckOutStatus, removeDataCheckOutStatus } = require('../../controllers/setting/checkOutStatusController');
-const { getAllDataHolidays, syncDataHoliday, insertDataHoliday, updateDataHoliday, removeDataHoliday } = require('../../controllers/setting/holidayController');
+const { getAllDataHolidays, syncDataHoliday } = require('../../controllers/setting/holidayController');
 const { getAllDataShiftTypes, insertDataShiftType, updateDataShiftType, removeDataShiftType } = require('../../controllers/setting/shiftTypeController');
 const { getAllDataShifts, insertDataShift, updateDataShift, removeDataShift } = require('../../controllers/setting/shiftController');
 const { getAllDataActivityTopics, insertDataActivityTopic, updateDataActivityTopic, removeDataActivityTopic } = require('../../controllers/setting/activityTopicController');
+
+// Medical Record Audit Setting
+const { getAllDataPatientServices, insertDataPatientService, updateDataPatientService, removeDataPatientService } = require('../../controllers/setting/patientServicesController');
 
 // ComplaintTopics
 router.get('/getComplaintTopics', authCheckTokenAdmin, getAllDataComplaintTopics);
@@ -48,5 +53,11 @@ router.get('/getActivityTopics', authCheckTokenAdmin, getAllDataActivityTopics);
 router.post('/insertActivityTopic', authCheckTokenAdmin, insertDataActivityTopic);
 // router.put('/updateActivityTopic/:id', authCheckTokenAdmin, updateDataActivityTopic);
 // router.delete('/removeActivityTopic/:id', authCheckTokenAdmin, removeDataActivityTopic);
+
+// PatientService
+router.get('/getPatientServices', authCheckTokenAdmin, getAllDataPatientServices);
+router.post('/insertPatientService', authCheckTokenAdmin, insertDataPatientService);
+router.put('/updatePatientService/:id', authCheckTokenAdmin, updateDataPatientService);
+router.delete('/removePatientService/:id', authCheckTokenAdmin, removeDataPatientService);
 
 module.exports = router;

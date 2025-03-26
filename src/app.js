@@ -173,9 +173,9 @@ function startBlacklistScheduler() {
 
 startBlacklistScheduler();
 
-app.use("*", (req, res) => {
-  if (req.accepts("html")) {
-    res.status(404).sendFile(path.join(__dirname, "public", "404.html"));
+app.use('*', (req, res) => {
+  if (req.accepts('html')) {
+    res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
   } else {
     msg(res, 404, "404 Not found!!!!");
   }
