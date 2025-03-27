@@ -186,21 +186,41 @@ exports.removeDataAkathospitalVersion = async (req, res) => {
         if (!fetchOneAkathospitalVersionById) return msg(res, 404, { message: `ไม่มีข้อมูล ( ID: ${akathospitalVersionId} ) อยู่ในระบบ!` });
 
         // ตรวจสอบว่ามี Foreign Key หรือไม่
-        const checkForeignKey = await pm.$queryRaw
-            `
-                SELECT TABLE_NAME, COLUMN_NAME
-                FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
-                WHERE REFERENCED_TABLE_NAME = 'akathospital_versions'
-                AND REFERENCED_COLUMN_NAME = 'akathospital_version_id'
-                AND EXISTS (
-                    SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = KEY_COLUMN_USAGE.TABLE_NAME
-                )
-            `
-        ;
+        const checkForeignKey = await pm.$queryRaw`
+            SELECT TABLE_NAME, COLUMN_NAME
+            FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+            WHERE REFERENCED_TABLE_NAME = 'akathospital_versions'
+            AND REFERENCED_COLUMN_NAME = 'akathospital_version_id'
+            AND EXISTS (
+                SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = KEY_COLUMN_USAGE.TABLE_NAME
+            )
+        `;
 
         if (checkForeignKey.length > 0) {
-            const tables = checkForeignKey.map(row => row.TABLE_NAME).join(', ');
-            return msg(res, 400, { message: `ไม่สามารถลบได้ เนื่องจาก akathospital_version_id ถูกใช้งานอยู่ในตาราง: ${tables} กรุณาลบข้อมูลที่เกี่ยวข้องก่อน!` });
+            let hasReference = false;
+            let referencedTables = [];
+
+            // ตรวจสอบแต่ละตารางว่ามีข้อมูลอ้างอิงอยู่หรือไม่
+            for (const row of checkForeignKey) {
+                const tableName = row.TABLE_NAME;
+                const columnName = row.COLUMN_NAME;
+
+                const checkData = await pm.$queryRawUnsafe(`
+                    SELECT 1 FROM ${tableName} WHERE ${columnName} = ${Number(req.params.id)} LIMIT 1
+                `);
+
+                if (checkData.length > 0) {
+                    hasReference = true;
+                    referencedTables.push(tableName);
+                }
+            }
+
+            // ถ้ามีตารางที่อ้างอิงอยู่ → ห้ามลบ
+            if (hasReference) {
+                return msg(res, 400, { 
+                    message: `ไม่สามารถลบได้ เนื่องจาก akathospital_version_id ถูกใช้งานอยู่ในตาราง: ${referencedTables.join(', ')} กรุณาลบข้อมูลที่เกี่ยวข้องก่อน!` 
+                });
+            }
         }
 
         // ลบข้อมูล
