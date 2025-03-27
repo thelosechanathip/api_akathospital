@@ -1,17 +1,28 @@
 const pm = require('../../config/prisma');
 const { msg } = require('../../utils/message');
+const { capitalizeFirstLetter } = require('../../utils/allCheck');
 
 // Function สำหรับ FetchAll ข้อมูลจาก Database
-exports.getAllDataPatientServices = async (req, res) => {
+exports.getAllDataReviewStatus = async (req, res) => {
     try {
         const fullname = req.user.fullname_thai;
 
         const startTime = Date.now();
-        const resultData = await pm.patient_services.findMany();
+        const resultData = await pm.review_status.findMany({
+            include: {
+                patient_service_id: false,
+                patient_services: {
+                    select: {
+                        patient_service_name_english: true,
+                        patient_service_name_thai: true
+                    }
+                }
+            }
+        });
         const endTime = Date.now() - startTime;
 
-        // บันทึกข้อมูลไปยัง patient_services_log
-        await pm.patient_services_log.create({
+        // บันทึกข้อมูลไปยัง review_status_log
+        await pm.review_status_log.create({
             data: {
                 ip_address: req.headers['x-forwarded-for'] || req.ip,
                 name: fullname,
@@ -27,35 +38,51 @@ exports.getAllDataPatientServices = async (req, res) => {
 
         return msg(res, 200, { data: resultData });
     } catch(err) {
-        console.log('getAllDataPatientServices : ', err);
+        console.log('getAllDataReviewStatus : ', err);
         return msg(res, 500, { message: err.message });
     }
 }
 
 // Function สำหรับ Insert ข้อมูลไปยัง Database
-exports.insertDataPatientService = async (req, res) => {
+exports.insertDataReviewStatus = async (req, res) => {
     try {
-        const patientServiceData = req.body; // ดึงข้อมูลทั้งหมดจาก req.body
+        const reviewStatusData = req.body; // ดึงข้อมูลทั้งหมดจาก req.body
         const fullname = req.user.fullname_thai;
+        reviewStatusData.review_status_name = await capitalizeFirstLetter(reviewStatusData.review_status_name);
 
         // ตรวจสอบค่าซ้ำ โดยเก็บค่า duplicate message ไว้ก่อน
+        const deplicateStatus = [];
         const duplicateMessages = [];
         let hasEmptyValue = false; // Flag สำหรับตรวจสอบค่าที่ว่าง
 
         await Promise.all(
-            Object.entries(patientServiceData).map(async ([key, value]) => {
+            Object.entries(reviewStatusData).map(async ([key, value]) => {
                 // ถ้าพบค่าว่าง ให้ตั้งค่า flag เป็น true
-                if (!value) hasEmptyValue = true;
+                if (['review_status_name', 'review_status_description'].includes(key) && !value) hasEmptyValue = true;
 
                 // ตรวจสอบค่าซ้ำเฉพาะ field ที่ไม่ว่าง
-                if (value) {
+                if (['review_status_name', 'review_status_description'].includes(key) && value) {
+                    const existingRecord = await pm.review_status.findFirst({
+                        where: { [key]: value },
+                        select: { review_status_id: true }
+                    });
+
+                    if (existingRecord) {
+                        deplicateStatus.push(409);
+                        duplicateMessages.push(`( ${value} ) มีข้อมูลในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!`);
+                    }
+                }
+
+                // ตรวจสอบว่ามี PatientServiceId นี้อยู่ใน Table patient_services จริงหรือไม่?
+                if(['patient_service_id'].includes(key) && value) {
                     const existingRecord = await pm.patient_services.findFirst({
                         where: { [key]: value },
                         select: { patient_service_id: true }
                     });
 
-                    if (existingRecord) {
-                        duplicateMessages.push(`( ${value} ) มีข้อมูลในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!`);
+                    if (!existingRecord) {
+                        deplicateStatus.push(404);
+                        duplicateMessages.push(`ไม่มี ( ID: ${value}) อยู่ใน patientService!`);
                     }
                 }
             })
@@ -68,13 +95,13 @@ exports.insertDataPatientService = async (req, res) => {
         }
 
         // ถ้ามีข้อมูลซ้ำหรือค่าที่ว่าง ให้ส่ง response กลับครั้งเดียว
-        if (duplicateMessages.length > 0) return msg(res, 409, { message: duplicateMessages.join(" AND ") });
+        if (duplicateMessages.length > 0) return msg(res, Math.max(...deplicateStatus), { message: duplicateMessages.join(" AND ") });
 
         // เพิ่มข้อมูลใหม่
         const startTime = Date.now();
-        const insertData = await pm.patient_services.create({
+        const insertData = await pm.review_status.create({
             data: {
-                ...patientServiceData, // กระจายค่าทั้งหมดจาก req.body
+                ...reviewStatusData, // กระจายค่าทั้งหมดจาก req.body
                 created_by: fullname,
                 updated_by: fullname
             }
@@ -82,7 +109,7 @@ exports.insertDataPatientService = async (req, res) => {
         const endTime = Date.now() - startTime;
 
         // บันทึก Log
-        await pm.patient_services_log.create({
+        await pm.review_status_log.create({
             data: {
                 ip_address: req.headers['x-forwarded-for'] || req.ip,
                 name: fullname,
@@ -97,70 +124,74 @@ exports.insertDataPatientService = async (req, res) => {
         return msg(res, 200, { message: 'Insert data successfully!' });
 
     } catch (err) {
-        console.error('insertDataPatientService : ', err);
+        console.error('insertDataReviewStatus : ', err);
         return msg(res, 500, { message: err.message });
     }
 };
 
 // Function สำหรับ Update ข้อมูลไปยัง Database
-exports.updateDataPatientService = async (req, res) => {
+exports.updateDataReviewStatus = async (req, res) => {
     try {
-        const { id } = req.params;
-        const patientServiceData = req.body; // ข้อมูลที่ต้องการอัปเดต
+        const reviewStatusId = req.params.id;
+        const reviewStatusData = req.body; // ข้อมูลที่ต้องการอัปเดต
         const fullname = req.user.fullname_thai;
 
-        // ตรวจสอบว่ามี ID นี้ในระบบหรือไม่
-        const fetchOnePatientServiceById = await pm.patient_services.findFirst({
-            where: { patient_service_id: Number(id) },
-            select: { patient_service_id: true }
+        const fetchOneReviewStatusById = await pm.review_status.findFirst({
+            where: { review_status_id: Number(reviewStatusId) },
+            select: { review_status_id: true }
         });
-        if (!fetchOnePatientServiceById) return msg(res, 404, { message: `ไม่มีข้อมูล ( ID: ${id} ) อยู่ในระบบ!` });
+        if (!fetchOneReviewStatusById) return msg(res, 404, { message: `ไม่มีข้อมูล ( ID: ${reviewStatusId} ) อยู่ในระบบ!` });
 
-        // ตรวจสอบค่าซ้ำ โดยเก็บค่า duplicate message ไว้ก่อน
+        const deplicateStatus = [];
         const duplicateMessages = [];
         let hasEmptyValue = false; // Flag สำหรับตรวจสอบค่าที่ว่าง
 
         await Promise.all(
-            Object.entries(patientServiceData).map(async ([key, value]) => {
+            Object.entries(reviewStatusData).map(async ([key, value]) => {
                 // ถ้าพบค่าว่าง ให้ตั้งค่า flag เป็น true
-                if (!value) hasEmptyValue = true;
+                if (['review_status_name', 'review_status_description'].includes(key) && !value) hasEmptyValue = true;
 
                 // ตรวจสอบค่าซ้ำเฉพาะ field ที่ไม่ว่าง
-                if (value) {
+                if (['review_status_name', 'review_status_description'].includes(key) && value) {
+                    const existingRecord = await pm.review_status.findFirst({
+                        where: { [key]: value },
+                        select: { review_status_id: true }
+                    });
+
+                    if (existingRecord) {
+                        deplicateStatus.push(409);
+                        duplicateMessages.push(`( ${value} ) มีข้อมูลในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!`);
+                    }
+                }
+
+                // ตรวจสอบว่ามี PatientServiceId นี้อยู่ใน Table patient_services จริงหรือไม่?
+                if(['patient_service_id'].includes(key) && value) {
                     const existingRecord = await pm.patient_services.findFirst({
                         where: { [key]: value },
                         select: { patient_service_id: true }
                     });
 
-                    if (existingRecord) {
-                        duplicateMessages.push(`( ${value} ) มีข้อมูลในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!`);
+                    if (!existingRecord) {
+                        deplicateStatus.push(404);
+                        duplicateMessages.push(`ไม่มี ( ID: ${value}) อยู่ใน patientService!`);
                     }
                 }
             })
         );
 
-        // ถ้ามีค่าที่ว่าง ให้เพิ่มข้อความแค่ครั้งเดียว
-        if (hasEmptyValue) {
-            duplicateMessages.unshift("กรุณากรอกข้อมูลให้ครบถ้วน!");
-            return msg(res, 400, { message: duplicateMessages[0] });
-        }
-
-        // ถ้ามีข้อมูลซ้ำหรือค่าที่ว่าง ให้ส่ง response กลับครั้งเดียว
-        if (duplicateMessages.length > 0) return msg(res, 409, { message: duplicateMessages.join(" AND ") });
-
         // อัปเดตข้อมูล
         const startTime = Date.now();
-        const updateData = await pm.patient_services.update({
-            where: { patient_service_id: Number(id) }, // ระบุ ID ที่ต้องการอัปเดต
+        const updateData = await pm.review_status.update({
+            where: { review_status_id: Number(reviewStatusId) }, // ระบุ reviewStatusId ที่ต้องการอัปเดต
             data: {
-                ...patientServiceData, // กระจายค่าทั้งหมดจาก req.body
+                ...reviewStatusData, // กระจายค่าทั้งหมดจาก req.body
                 updated_by: fullname
             }
         });
         const endTime = Date.now() - startTime;
 
         // บันทึก Log
-        await pm.patient_services_log.create({
+        await pm.review_status_log.create({
             data: {
                 ip_address: req.headers["x-forwarded-for"] || req.ip,
                 name: fullname,
@@ -174,34 +205,34 @@ exports.updateDataPatientService = async (req, res) => {
 
         return msg(res, 200, { message: "Update data successfully!" });
     } catch (err) {
-        console.error("updateDataPatientService : ", err);
+        console.error('updateDataReviewStatus : ', err);
         return msg(res, 500, { message: err.message });
     }
-};
+}
 
 // Function สำหรับ Delete ข้อมูลจาก Database
-exports.removeDataPatientService = async (req, res) => {
+exports.removeDataReviewStatus = async (req, res) => {
     try {
-        const { id } = req.params;
+        const reviewStatusId = req.params.id;
         const fullname = req.user.fullname_thai;
 
         // ตรวจสอบว่ามี ID นี้ในระบบหรือไม่
-        const fetchOnePatientServiceById = await pm.patient_services.findFirst({
-            where: { patient_service_id: Number(id) },
-            select: { patient_service_id: true }
+        const fetchOneReviewStatusById = await pm.review_status.findFirst({
+            where: { review_status_id: Number(reviewStatusId) },
+            select: { review_status_id: true }
         });
 
-        if (!fetchOnePatientServiceById) return msg(res, 404, { message: `ไม่มีข้อมูล ( ID: ${id} ) อยู่ในระบบ!` });
+        if (!fetchOneReviewStatusById) return msg(res, 404, { message: `ไม่มีข้อมูล ( ID: ${reviewStatusId} ) อยู่ในระบบ!` });
 
         // ลบข้อมูล
         const startTime = Date.now();
-        const removeData = await pm.patient_services.delete({
-            where: { patient_service_id: Number(id) }
+        const removeData = await pm.review_status.delete({
+            where: { review_status_id: Number(reviewStatusId) }
         });
         const endTime = Date.now() - startTime;
 
-        // บันทึกข้อมูลไปยัง patient_services_log
-        await pm.patient_services_log.create({
+        // บันทึกข้อมูลไปยัง review_status_log
+        await pm.review_status_log.create({
             data: {
                 ip_address: req.headers['x-forwarded-for'] || req.ip,
                 name: fullname,
@@ -213,16 +244,16 @@ exports.removeDataPatientService = async (req, res) => {
             }
         });
 
-        // ดึงค่า MAX(patient_service_id)
-        const maxIdResult = await pm.$queryRaw`SELECT COALESCE(MAX(patient_service_id), 0) + 1 AS nextId FROM patient_services`;
+        // ดึงค่า MAX(review_status_id)
+        const maxIdResult = await pm.$queryRaw`SELECT COALESCE(MAX(review_status_id), 0) + 1 AS nextId FROM review_status`;
 
         // รีเซ็ตค่า AUTO_INCREMENT
-        await pm.$executeRawUnsafe(`ALTER TABLE patient_services AUTO_INCREMENT = ${maxIdResult[0].nextId}`);
+        await pm.$executeRawUnsafe(`ALTER TABLE review_status AUTO_INCREMENT = ${maxIdResult[0].nextId}`);
 
         return msg(res, 200, { message: 'Deleted successfully!' });
 
     } catch (err) {
-        console.log('removeDataPatientService : ', err);
+        console.log('removeDataReviewStatus : ', err);
         return msg(res, 500, { message: err.message });
     }
 };

@@ -164,15 +164,15 @@ model check_out_status {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model check_out_status_log {
-  complaint_log_id Int      @id @default(autoincrement())
-  ip_address       String   @db.VarChar(100)
-  name             String   @db.VarChar(100)
-  request_method   String   @db.VarChar(100)
-  endpoint         String   @db.VarChar(100)
-  execution_time   Float    @db.Float
-  row_count        Float    @db.Float
-  status           String   @db.VarChar(100)
-  created_at       DateTime @default(now()) @db.Timestamp(0)
+  check_out_status_id Int      @id @default(autoincrement())
+  ip_address          String   @db.VarChar(100)
+  name                String   @db.VarChar(100)
+  request_method      String   @db.VarChar(100)
+  endpoint            String   @db.VarChar(100)
+  execution_time      Float    @db.Float
+  row_count           Float    @db.Float
+  status              String   @db.VarChar(100)
+  created_at          DateTime @default(now()) @db.Timestamp(0)
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -188,15 +188,15 @@ model complaint_topics {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model complaint_topics_log {
-  complaint_log_id Int      @id @default(autoincrement())
-  ip_address       String   @db.VarChar(100)
-  name             String   @db.VarChar(100)
-  request_method   String   @db.VarChar(100)
-  endpoint         String   @db.VarChar(100)
-  execution_time   Float    @db.Float
-  row_count        Float    @db.Float
-  status           String   @db.VarChar(100)
-  created_at       DateTime @default(now()) @db.Timestamp(0)
+  complaint_topic_log_id Int      @id @default(autoincrement())
+  ip_address             String   @db.VarChar(100)
+  name                   String   @db.VarChar(100)
+  request_method         String   @db.VarChar(100)
+  endpoint               String   @db.VarChar(100)
+  execution_time         Float    @db.Float
+  row_count              Float    @db.Float
+  status                 String   @db.VarChar(100)
+  created_at             DateTime @default(now()) @db.Timestamp(0)
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -231,7 +231,7 @@ model complaints_log {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model content_of_medical_records {
-  id                                         Int                                          @id @default(autoincrement())
+  content_of_medical_record_id               Int                                          @id @default(autoincrement())
   content_of_medical_record_name             String                                       @unique(map: "content_of_medical_record_name") @db.VarChar(255)
   na_type                                    Boolean?                                     @default(false)
   missing_type                               Boolean?
@@ -246,15 +246,15 @@ model content_of_medical_records {
   criterion_number_8_type                    Boolean?
   criterion_number_9_type                    Boolean?
   points_deducted_type                       Boolean?                                     @default(false)
-  patient_services_id                        Int?
+  patient_service_id                         Int?
   created_at                                 DateTime                                     @default(now()) @db.Timestamp(0)
-  created_by                                 String?                                      @db.VarChar(255)
+  created_by                                 String?                                      @default("admin") @db.VarChar(255)
   updated_at                                 DateTime                                     @default(now()) @db.Timestamp(0)
-  updated_by                                 String?                                      @db.VarChar(255)
-  patient_services                           patient_services?                            @relation(fields: [patient_services_id], references: [patient_service_id], onDelete: Restrict, onUpdate: Restrict, map: "content_of_medical_records_ibfk_1")
+  updated_by                                 String?                                      @default("admin") @db.VarChar(255)
+  patient_services                           patient_services?                            @relation(fields: [patient_service_id], references: [patient_service_id], onDelete: Restrict, onUpdate: Restrict, map: "content_of_medical_records_ibfk_1")
   form_ipd_content_of_medical_record_results form_ipd_content_of_medical_record_results[]
 
-  @@index([patient_services_id], map: "patient_services_id")
+  @@index([patient_service_id], map: "patient_services_id")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -282,7 +282,7 @@ model form_ipd_content_of_medical_record_results {
   updated_at                   DateTime                   @default(now()) @db.Timestamp(0)
   updated_by                   String                     @db.VarChar(100)
   form_ipds                    form_ipds                  @relation(fields: [form_ipd_id], references: [id], onUpdate: Restrict, map: "form_ipd_content_of_medical_record_results_ibfk_1")
-  content_of_medical_records   content_of_medical_records @relation(fields: [content_of_medical_record_id], references: [id], onUpdate: Restrict, map: "form_ipd_content_of_medical_record_results_ibfk_2")
+  content_of_medical_records   content_of_medical_records @relation(fields: [content_of_medical_record_id], references: [content_of_medical_record_id], onUpdate: Restrict, map: "form_ipd_content_of_medical_record_results_ibfk_2")
 
   @@index([form_ipd_id], map: "form_ipd_content_of_medical_record_results_ibfk_1")
   @@index([content_of_medical_record_id], map: "form_ipd_content_of_medical_record_results_ibfk_2")
@@ -299,7 +299,7 @@ model form_ipd_overall_finding_results {
   updated_at             DateTime        @default(now()) @db.Timestamp(0)
   updated_by             String          @db.VarChar(100)
   form_ipds              form_ipds       @relation(fields: [form_ipd_id], references: [id], onUpdate: Restrict, map: "form_ipd_overall_finding_results_ibfk_1")
-  overall_finding        overall_finding @relation(fields: [overall_finding_id], references: [id], onUpdate: Restrict, map: "form_ipd_overall_finding_results_ibfk_2")
+  overall_finding        overall_finding @relation(fields: [overall_finding_id], references: [overall_finding_id], onUpdate: Restrict, map: "form_ipd_overall_finding_results_ibfk_2")
 
   @@index([form_ipd_id], map: "form_ipd_overall_finding_results_ibfk_1")
   @@index([overall_finding_id], map: "form_ipd_overall_finding_results_ibfk_2")
@@ -317,7 +317,7 @@ model form_ipd_review_status_results {
   updated_at            DateTime      @default(now()) @db.Timestamp(0)
   updated_by            String        @db.VarChar(100)
   form_ipds             form_ipds     @relation(fields: [form_ipd_id], references: [id], onUpdate: Restrict, map: "form_ipd_review_status_results_ibfk_1")
-  review_status         review_status @relation(fields: [review_status_id], references: [id], onUpdate: Restrict, map: "form_ipd_review_status_results_ibfk_2")
+  review_status         review_status @relation(fields: [review_status_id], references: [review_status_id], onUpdate: Restrict, map: "form_ipd_review_status_results_ibfk_2")
 
   @@index([form_ipd_id], map: "form_ipd_review_status_results_ibfk_1")
   @@index([review_status_id], map: "form_ipd_review_status_results_ibfk_2")
@@ -352,30 +352,30 @@ model holidays {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model holidays_log {
-  complaint_log_id Int      @id @default(autoincrement())
-  ip_address       String   @db.VarChar(100)
-  name             String   @db.VarChar(100)
-  request_method   String   @db.VarChar(100)
-  endpoint         String   @db.VarChar(100)
-  execution_time   Float    @db.Float
-  row_count        Float    @db.Float
-  status           String   @db.VarChar(100)
-  created_at       DateTime @default(now()) @db.Timestamp(0)
+  holiday_log_id Int      @id @default(autoincrement())
+  ip_address     String   @db.VarChar(100)
+  name           String   @db.VarChar(100)
+  request_method String   @db.VarChar(100)
+  endpoint       String   @db.VarChar(100)
+  execution_time Float    @db.Float
+  row_count      Float    @db.Float
+  status         String   @db.VarChar(100)
+  created_at     DateTime @default(now()) @db.Timestamp(0)
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model overall_finding {
-  id                               Int                                @id @default(autoincrement())
+  overall_finding_id               Int                                @id @default(autoincrement())
   overall_finding_name             String?                            @db.LongText
-  patient_services_id              Int?
+  patient_service_id               Int?
   created_at                       DateTime                           @default(now()) @db.Timestamp(0)
   created_by                       String?                            @db.VarChar(255)
   updated_at                       DateTime                           @default(now()) @db.Timestamp(0)
   updated_by                       String?                            @db.VarChar(255)
   form_ipd_overall_finding_results form_ipd_overall_finding_results[]
-  patient_services                 patient_services?                  @relation(fields: [patient_services_id], references: [patient_service_id], onDelete: Restrict, onUpdate: Restrict, map: "overall_finding_ibfk_1")
+  patient_services                 patient_services?                  @relation(fields: [patient_service_id], references: [patient_service_id], onDelete: Restrict, onUpdate: Restrict, map: "overall_finding_ibfk_1")
 
-  @@index([patient_services_id], map: "patient_services_id")
+  @@index([patient_service_id], map: "patient_services_id")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -394,15 +394,15 @@ model patient_services {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model patient_services_log {
-  complaint_log_id Int      @id @default(autoincrement())
-  ip_address       String   @db.VarChar(100)
-  name             String   @db.VarChar(100)
-  request_method   String   @db.VarChar(100)
-  endpoint         String   @db.VarChar(100)
-  execution_time   Float    @db.Float
-  row_count        Float    @db.Float
-  status           String   @db.VarChar(100)
-  created_at       DateTime @default(now()) @db.Timestamp(0)
+  patient_service_log_id Int      @id @default(autoincrement())
+  ip_address             String   @db.VarChar(100)
+  name                   String   @db.VarChar(100)
+  request_method         String   @db.VarChar(100)
+  endpoint               String   @db.VarChar(100)
+  execution_time         Float    @db.Float
+  row_count              Float    @db.Float
+  status                 String   @db.VarChar(100)
+  created_at             DateTime @default(now()) @db.Timestamp(0)
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -425,19 +425,19 @@ model patients {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model review_status {
-  id                             Int                              @id @default(autoincrement())
+  review_status_id               Int                              @id @default(autoincrement())
   review_status_name             String                           @unique(map: "review_status_name") @db.VarChar(100)
   review_status_description      String                           @db.VarChar(100)
   review_status_type             Boolean?                         @default(false)
-  patient_services_id            Int?
+  patient_service_id             Int?
   created_at                     DateTime                         @default(now()) @db.Timestamp(0)
   created_by                     String?                          @db.VarChar(255)
   updated_at                     DateTime                         @default(now()) @db.Timestamp(0)
   updated_by                     String?                          @db.VarChar(255)
   form_ipd_review_status_results form_ipd_review_status_results[]
-  patient_services               patient_services?                @relation(fields: [patient_services_id], references: [patient_service_id], onDelete: Restrict, onUpdate: Restrict, map: "review_status_ibfk_1")
+  patient_services               patient_services?                @relation(fields: [patient_service_id], references: [patient_service_id], onDelete: Restrict, onUpdate: Restrict, map: "review_status_ibfk_1")
 
-  @@index([patient_services_id], map: "patient_services_id")
+  @@index([patient_service_id], map: "patient_services_id")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -453,15 +453,15 @@ model shift_types {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model shift_types_log {
-  complaint_log_id Int      @id @default(autoincrement())
-  ip_address       String   @db.VarChar(100)
-  name             String   @db.VarChar(100)
-  request_method   String   @db.VarChar(100)
-  endpoint         String   @db.VarChar(100)
-  execution_time   Float    @db.Float
-  row_count        Float    @db.Float
-  status           String   @db.VarChar(100)
-  created_at       DateTime @default(now()) @db.Timestamp(0)
+  shift_type_log_id Int      @id @default(autoincrement())
+  ip_address        String   @db.VarChar(100)
+  name              String   @db.VarChar(100)
+  request_method    String   @db.VarChar(100)
+  endpoint          String   @db.VarChar(100)
+  execution_time    Float    @db.Float
+  row_count         Float    @db.Float
+  status            String   @db.VarChar(100)
+  created_at        DateTime @default(now()) @db.Timestamp(0)
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -481,15 +481,15 @@ model shifts {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model shifts_log {
-  complaint_log_id Int      @id @default(autoincrement())
-  ip_address       String   @db.VarChar(100)
-  name             String   @db.VarChar(100)
-  request_method   String   @db.VarChar(100)
-  endpoint         String   @db.VarChar(100)
-  execution_time   Float    @db.Float
-  row_count        Float    @db.Float
-  status           String   @db.VarChar(100)
-  created_at       DateTime @default(now()) @db.Timestamp(0)
+  shift_log_id   Int      @id @default(autoincrement())
+  ip_address     String   @db.VarChar(100)
+  name           String   @db.VarChar(100)
+  request_method String   @db.VarChar(100)
+  endpoint       String   @db.VarChar(100)
+  execution_time Float    @db.Float
+  row_count      Float    @db.Float
+  status         String   @db.VarChar(100)
+  created_at     DateTime @default(now()) @db.Timestamp(0)
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -519,4 +519,66 @@ model users {
   activity_rooms     activity_rooms[]
   attendance_records attendance_records[]
   auth_tokens        auth_tokens[]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model review_status_log {
+  review_status_log_id Int      @id @default(autoincrement())
+  ip_address           String   @db.VarChar(100)
+  name                 String   @db.VarChar(100)
+  request_method       String   @db.VarChar(100)
+  endpoint             String   @db.VarChar(100)
+  execution_time       Float    @db.Float
+  row_count            Float    @db.Float
+  status               String   @db.VarChar(100)
+  created_at           DateTime @default(now()) @db.Timestamp(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model overall_finding_log {
+  overall_finding_log_id Int      @id @default(autoincrement())
+  ip_address             String   @db.VarChar(100)
+  name                   String   @db.VarChar(100)
+  request_method         String   @db.VarChar(100)
+  endpoint               String   @db.VarChar(100)
+  execution_time         Float    @db.Float
+  row_count              Float    @db.Float
+  status                 String   @db.VarChar(100)
+  created_at             DateTime @default(now()) @db.Timestamp(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model content_of_medical_records_log {
+  content_of_medical_record_log_id Int      @id @default(autoincrement())
+  ip_address                       String   @db.VarChar(100)
+  name                             String   @db.VarChar(100)
+  request_method                   String   @db.VarChar(100)
+  endpoint                         String   @db.VarChar(100)
+  execution_time                   Float    @db.Float
+  row_count                        Float    @db.Float
+  status                           String   @db.VarChar(100)
+  created_at                       DateTime @default(now()) @db.Timestamp(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model api_versions {
+  api_version_id   Int      @id @default(autoincrement())
+  api_version_name Float    @db.Float
+  created_at       DateTime @default(now()) @db.Timestamp(0)
+  created_by       String?  @default("admin") @db.VarChar(100)
+  updated_at       DateTime @default(now()) @db.Timestamp(0)
+  updated_by       String?  @default("admin") @db.VarChar(100)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model api_versions_log {
+  api_version_log_id Int      @id @default(autoincrement())
+  ip_address         String   @db.VarChar(100)
+  name               String   @db.VarChar(100)
+  request_method     String   @db.VarChar(100)
+  endpoint           String   @db.VarChar(100)
+  execution_time     Float    @db.Float
+  row_count          Float    @db.Float
+  status             String   @db.VarChar(100)
+  created_at         DateTime @default(now()) @db.Timestamp(0)
 }
