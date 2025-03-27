@@ -4,6 +4,11 @@ const { authCheckToken, authCheckTokenAdmin } = require('../../middleware/auth/a
 
 // Api Version
 const { getAllDataApiVersions, insertDataApiVersion, updateDataApiVersion, removeDataApiVersion } = require('../../controllers/setting/apiVersionController');
+const { getAllDataApiVersionDetails, insertDataApiVersionDetail, updateDataApiVersionDetail, removeDataApiVersionDetail } = require('../../controllers/setting/apiVersionDetailController');
+
+// Akathospital Version
+const { getAllDataAkathospitalVersions, insertDataAkathospitalVersion, updateDataAkathospitalVersion, removeDataAkathospitalVersion } = require('../../controllers/setting/akathospitalVersionController');
+const { getAllDataAkathospitalVersionDetails, insertDataAkathospitalVersionDetail, updateDataAkathospitalVersionDetail, removeDataAkathospitalVersionDetail } = require('../../controllers/setting/akathospitalVersionDetailController');
 
 // Attendance Record Setting
 const { getAllDataComplaintTopics, insertDataComplaintTopic, updateDataComplaintTopic, removeDataComplaintTopic } = require('../../controllers/setting/complaintTopicController');
@@ -22,9 +27,27 @@ const { getAllDataContentOfMedicalRecords, insertDataContentOfMedicalRecord, upd
 
 // ApiVersion
 router.get('/getApiVersions', authCheckTokenAdmin, getAllDataApiVersions);
-// router.post('/insertApiVersion', authCheckTokenAdmin, insertDataApiVersion);
-// router.put('/updateApiVersion/:id', authCheckTokenAdmin, updateDataApiVersion);
-// router.delete('/removeApiVersion/:id', authCheckTokenAdmin, removeDataApiVersion);
+router.post('/insertApiVersion', authCheckTokenAdmin, insertDataApiVersion);
+router.put('/updateApiVersion/:id', authCheckTokenAdmin, updateDataApiVersion);
+router.delete('/removeApiVersion/:id', authCheckTokenAdmin, removeDataApiVersion);
+
+// ApiVersionDetail
+router.get('/getApiVersionDetails', authCheckTokenAdmin, getAllDataApiVersionDetails);
+router.post('/insertApiVersionDetail', authCheckTokenAdmin, insertDataApiVersionDetail);
+router.put('/updateApiVersionDetail/:id', authCheckTokenAdmin, updateDataApiVersionDetail);
+router.delete('/removeApiVersionDetail/:id', authCheckTokenAdmin, removeDataApiVersionDetail);
+
+// AkathospitalVersion
+router.get('/getAkathospitalVersions', authCheckTokenAdmin, getAllDataAkathospitalVersions);
+router.post('/insertAkathospitalVersion', authCheckTokenAdmin, insertDataAkathospitalVersion);
+router.put('/updateAkathospitalVersion/:id', authCheckTokenAdmin, updateDataAkathospitalVersion);
+router.delete('/removeAkathospitalVersion/:id', authCheckTokenAdmin, removeDataAkathospitalVersion);
+
+// AkathospitalVersionDetail
+router.get('/getAkathospitalVersionDetails', authCheckTokenAdmin, getAllDataAkathospitalVersionDetails);
+router.post('/insertAkathospitalVersionDetail', authCheckTokenAdmin, insertDataAkathospitalVersionDetail);
+router.put('/updateAkathospitalVersionDetail/:id', authCheckTokenAdmin, updateDataAkathospitalVersionDetail);
+router.delete('/removeAkathospitalVersionDetail/:id', authCheckTokenAdmin, removeDataAkathospitalVersionDetail);
 
 // ComplaintTopics
 router.get('/getComplaintTopics', authCheckTokenAdmin, getAllDataComplaintTopics);

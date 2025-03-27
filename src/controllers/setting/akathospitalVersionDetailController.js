@@ -2,16 +2,25 @@ const pm = require('../../config/prisma');
 const { msg } = require('../../utils/message');
 
 // Function สำหรับ FetchAll ข้อมูลจาก Database
-exports.getAllDataApiVersions = async (req, res) => {
+exports.getAllDataAkathospitalVersionDetails = async (req, res) => {
     try {
         const fullname = req.user.fullname_thai;
 
         const startTime = Date.now();
-        const resultData = await pm.api_versions.findMany();
+        const resultData = await pm.akathospital_version_details.findMany({
+            include: {
+                akathospital_version_id: false,
+                akathospital_versions: {
+                    select: {
+                        akathospital_version_name: true
+                    }
+                }
+            }
+        });
         const endTime = Date.now() - startTime;
 
-        // บันทึกข้อมูลไปยัง api_versions_log
-        await pm.api_versions_log.create({
+        // บันทึกข้อมูลไปยัง akathospital_version_details_log
+        await pm.akathospital_version_details_log.create({
             data: {
                 ip_address: req.headers['x-forwarded-for'] || req.ip,
                 name: fullname,
@@ -27,15 +36,15 @@ exports.getAllDataApiVersions = async (req, res) => {
 
         return msg(res, 200, { data: resultData });
     } catch(err) {
-        console.log('getAllDataApiVersions : ', err);
+        console.log('getAllDataAkathospitalVersionDetails : ', err);
         return msg(res, 500, { message: err.message });
     }
 }
 
 // Function สำหรับ Insert ข้อมูลไปยัง Database
-exports.insertDataApiVersion = async (req, res) => {
+exports.insertDataAkathospitalVersionDetail = async (req, res) => {
     try {
-        const apiVersionData = req.body; // ดึงข้อมูลทั้งหมดจาก req.body
+        const akathospitalVersionDetailData = req.body; // ดึงข้อมูลทั้งหมดจาก req.body
         const fullname = req.user.fullname_thai;
 
         // ตรวจสอบค่าซ้ำ โดยเก็บค่า duplicate message ไว้ก่อน
@@ -44,20 +53,33 @@ exports.insertDataApiVersion = async (req, res) => {
         let hasEmptyValue = false; // Flag สำหรับตรวจสอบค่าที่ว่าง
 
         await Promise.all(
-            Object.entries(apiVersionData).map(async ([key, value]) => {
+            Object.entries(akathospitalVersionDetailData).map(async ([key, value]) => {
                 // ถ้าพบค่าว่าง ให้ตั้งค่า flag เป็น true
-                if (!value) hasEmptyValue = true;
+                if (['akathospital_version_detail_comment'].includes(key) && !value) hasEmptyValue = true;
 
                 // ตรวจสอบค่าซ้ำเฉพาะ field ที่ไม่ว่าง
-                if (value) {
-                    const existingRecord = await pm.api_versions.findFirst({
+                if (['akathospital_version_detail_comment'].includes(key) && value) {
+                    const existingRecord = await pm.akathospital_version_details.findFirst({
                         where: { [key]: value },
-                        select: { api_version_id: true }
+                        select: { akathospital_version_detail_id: true }
                     });
 
                     if (existingRecord) {
                         deplicateStatus.push(409);
                         duplicateMessages.push(`( ${value} ) มีข้อมูลในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!`);
+                    }
+                }
+
+                // ตรวจสอบว่ามี AkathospitalVersionId นี้อยู่ใน Table akathospital_versions จริงหรือไม่?
+                if(['akathospital_version_id'].includes(key) && value) {
+                    const existingRecord = await pm.akathospital_versions.findFirst({
+                        where: { [key]: value },
+                        select: { akathospital_version_id: true }
+                    });
+
+                    if (!existingRecord) {
+                        deplicateStatus.push(404);
+                        duplicateMessages.push(`ไม่มี ( ID: ${value}) อยู่ใน akathospitalVersion!`);
                     }
                 }
             })
@@ -74,9 +96,9 @@ exports.insertDataApiVersion = async (req, res) => {
 
         // เพิ่มข้อมูลใหม่
         const startTime = Date.now();
-        const insertData = await pm.api_versions.create({
+        const insertData = await pm.akathospital_version_details.create({
             data: {
-                ...apiVersionData, // กระจายค่าทั้งหมดจาก req.body
+                ...akathospitalVersionDetailData, // กระจายค่าทั้งหมดจาก req.body
                 created_by: fullname,
                 updated_by: fullname
             }
@@ -84,7 +106,7 @@ exports.insertDataApiVersion = async (req, res) => {
         const endTime = Date.now() - startTime;
 
         // บันทึก Log
-        await pm.api_versions_log.create({
+        await pm.akathospital_version_details_log.create({
             data: {
                 ip_address: req.headers['x-forwarded-for'] || req.ip,
                 name: fullname,
@@ -99,40 +121,38 @@ exports.insertDataApiVersion = async (req, res) => {
         return msg(res, 200, { message: 'Insert data successfully!' });
 
     } catch (err) {
-        console.error('insertDataApiVersion : ', err);
+        console.error('insertDataAkathospitalVersionDetail : ', err);
         return msg(res, 500, { message: err.message });
     }
 };
 
 // Function สำหรับ Update ข้อมูลไปยัง Database
-exports.updateDataApiVersion = async (req, res) => {
+exports.updateDataAkathospitalVersionDetail = async (req, res) => {
     try {
-        const apiVersionId = req.params.id;
-        const apiVersionData = req.body; // ข้อมูลที่ต้องการอัปเดต
+        const akathospitalVersionDetailId = req.params.id;
+        const akathospitalVersionDetailData = req.body; // ข้อมูลที่ต้องการอัปเดต
         const fullname = req.user.fullname_thai;
 
-        // ตรวจสอบว่ามี ID นี้ในระบบหรือไม่
-        const fetchOneApiVersionById = await pm.api_versions.findFirst({
-            where: { api_version_id: Number(apiVersionId) },
-            select: { api_version_id: true }
+        const fetchOneAkathospitalVersionDetailById = await pm.akathospital_version_details.findFirst({
+            where: { akathospital_version_detail_id: Number(akathospitalVersionDetailId) },
+            select: { akathospital_version_detail_id: true }
         });
-        if (!fetchOneApiVersionById) return msg(res, 404, { message: `ไม่มีข้อมูล ( ID: ${apiVersionId} ) อยู่ในระบบ!` });
+        if (!fetchOneAkathospitalVersionDetailById) return msg(res, 404, { message: `ไม่มีข้อมูล ( ID: ${akathospitalVersionDetailId} ) อยู่ในระบบ!` });
 
-        // ตรวจสอบค่าซ้ำ โดยเก็บค่า duplicate message ไว้ก่อน
         const deplicateStatus = [];
         const duplicateMessages = [];
         let hasEmptyValue = false; // Flag สำหรับตรวจสอบค่าที่ว่าง
 
         await Promise.all(
-            Object.entries(apiVersionData).map(async ([key, value]) => {
+            Object.entries(akathospitalVersionDetailData).map(async ([key, value]) => {
                 // ถ้าพบค่าว่าง ให้ตั้งค่า flag เป็น true
-                if (!value) hasEmptyValue = true;
+                if (['akathospital_version_detail_comment'].includes(key) && !value) hasEmptyValue = true;
 
                 // ตรวจสอบค่าซ้ำเฉพาะ field ที่ไม่ว่าง
-                if (value) {
-                    const existingRecord = await pm.api_versions.findFirst({
+                if (['akathospital_version_detail_comment'].includes(key) && value) {
+                    const existingRecord = await pm.akathospital_version_details.findFirst({
                         where: { [key]: value },
-                        select: { api_version_id: true }
+                        select: { akathospital_version_detail_id: true }
                     });
 
                     if (existingRecord) {
@@ -140,31 +160,35 @@ exports.updateDataApiVersion = async (req, res) => {
                         duplicateMessages.push(`( ${value} ) มีข้อมูลในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!`);
                     }
                 }
+
+                // ตรวจสอบว่ามี AkathospitalVersionId นี้อยู่ใน Table akathospital_versions จริงหรือไม่?
+                if(['akathospital_version_id'].includes(key) && value) {
+                    const existingRecord = await pm.akathospital_versions.findFirst({
+                        where: { [key]: value },
+                        select: { akathospital_version_id: true }
+                    });
+
+                    if (!existingRecord) {
+                        deplicateStatus.push(404);
+                        duplicateMessages.push(`ไม่มี ( ID: ${value}) อยู่ใน akathospitalVersion!`);
+                    }
+                }
             })
         );
 
-        // ถ้ามีค่าที่ว่าง ให้เพิ่มข้อความแค่ครั้งเดียว
-        if (hasEmptyValue) {
-            duplicateMessages.unshift("กรุณากรอกข้อมูลให้ครบถ้วน!");
-            return msg(res, 400, { message: duplicateMessages[0] });
-        }
-
-        // ถ้ามีข้อมูลซ้ำหรือค่าที่ว่าง ให้ส่ง response กลับครั้งเดียว
-        if (duplicateMessages.length > 0) return msg(res, Math.max(...deplicateStatus), { message: duplicateMessages.join(" AND ") });
-
         // อัปเดตข้อมูล
         const startTime = Date.now();
-        const updateData = await pm.api_versions.update({
-            where: { api_version_id: Number(apiVersionId) }, // ระบุ apiVersionId ที่ต้องการอัปเดต
+        const updateData = await pm.akathospital_version_details.update({
+            where: { akathospital_version_detail_id: Number(akathospitalVersionDetailId) }, // ระบุ akathospitalVersionDetailId ที่ต้องการอัปเดต
             data: {
-                ...apiVersionData, // กระจายค่าทั้งหมดจาก req.body
+                ...akathospitalVersionDetailData, // กระจายค่าทั้งหมดจาก req.body
                 updated_by: fullname
             }
         });
         const endTime = Date.now() - startTime;
 
         // บันทึก Log
-        await pm.api_versions_log.create({
+        await pm.akathospital_version_details_log.create({
             data: {
                 ip_address: req.headers["x-forwarded-for"] || req.ip,
                 name: fullname,
@@ -178,51 +202,34 @@ exports.updateDataApiVersion = async (req, res) => {
 
         return msg(res, 200, { message: "Update data successfully!" });
     } catch (err) {
-        console.error("updateDataApiVersion : ", err);
+        console.error('updateDataAkathospitalVersionDetail : ', err);
         return msg(res, 500, { message: err.message });
     }
-};
+}
 
 // Function สำหรับ Delete ข้อมูลจาก Database
-exports.removeDataApiVersion = async (req, res) => {
+exports.removeDataAkathospitalVersionDetail = async (req, res) => {
     try {
-        const apiVersionId = req.params.id;
+        const akathospitalVersionDetailId = req.params.id;
         const fullname = req.user.fullname_thai;
 
         // ตรวจสอบว่ามี ID นี้ในระบบหรือไม่
-        const fetchOneApiVersionById = await pm.api_versions.findFirst({
-            where: { api_version_id: Number(apiVersionId) },
-            select: { api_version_id: true }
+        const fetchOneAkathospitalVersionDetailById = await pm.akathospital_version_details.findFirst({
+            where: { akathospital_version_detail_id: Number(akathospitalVersionDetailId) },
+            select: { akathospital_version_detail_id: true }
         });
-        if (!fetchOneApiVersionById) return msg(res, 404, { message: `ไม่มีข้อมูล ( ID: ${apiVersionId} ) อยู่ในระบบ!` });
 
-        // ตรวจสอบว่ามี Foreign Key หรือไม่
-        const checkForeignKey = await pm.$queryRaw
-            `
-                SELECT TABLE_NAME, COLUMN_NAME
-                FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
-                WHERE REFERENCED_TABLE_NAME = 'api_versions'
-                AND REFERENCED_COLUMN_NAME = 'api_version_id'
-                AND EXISTS (
-                    SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = KEY_COLUMN_USAGE.TABLE_NAME
-                )
-            `
-        ;
-
-        if (checkForeignKey.length > 0) {
-            const tables = checkForeignKey.map(row => row.TABLE_NAME).join(', ');
-            return msg(res, 400, { message: `ไม่สามารถลบได้ เนื่องจาก api_version_id ถูกใช้งานอยู่ในตาราง: ${tables} กรุณาลบข้อมูลที่เกี่ยวข้องก่อน!` });
-        }
+        if (!fetchOneAkathospitalVersionDetailById) return msg(res, 404, { message: `ไม่มีข้อมูล ( ID: ${akathospitalVersionDetailId} ) อยู่ในระบบ!` });
 
         // ลบข้อมูล
         const startTime = Date.now();
-        const removeData = await pm.api_versions.delete({
-            where: { api_version_id: Number(apiVersionId) }
+        const removeData = await pm.akathospital_version_details.delete({
+            where: { akathospital_version_detail_id: Number(akathospitalVersionDetailId) }
         });
         const endTime = Date.now() - startTime;
 
-        // บันทึกข้อมูลไปยัง api_versions_log
-        await pm.api_versions_log.create({
+        // บันทึกข้อมูลไปยัง akathospital_version_details_log
+        await pm.akathospital_version_details_log.create({
             data: {
                 ip_address: req.headers['x-forwarded-for'] || req.ip,
                 name: fullname,
@@ -234,16 +241,16 @@ exports.removeDataApiVersion = async (req, res) => {
             }
         });
 
-        // ดึงค่า MAX(api_version_id)
-        const maxIdResult = await pm.$queryRaw`SELECT COALESCE(MAX(api_version_id), 0) + 1 AS nextId FROM api_versions`;
+        // ดึงค่า MAX(akathospital_version_detail_id)
+        const maxIdResult = await pm.$queryRaw`SELECT COALESCE(MAX(akathospital_version_detail_id), 0) + 1 AS nextId FROM akathospital_version_details`;
 
         // รีเซ็ตค่า AUTO_INCREMENT
-        await pm.$executeRawUnsafe(`ALTER TABLE api_versions AUTO_INCREMENT = ${maxIdResult[0].nextId}`);
+        await pm.$executeRawUnsafe(`ALTER TABLE akathospital_version_details AUTO_INCREMENT = ${maxIdResult[0].nextId}`);
 
         return msg(res, 200, { message: 'Deleted successfully!' });
 
     } catch (err) {
-        console.log('removeDataApiVersion : ', err);
+        console.log('removeDataAkathospitalVersionDetail : ', err);
         return msg(res, 500, { message: err.message });
     }
 };

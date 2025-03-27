@@ -194,8 +194,25 @@ exports.removeDataPatientService = async (req, res) => {
             where: { patient_service_id: Number(patientServiceId) },
             select: { patient_service_id: true }
         });
-
         if (!fetchOnePatientServiceById) return msg(res, 404, { message: `ไม่มีข้อมูล ( ID: ${patientServiceId} ) อยู่ในระบบ!` });
+
+        // ตรวจสอบว่ามี Foreign Key หรือไม่
+        const checkForeignKey = await pm.$queryRaw
+            `
+                SELECT TABLE_NAME, COLUMN_NAME
+                FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+                WHERE REFERENCED_TABLE_NAME = 'patient_services'
+                AND REFERENCED_COLUMN_NAME = 'patient_service_id'
+                AND EXISTS (
+                    SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = KEY_COLUMN_USAGE.TABLE_NAME
+                )
+            `
+        ;
+
+        if (checkForeignKey.length > 0) {
+            const tables = checkForeignKey.map(row => row.TABLE_NAME).join(', ');
+            return msg(res, 400, { message: `ไม่สามารถลบได้ เนื่องจาก patient_service_id ถูกใช้งานอยู่ในตาราง: ${tables} กรุณาลบข้อมูลที่เกี่ยวข้องก่อน!` });
+        }
 
         // ลบข้อมูล
         const startTime = Date.now();
