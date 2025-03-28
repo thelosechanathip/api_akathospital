@@ -50,8 +50,8 @@ router.put('/updateAkathospitalVersionDetail/:id', authCheckTokenAdmin, updateDa
 router.delete('/removeAkathospitalVersionDetail/:id', authCheckTokenAdmin, removeDataAkathospitalVersionDetail);
 
 // ComplaintTopics
-router.get('/getComplaintTopics', authCheckTokenAdmin, getAllDataComplaintTopics);
-router.post('/insertComplaintTopics', authCheckTokenAdmin, insertDataComplaintTopic);
+router.get('/getComplaintTopics', getAllDataComplaintTopics);
+router.post('/insertComplaintTopics', insertDataComplaintTopic);
 router.put('/updateComplaintTopics/:id', authCheckTokenAdmin, updateDataComplaintTopic);
 router.delete('/removeComplaintTopics/:id', authCheckTokenAdmin, removeDataComplaintTopic);
 
