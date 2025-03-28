@@ -8556,7 +8556,7 @@
                           },
                           "image_url": {
                             "type": "string",
-                            "example": "/carousel-image/1"
+                            "example": "/carouselShowImage/1"
                           }
                         }
                       }
@@ -10320,7 +10320,7 @@
                           },
                           "image_url": {
                             "type": "string",
-                            "example": "/carousel-image/1"
+                            "example": "/carouselShowImage/1"
                           }
                         }
                       }
