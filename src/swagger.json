@@ -10374,7 +10374,7 @@
         "description": "สำหรับดึงข้อมูลทั้งหมดของ Carousel",
         "parameters": [
           {
-            "name": "id",
+            "name": "carousel_id",
             "in": "path",
             "required": true,
             "schema": {
