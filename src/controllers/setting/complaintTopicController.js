@@ -4,24 +4,24 @@ const { msg } = require('../../utils/message');
 // Function สำหรับ FetchAll ข้อมูลจาก Database
 exports.getAllDataComplaintTopics = async (req, res) => {
     try {
-        const fullname = req.user.fullname_thai;
+        // const fullname = req.user.fullname_thai;
 
-        const startTime = Date.now();
+        // const startTime = Date.now();
         const resultData = await pm.complaint_topics.findMany();
-        const endTime = Date.now() - startTime;
+        // const endTime = Date.now() - startTime;
 
-        // บันทึกข้อมูลไปยัง complaint_topics_log
-        await pm.complaint_topics_log.create({
-            data: {
-                ip_address: req.headers['x-forwarded-for'] || req.ip,
-                name: fullname,
-                request_method: req.method,
-                endpoint: req.originalUrl,
-                execution_time: endTime,
-                row_count: resultData.length,
-                status: resultData.length > 0 ? 'Success' : 'No Data'
-            }
-        });
+        // // บันทึกข้อมูลไปยัง complaint_topics_log
+        // await pm.complaint_topics_log.create({
+        //     data: {
+        //         ip_address: req.headers['x-forwarded-for'] || req.ip,
+        //         name: fullname,
+        //         request_method: req.method,
+        //         endpoint: req.originalUrl,
+        //         execution_time: endTime,
+        //         row_count: resultData.length,
+        //         status: resultData.length > 0 ? 'Success' : 'No Data'
+        //     }
+        // });
 
         if(resultData.length === 0) return msg(res, 404, { message: 'ไม่มีข้อมูลบน Database!' });
 
@@ -36,7 +36,7 @@ exports.getAllDataComplaintTopics = async (req, res) => {
 exports.insertDataComplaintTopic = async (req, res) => {
     try {
         const { complaint_topic_name } = req.body;
-        const fullname = req.user.fullname_thai;
+        // const fullname = req.user.fullname_thai;
 
         if(!complaint_topic_name) return msg(res, 400, 'กรุณากรอกข้อมูลให้ครบถ้วน!');
 
@@ -48,7 +48,7 @@ exports.insertDataComplaintTopic = async (req, res) => {
         });
         if(checkComplaintTopicNameResult) return msg(res, 404, 'มี (complaint_topic_name) อยู่ในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!');
 
-        const startTime = Date.now();
+        // const startTime = Date.now();
         const insertData = await pm.complaint_topics.create({
             data: {
                 complaint_topic_name: complaint_topic_name,
@@ -56,20 +56,20 @@ exports.insertDataComplaintTopic = async (req, res) => {
                 updated_by: fullname
             }
         });
-        const endTime = Date.now() - startTime;
+        // const endTime = Date.now() - startTime;
 
-        // บันทึกข้อมูลไปยัง complaint_topics_log
-        await pm.complaint_topics_log.create({
-            data: {
-                ip_address: req.headers['x-forwarded-for'] || req.ip,
-                name: fullname,
-                request_method: req.method,
-                endpoint: req.originalUrl,
-                execution_time: endTime,
-                row_count: insertData ? 1 : 0,
-                status: insertData ? 'Success' : 'Failed'
-            }
-        });
+        // // บันทึกข้อมูลไปยัง complaint_topics_log
+        // await pm.complaint_topics_log.create({
+        //     data: {
+        //         ip_address: req.headers['x-forwarded-for'] || req.ip,
+        //         name: fullname,
+        //         request_method: req.method,
+        //         endpoint: req.originalUrl,
+        //         execution_time: endTime,
+        //         row_count: insertData ? 1 : 0,
+        //         status: insertData ? 'Success' : 'Failed'
+        //     }
+        // });
 
         return msg(res, 200, { message: 'Insert data successfully!' });
     } catch(err) {
