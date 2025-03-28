@@ -83,6 +83,14 @@
     {
       "name": "AkathospitalVersionDetail",
       "description": "Endpoints สำหรับการจัดการข้อมูล รายละเอียดของ Akathospital Version"
+    },
+    {
+      "name": "SettingCarousel",
+      "description": "Endpoints สำหรับการจัดการข้อมูล ของรูปภาพสำหรับ Slider"
+    },
+    {
+      "name": "Carousel",
+      "description": "Endpoints สำหรับการจัดการแสดงผลไปยัง PublicAPI"
     }
   ],
   "paths": {
@@ -3796,1266 +3804,6 @@
                     "message": {
                       "type": "string",
                       "example": "ไม่มี shift_id อยู่ในระบบ!"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "internal server errors"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/akatApi/publicAPI/getComplaints": {
-      "get": {
-        "tags": [
-          "Complaint"
-        ],
-        "summary": "สำหรับดึงข้อมูล Complaint",
-        "description": "สำหรับดึงข้อมูลทั้งหมดของ Complaint",
-        "responses": {
-          "200": {
-            "description": "ความสำเร็จทั่วไป",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "complaint_id": {
-                            "type": "integer",
-                            "example": 1
-                          },
-                          "fullname": {
-                            "type": "string",
-                            "example": "นายร้องเรียน อยากร้องเรียน"
-                          },
-                          "email": {
-                            "type": "string",
-                            "example": "nailonglint@gmail.com"
-                          },
-                          "telephone_number": {
-                            "type": "string",
-                            "example": "0123456789876"
-                          },
-                          "complaint_topics": {
-                            "type": "object",
-                            "properties": {
-                              "complaint_topic_id": {
-                                "type": "int",
-                                "example": "1"
-                              },
-                              "complaint_topic_name": {
-                                "type": "string",
-                                "example": "ร้องเรียนเจ้าหน้าที่"
-                              },
-                              "created_at": {
-                                "type": "string",
-                                "format": "date-time",
-                                "example": "2025-02-19T08:55:57.000Z"
-                              },
-                              "created_by": {
-                                "type": "string",
-                                "example": "admin"
-                              },
-                              "updated_at": {
-                                "type": "string",
-                                "format": "date-time",
-                                "example": "2025-02-19T08:55:57.000Z"
-                              },
-                              "updated_by": {
-                                "type": "string",
-                                "example": "admin"
-                              }
-                            }
-                          },
-                          "detail": {
-                            "type": "string",
-                            "example": "อยากร้องเรียนเพราะอะไรไม่รู้เหมือนกัน"
-                          },
-                          "created_at": {
-                            "type": "string",
-                            "format": "date-time",
-                            "example": "2025-02-19T08:55:57.000Z"
-                          },
-                          "created_by": {
-                            "type": "string",
-                            "example": "admin"
-                          },
-                          "updated_at": {
-                            "type": "string",
-                            "format": "date-time",
-                            "example": "2025-02-19T08:55:57.000Z"
-                          },
-                          "updated_by": {
-                            "type": "string",
-                            "example": "admin"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource ไม่พบ",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "ไม่มีข้อมูลบน Database!"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "internal server errors"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/akatApi/publicAPI/insertComplaint": {
-      "post": {
-        "tags": [
-          "Complaint"
-        ],
-        "summary": "สำหรับบันทึกข้อมูล Complaint",
-        "description": "สำหรับบันทึกข้อมูลทั้งหมดของ Complaint",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "fullname": {
-                    "type": "string",
-                    "example": "นายดำ ค้ำเครียด"
-                  },
-                  "email": {
-                    "type": "string",
-                    "example": "admin@gmail.com"
-                  },
-                  "telephone_number": {
-                    "type": "string",
-                    "example": "0999739572"
-                  },
-                  "complaint_topic_id": {
-                    "type": "int",
-                    "example": "1"
-                  },
-                  "detail": {
-                    "type": "string",
-                    "example": "อยากร้องเรียนเฉยๆมีไรป๊ะ!!"
-                  }
-                },
-                "required": [
-                  "fullname",
-                  "email",
-                  "telephone_number",
-                  "complaint_topic_id",
-                  "detail"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "ความสำเร็จทั่วไป",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Insert data successfully!"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "ข้อมูลจาก Client ไม่ถูกต้อง",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "กรุณากรอกข้อมูลให้ครบถ้วน || รูปแบบ Email ไม่ถูกต้องกรุณาตรวจสอบ! || รูปแบบเบอร์โทรศัพท์ไม่ถูกต้องกรุณาตรวจสอบ!"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "internal server errors"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/akatApi/publicAPI/removeComplaint/{id}": {
-      "delete": {
-        "tags": [
-          "Complaint"
-        ],
-        "summary": "สำหรับลบข้อมูล Complaint",
-        "description": "สำหรับลบข้อมูลทั้งหมดของ Complaint",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "example": 1
-            },
-            "description": "ID ของ Complaint ที่ต้องการลบ"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {}
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "ความสำเร็จทั่วไป",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Deleted successfully!"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource ไม่พบ",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "ไม่มี complaint_id อยู่ในระบบ!"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "internal server errors"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/akatApi/publicAPI/fetchDataAllAttendanceRecord": {
-      "get": {
-        "tags": [
-          "AttendanceRecord"
-        ],
-        "summary": "สำหรับดึงข้อมูล AttendanceRecord",
-        "description": "สำหรับดึงข้อมูลทั้งหมดของ AttendanceRecord",
-        "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-            },
-            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "ความสำเร็จทั่วไป",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "attendance_record_id": {
-                            "type": "integer",
-                            "example": 1
-                          },
-                          "users": {
-                            "type": "object",
-                            "items": {
-                              "fullname_thai": {
-                                "type": "string",
-                                "example": "นายดำ ขำแห้ง"
-                              }
-                            }
-                          },
-                          "shift_types": {
-                            "type": "object",
-                            "items": {
-                              "shift_type_name": {
-                                "type": "string",
-                                "example": "OnCall"
-                              }
-                            }
-                          },
-                          "shifts": {
-                            "type": "object",
-                            "items": {
-                              "shift_name": {
-                                "type": "string",
-                                "example": "เช้า"
-                              }
-                            }
-                          },
-                          "starting": {
-                            "type": "string",
-                            "example": "10:33:35"
-                          },
-                          "check_in_status": {
-                            "type": "object",
-                            "items": {
-                              "check_in_status_name": {
-                                "type": "string",
-                                "example": "เข้างาน"
-                              }
-                            }
-                          },
-                          "ending": {
-                            "type": "string",
-                            "example": "10:34:00"
-                          },
-                          "check_out_status": {
-                            "type": "object",
-                            "items": {
-                              "check_out_status_name": {
-                                "type": "string",
-                                "example": "ออกก่อนเวลา"
-                              }
-                            }
-                          },
-                          "created_at": {
-                            "type": "date",
-                            "example": "2025-03-19T05:34:20.000Z"
-                          },
-                          "created_by": {
-                            "type": "string",
-                            "example": "admin"
-                          },
-                          "updated_at": {
-                            "type": "date",
-                            "example": "2025-03-19T05:34:20.000Z"
-                          },
-                          "updated_by": {
-                            "type": "string",
-                            "example": "admin"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource ไม่พบ",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "ไม่มีข้อมูลบน Database!"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "internal server errors"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/akatApi/publicAPI/checkIn": {
-      "post": {
-        "tags": [
-          "AttendanceRecord"
-        ],
-        "summary": "สำหรับ CheckIn หรือลงชื่อเข้างาน",
-        "description": "สำหรับ CheckIn หรือลงชื่อเข้างานเมื่อลงสำเร็จจะต้องมี OTP 6 หลักส่งไปยัง Application Telegram เพื่อนำไปยืนยันตัวตน OTP จะมีเวลาใช้งานได้แค่ 20 วินาที และ Generate Token เพื่อยืนยันตัวตนแบบ 2FA",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "national_id": {
-                    "type": "string",
-                    "example": "L5vFjTdZFX8LG+hvejyrG97+5BdbGeY0=",
-                    "description": "เลขบัตรประจำตัวประชาชนที่มีการเข้ารหัสในรูปแบบของ CryptoJS"
-                  },
-                  "shift_type_id": {
-                    "type": "int",
-                    "example": 1,
-                    "description": "Foreign Key ของประเภทกะการทำงาน ( ตัวอย่าง: ปกติ, นอกเวลาราชการ, OnCall )"
-                  }
-                },
-                "required": [
-                  "national_id",
-                  "shift_type_id"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "ความสำเร็จทั่วไป",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "token": {
-                      "type": "string",
-                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Server ไม่สามารถประมวลผลคำร้องขอเนื่องจากข้อผิดพลาดของ Client",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "กรุณากรอกข้อมูลให้ครบถ้วน || ไม่มี TelegramChatId ใน User กรุณาติดต่อ Admin เพื่อเพิ่มข้อมูล! || ไม่มีข้อมูลประเภทกะการทำงาน กรุณาเพิ่มข้อมูลก่อน! || ไม่พบกะการทำงานที่ตรงกับเวลาปัจจุบัน || เกิดข้อผิดพลาดในการดึงข้อมูลกะการทำงานหรือสถานะเช็คอิน"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource ไม่พบ",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "ไม่มี User นี้อยู่ในระบบ กรุณา Register ก่อนใช้งาน!"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "คำร้องขอไม่สามารถดำเนินการได้เนื่องจากขัดแย้งกับสถานะปัจจุบันของทรัพยากรที่ต้องการอัพเดท",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "มีข้อมูลซ้ำที่ยังไม่ได้ Check Out กรุณา Check Out ก่อน!"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "internal server errors"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/akatApi/publicAPI/checkInVerifyOtp": {
-      "post": {
-        "tags": [
-          "AttendanceRecord"
-        ],
-        "summary": "checkInVerifyOtp",
-        "description": "ตรวจสอบ Token เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header และตรวจสอบ OTP ที่เจ้าหน้าที่กรอกข้อมูลเข้ามาว่าถูกต้องและตรงกันกับ telegram หรือไม่",
-        "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-            },
-            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "otpCode": {
-                    "type": "string",
-                    "example": "123456",
-                    "description": "รหัส OTP 6 หลักจาก Application Telegram"
-                  }
-                },
-                "required": [
-                  "otp"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "ความสำเร็จทั่วไป",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "ลงทะเบียนเข้างานเสร็จสิ้น!"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "ข้อมูลจาก Client ไม่ถูกต้อง",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "การเข้าถึงถูกปฏิเสธ! || กรุณากรอกข้อมูลให้ครบถ้วน!"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "การรับรองความถูกต้องล้มเหลว",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || ไม่มี Chat ID ใน Token || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Server ปฏิเสธการร้องขอ",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource ไม่พบ( Not found )",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "ไม่มีข้อมูลบน Database! || ไม่มี User นี้อยู่ในระบบ กรุณา Register ก่อนใช้งาน! || User นี้ไม่มีการ CheckIn เข้าทำงาน! || ไม่มีข้อมูล (สถานะการออกงาน) กรุณาเพิ่มข้อมูลก่อน!"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "internal server errors"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/akatApi/publicAPI/checkOut": {
-      "post": {
-        "tags": [
-          "AttendanceRecord"
-        ],
-        "summary": "สำหรับ checkOut หรือลงชื่อออกงาน",
-        "description": "สำหรับ checkOut หรือลงชื่อออกงาน",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "national_id": {
-                    "type": "string",
-                    "example": "L5vFjTdZFX8LG+hvejyrG97+5BdbGeY0=",
-                    "description": "เลขบัตรประจำตัวประชาชนที่มีการเข้ารหัสในรูปแบบของ CryptoJS"
-                  }
-                },
-                "required": [
-                  "national_id"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "ความสำเร็จทั่วไป",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "ลงเวลาออกงานเสร็จสิ้น"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "ข้อมูลจาก Client ไม่ถูกต้อง",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "การเข้าถึงถูกปฏิเสธ! || กรุณากรอกข้อมูลให้ครบถ้วน!"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "การรับรองความถูกต้องล้มเหลว",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Server ปฏิเสธการร้องขอ",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource ไม่พบ( Not found )",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "ไม่มีข้อมูลบน Database! || ไม่มี User นี้อยู่ในระบบ กรุณา Register ก่อนใช้งาน! || User นี้ไม่มีการ CheckIn เข้าทำงาน! || ไม่มีข้อมูล (สถานะการออกงาน) กรุณาเพิ่มข้อมูลก่อน!"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "internal server errors"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/akatApi/publicAPI/searchAttendanceRecords/{keyword}": {
-      "get": {
-        "tags": [
-          "AttendanceRecord"
-        ],
-        "summary": "สำหรับดึงข้อมูล AttendanceRecord",
-        "description": "สำหรับดึงข้อมูลทั้งหมดของ AttendanceRecord",
-        "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-            },
-            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
-          },
-          {
-            "name": "keyword",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "example": 1
-            },
-            "description": "Keyword ของ AttendanceRecord ที่ต้องการหาข้อมูล"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "ความสำเร็จทั่วไป",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "attendance_record_id": {
-                            "type": "integer",
-                            "example": 1
-                          },
-                          "users": {
-                            "type": "object",
-                            "items": {
-                              "fullname_thai": {
-                                "type": "string",
-                                "example": "นายดำ ขำแห้ง"
-                              }
-                            }
-                          },
-                          "shift_types": {
-                            "type": "object",
-                            "items": {
-                              "shift_type_name": {
-                                "type": "string",
-                                "example": "OnCall"
-                              }
-                            }
-                          },
-                          "shifts": {
-                            "type": "object",
-                            "items": {
-                              "shift_name": {
-                                "type": "string",
-                                "example": "เช้า"
-                              }
-                            }
-                          },
-                          "starting": {
-                            "type": "string",
-                            "example": "10:33:35"
-                          },
-                          "check_in_status": {
-                            "type": "object",
-                            "items": {
-                              "check_in_status_name": {
-                                "type": "string",
-                                "example": "เข้างาน"
-                              }
-                            }
-                          },
-                          "ending": {
-                            "type": "string",
-                            "example": "10:34:00"
-                          },
-                          "check_out_status": {
-                            "type": "object",
-                            "items": {
-                              "check_out_status_name": {
-                                "type": "string",
-                                "example": "ออกก่อนเวลา"
-                              }
-                            }
-                          },
-                          "created_at": {
-                            "type": "date",
-                            "example": "2025-03-19T05:34:20.000Z"
-                          },
-                          "created_by": {
-                            "type": "string",
-                            "example": "admin"
-                          },
-                          "updated_at": {
-                            "type": "date",
-                            "example": "2025-03-19T05:34:20.000Z"
-                          },
-                          "updated_by": {
-                            "type": "string",
-                            "example": "admin"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "ข้อมูลจาก Client ไม่ถูกต้อง",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "การเข้าถึงถูกปฏิเสธ!"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "การรับรองความถูกต้องล้มเหลว",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Server ปฏิเสธการร้องขอ",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource ไม่พบ( Not found )",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "ไม่มีข้อมูลบน Database!"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "internal server errors"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/akatApi/publicAPI/searchDateAttendanceRecord/{date_start}/{date_end}": {
-      "get": {
-        "tags": [
-          "AttendanceRecord"
-        ],
-        "summary": "สำหรับดึงข้อมูล AttendanceRecord",
-        "description": "สำหรับดึงข้อมูลทั้งหมดของ AttendanceRecord",
-        "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-            },
-            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
-          },
-          {
-            "name": "date_start",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "example": 1
-            },
-            "description": "date_start ของ AttendanceRecord ที่ต้องการหาข้อมูล"
-          },
-          {
-            "name": "date_end",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "example": 1
-            },
-            "description": "date_end ของ AttendanceRecord ที่ต้องการหาข้อมูล"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "ความสำเร็จทั่วไป",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "attendance_record_id": {
-                            "type": "integer",
-                            "example": 1
-                          },
-                          "users": {
-                            "type": "object",
-                            "items": {
-                              "fullname_thai": {
-                                "type": "string",
-                                "example": "นายดำ ขำแห้ง"
-                              }
-                            }
-                          },
-                          "shift_types": {
-                            "type": "object",
-                            "items": {
-                              "shift_type_name": {
-                                "type": "string",
-                                "example": "OnCall"
-                              }
-                            }
-                          },
-                          "shifts": {
-                            "type": "object",
-                            "items": {
-                              "shift_name": {
-                                "type": "string",
-                                "example": "เช้า"
-                              }
-                            }
-                          },
-                          "starting": {
-                            "type": "string",
-                            "example": "10:33:35"
-                          },
-                          "check_in_status": {
-                            "type": "object",
-                            "items": {
-                              "check_in_status_name": {
-                                "type": "string",
-                                "example": "เข้างาน"
-                              }
-                            }
-                          },
-                          "ending": {
-                            "type": "string",
-                            "example": "10:34:00"
-                          },
-                          "check_out_status": {
-                            "type": "object",
-                            "items": {
-                              "check_out_status_name": {
-                                "type": "string",
-                                "example": "ออกก่อนเวลา"
-                              }
-                            }
-                          },
-                          "created_at": {
-                            "type": "date",
-                            "example": "2025-03-19T05:34:20.000Z"
-                          },
-                          "created_by": {
-                            "type": "string",
-                            "example": "admin"
-                          },
-                          "updated_at": {
-                            "type": "date",
-                            "example": "2025-03-19T05:34:20.000Z"
-                          },
-                          "updated_by": {
-                            "type": "string",
-                            "example": "admin"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "ข้อมูลจาก Client ไม่ถูกต้อง",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "การเข้าถึงถูกปฏิเสธ! || กรุณากรอกข้อมูลให้ครบถ้วน || วันที่ไม่ถูกต้อง กรุณาระบุในรูปแบบ YYYY-MM-DD!"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "การรับรองความถูกต้องล้มเหลว",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Server ปฏิเสธการร้องขอ",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource ไม่พบ( Not found )",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "ไม่มีข้อมูลบน Database!"
                     }
                   }
                 }
@@ -9723,6 +8471,1941 @@
                     "message": {
                       "type": "string",
                       "example": "ไม่มีข้อมูล ( ID: ${akathospitalVersionDetailId} ) อยู่ในระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/setting/getSettingCarousels": {
+      "get": {
+        "tags": [
+          "SettingCarousel"
+        ],
+        "summary": "สำหรับดึงข้อมูล SettingCarousel",
+        "description": "สำหรับดึงข้อมูลทั้งหมดของ SettingCarousel และตรวจสอบ Token เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "carousel_id": {
+                            "type": "integer",
+                            "example": 1
+                          },
+                          "carousel_name": {
+                            "type": "string",
+                            "example": "นโยบายงดการให้และรับของขวัญ"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2025-02-19T08:55:57.000Z"
+                          },
+                          "created_by": {
+                            "type": "string",
+                            "example": "admin"
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2025-02-19T08:55:57.000Z"
+                          },
+                          "updated_by": {
+                            "type": "string",
+                            "example": "admin"
+                          },
+                          "image_url": {
+                            "type": "string",
+                            "example": "/carousel-image/1"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีข้อมูลบน Database!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/setting/insertSettingCarousel": {
+      "post": {
+        "tags": [
+          "SettingCarousel"
+        ],
+        "summary": "สำหรับบันทึกข้อมูล SettingCarousel",
+        "description": "สำหรับบันทึกข้อมูลทั้งหมดของ SettingCarousel และตรวจสอบ Token เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "carousel_name": {
+                    "type": "string",
+                    "example": "1.0.0"
+                  },
+                  "carousel_image": {
+                    "type": "string",
+                    "format": "binary",
+                    "example": "03.jpg"
+                  }
+                },
+                "required": [
+                  "carousel_name",
+                  "carousel_image"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Insert data successfully!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ข้อมูลจาก Client ไม่ถูกต้อง",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "การเข้าถึงถูกปฏิเสธ! || กรุณากรอกข้อมูลให้ครบถ้วน! || กรุณาอัปโหลดไฟล์!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Server ปฏิเสธการร้องขอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/setting/updateSettingCarousel/{id}": {
+      "put": {
+        "tags": [
+          "SettingCarousel"
+        ],
+        "summary": "สำหรับอัพเดทข้อมูล SettingCarousel",
+        "description": "สำหรับอัพเดทข้อมูลทั้งหมดของ SettingCarousel และตรวจสอบ Token เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            },
+            "description": "ID ของ SettingCarousel ที่ต้องการอัพเดท"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "carousel_name": {
+                    "type": "string",
+                    "example": "1.0.0"
+                  },
+                  "carousel_image": {
+                    "type": "string",
+                    "format": "binary",
+                    "example": "03.jpg"
+                  }
+                },
+                "required": [
+                  "carousel_name",
+                  "carousel_image"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Updated successfully!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ข้อมูลจาก Client ไม่ถูกต้อง",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "การเข้าถึงถูกปฏิเสธ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Server ปฏิเสธการร้องขอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ( Not found )",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีข้อมูล ( ID: ${carouselId} ) อยู่ในระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/setting/removeSettingCarousel/{id}": {
+      "delete": {
+        "tags": [
+          "SettingCarousel"
+        ],
+        "summary": "สำหรับลบข้อมูล SettingCarousel",
+        "description": "สำหรับลบข้อมูลทั้งหมดของ SettingCarousel และตรวจสอบ Token เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            },
+            "description": "ID ของ SettingCarousel ที่ต้องการอัพเดท"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Deleted successfully!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Server ไม่สามารถประมวลผลคำร้องขอเนื่องจากข้อผิดพลาดของ Client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "การเข้าถึงถูกปฏิเสธ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Server ปฏิเสธการร้องขอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีข้อมูล ( ID: ${carouselId} ) อยู่ในระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/publicAPI/getComplaints": {
+      "get": {
+        "tags": [
+          "Complaint"
+        ],
+        "summary": "สำหรับดึงข้อมูล Complaint",
+        "description": "สำหรับดึงข้อมูลทั้งหมดของ Complaint",
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "complaint_id": {
+                            "type": "integer",
+                            "example": 1
+                          },
+                          "fullname": {
+                            "type": "string",
+                            "example": "นายร้องเรียน อยากร้องเรียน"
+                          },
+                          "email": {
+                            "type": "string",
+                            "example": "nailonglint@gmail.com"
+                          },
+                          "telephone_number": {
+                            "type": "string",
+                            "example": "0123456789876"
+                          },
+                          "complaint_topics": {
+                            "type": "object",
+                            "properties": {
+                              "complaint_topic_id": {
+                                "type": "int",
+                                "example": "1"
+                              },
+                              "complaint_topic_name": {
+                                "type": "string",
+                                "example": "ร้องเรียนเจ้าหน้าที่"
+                              },
+                              "created_at": {
+                                "type": "string",
+                                "format": "date-time",
+                                "example": "2025-02-19T08:55:57.000Z"
+                              },
+                              "created_by": {
+                                "type": "string",
+                                "example": "admin"
+                              },
+                              "updated_at": {
+                                "type": "string",
+                                "format": "date-time",
+                                "example": "2025-02-19T08:55:57.000Z"
+                              },
+                              "updated_by": {
+                                "type": "string",
+                                "example": "admin"
+                              }
+                            }
+                          },
+                          "detail": {
+                            "type": "string",
+                            "example": "อยากร้องเรียนเพราะอะไรไม่รู้เหมือนกัน"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2025-02-19T08:55:57.000Z"
+                          },
+                          "created_by": {
+                            "type": "string",
+                            "example": "admin"
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2025-02-19T08:55:57.000Z"
+                          },
+                          "updated_by": {
+                            "type": "string",
+                            "example": "admin"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีข้อมูลบน Database!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/publicAPI/insertComplaint": {
+      "post": {
+        "tags": [
+          "Complaint"
+        ],
+        "summary": "สำหรับบันทึกข้อมูล Complaint",
+        "description": "สำหรับบันทึกข้อมูลทั้งหมดของ Complaint",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fullname": {
+                    "type": "string",
+                    "example": "นายดำ ค้ำเครียด"
+                  },
+                  "email": {
+                    "type": "string",
+                    "example": "admin@gmail.com"
+                  },
+                  "telephone_number": {
+                    "type": "string",
+                    "example": "0999739572"
+                  },
+                  "complaint_topic_id": {
+                    "type": "int",
+                    "example": "1"
+                  },
+                  "detail": {
+                    "type": "string",
+                    "example": "อยากร้องเรียนเฉยๆมีไรป๊ะ!!"
+                  }
+                },
+                "required": [
+                  "fullname",
+                  "email",
+                  "telephone_number",
+                  "complaint_topic_id",
+                  "detail"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Insert data successfully!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ข้อมูลจาก Client ไม่ถูกต้อง",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "กรุณากรอกข้อมูลให้ครบถ้วน || รูปแบบ Email ไม่ถูกต้องกรุณาตรวจสอบ! || รูปแบบเบอร์โทรศัพท์ไม่ถูกต้องกรุณาตรวจสอบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/publicAPI/removeComplaint/{id}": {
+      "delete": {
+        "tags": [
+          "Complaint"
+        ],
+        "summary": "สำหรับลบข้อมูล Complaint",
+        "description": "สำหรับลบข้อมูลทั้งหมดของ Complaint",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            },
+            "description": "ID ของ Complaint ที่ต้องการลบ"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {}
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Deleted successfully!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มี complaint_id อยู่ในระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/publicAPI/fetchDataAllAttendanceRecord": {
+      "get": {
+        "tags": [
+          "AttendanceRecord"
+        ],
+        "summary": "สำหรับดึงข้อมูล AttendanceRecord",
+        "description": "สำหรับดึงข้อมูลทั้งหมดของ AttendanceRecord",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "attendance_record_id": {
+                            "type": "integer",
+                            "example": 1
+                          },
+                          "users": {
+                            "type": "object",
+                            "items": {
+                              "fullname_thai": {
+                                "type": "string",
+                                "example": "นายดำ ขำแห้ง"
+                              }
+                            }
+                          },
+                          "shift_types": {
+                            "type": "object",
+                            "items": {
+                              "shift_type_name": {
+                                "type": "string",
+                                "example": "OnCall"
+                              }
+                            }
+                          },
+                          "shifts": {
+                            "type": "object",
+                            "items": {
+                              "shift_name": {
+                                "type": "string",
+                                "example": "เช้า"
+                              }
+                            }
+                          },
+                          "starting": {
+                            "type": "string",
+                            "example": "10:33:35"
+                          },
+                          "check_in_status": {
+                            "type": "object",
+                            "items": {
+                              "check_in_status_name": {
+                                "type": "string",
+                                "example": "เข้างาน"
+                              }
+                            }
+                          },
+                          "ending": {
+                            "type": "string",
+                            "example": "10:34:00"
+                          },
+                          "check_out_status": {
+                            "type": "object",
+                            "items": {
+                              "check_out_status_name": {
+                                "type": "string",
+                                "example": "ออกก่อนเวลา"
+                              }
+                            }
+                          },
+                          "created_at": {
+                            "type": "date",
+                            "example": "2025-03-19T05:34:20.000Z"
+                          },
+                          "created_by": {
+                            "type": "string",
+                            "example": "admin"
+                          },
+                          "updated_at": {
+                            "type": "date",
+                            "example": "2025-03-19T05:34:20.000Z"
+                          },
+                          "updated_by": {
+                            "type": "string",
+                            "example": "admin"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีข้อมูลบน Database!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/publicAPI/checkIn": {
+      "post": {
+        "tags": [
+          "AttendanceRecord"
+        ],
+        "summary": "สำหรับ CheckIn หรือลงชื่อเข้างาน",
+        "description": "สำหรับ CheckIn หรือลงชื่อเข้างานเมื่อลงสำเร็จจะต้องมี OTP 6 หลักส่งไปยัง Application Telegram เพื่อนำไปยืนยันตัวตน OTP จะมีเวลาใช้งานได้แค่ 20 วินาที และ Generate Token เพื่อยืนยันตัวตนแบบ 2FA",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "national_id": {
+                    "type": "string",
+                    "example": "L5vFjTdZFX8LG+hvejyrG97+5BdbGeY0=",
+                    "description": "เลขบัตรประจำตัวประชาชนที่มีการเข้ารหัสในรูปแบบของ CryptoJS"
+                  },
+                  "shift_type_id": {
+                    "type": "int",
+                    "example": 1,
+                    "description": "Foreign Key ของประเภทกะการทำงาน ( ตัวอย่าง: ปกติ, นอกเวลาราชการ, OnCall )"
+                  }
+                },
+                "required": [
+                  "national_id",
+                  "shift_type_id"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Server ไม่สามารถประมวลผลคำร้องขอเนื่องจากข้อผิดพลาดของ Client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "กรุณากรอกข้อมูลให้ครบถ้วน || ไม่มี TelegramChatId ใน User กรุณาติดต่อ Admin เพื่อเพิ่มข้อมูล! || ไม่มีข้อมูลประเภทกะการทำงาน กรุณาเพิ่มข้อมูลก่อน! || ไม่พบกะการทำงานที่ตรงกับเวลาปัจจุบัน || เกิดข้อผิดพลาดในการดึงข้อมูลกะการทำงานหรือสถานะเช็คอิน"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มี User นี้อยู่ในระบบ กรุณา Register ก่อนใช้งาน!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "คำร้องขอไม่สามารถดำเนินการได้เนื่องจากขัดแย้งกับสถานะปัจจุบันของทรัพยากรที่ต้องการอัพเดท",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "มีข้อมูลซ้ำที่ยังไม่ได้ Check Out กรุณา Check Out ก่อน!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/publicAPI/checkInVerifyOtp": {
+      "post": {
+        "tags": [
+          "AttendanceRecord"
+        ],
+        "summary": "checkInVerifyOtp",
+        "description": "ตรวจสอบ Token เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header และตรวจสอบ OTP ที่เจ้าหน้าที่กรอกข้อมูลเข้ามาว่าถูกต้องและตรงกันกับ telegram หรือไม่",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "otpCode": {
+                    "type": "string",
+                    "example": "123456",
+                    "description": "รหัส OTP 6 หลักจาก Application Telegram"
+                  }
+                },
+                "required": [
+                  "otp"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ลงทะเบียนเข้างานเสร็จสิ้น!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ข้อมูลจาก Client ไม่ถูกต้อง",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "การเข้าถึงถูกปฏิเสธ! || กรุณากรอกข้อมูลให้ครบถ้วน!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || ไม่มี Chat ID ใน Token || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Server ปฏิเสธการร้องขอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ( Not found )",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีข้อมูลบน Database! || ไม่มี User นี้อยู่ในระบบ กรุณา Register ก่อนใช้งาน! || User นี้ไม่มีการ CheckIn เข้าทำงาน! || ไม่มีข้อมูล (สถานะการออกงาน) กรุณาเพิ่มข้อมูลก่อน!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/publicAPI/checkOut": {
+      "post": {
+        "tags": [
+          "AttendanceRecord"
+        ],
+        "summary": "สำหรับ checkOut หรือลงชื่อออกงาน",
+        "description": "สำหรับ checkOut หรือลงชื่อออกงาน",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "national_id": {
+                    "type": "string",
+                    "example": "L5vFjTdZFX8LG+hvejyrG97+5BdbGeY0=",
+                    "description": "เลขบัตรประจำตัวประชาชนที่มีการเข้ารหัสในรูปแบบของ CryptoJS"
+                  }
+                },
+                "required": [
+                  "national_id"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ลงเวลาออกงานเสร็จสิ้น"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ข้อมูลจาก Client ไม่ถูกต้อง",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "การเข้าถึงถูกปฏิเสธ! || กรุณากรอกข้อมูลให้ครบถ้วน!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Server ปฏิเสธการร้องขอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ( Not found )",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีข้อมูลบน Database! || ไม่มี User นี้อยู่ในระบบ กรุณา Register ก่อนใช้งาน! || User นี้ไม่มีการ CheckIn เข้าทำงาน! || ไม่มีข้อมูล (สถานะการออกงาน) กรุณาเพิ่มข้อมูลก่อน!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/publicAPI/searchAttendanceRecords/{keyword}": {
+      "get": {
+        "tags": [
+          "AttendanceRecord"
+        ],
+        "summary": "สำหรับดึงข้อมูล AttendanceRecord",
+        "description": "สำหรับดึงข้อมูลทั้งหมดของ AttendanceRecord",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          },
+          {
+            "name": "keyword",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            },
+            "description": "Keyword ของ AttendanceRecord ที่ต้องการหาข้อมูล"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "attendance_record_id": {
+                            "type": "integer",
+                            "example": 1
+                          },
+                          "users": {
+                            "type": "object",
+                            "items": {
+                              "fullname_thai": {
+                                "type": "string",
+                                "example": "นายดำ ขำแห้ง"
+                              }
+                            }
+                          },
+                          "shift_types": {
+                            "type": "object",
+                            "items": {
+                              "shift_type_name": {
+                                "type": "string",
+                                "example": "OnCall"
+                              }
+                            }
+                          },
+                          "shifts": {
+                            "type": "object",
+                            "items": {
+                              "shift_name": {
+                                "type": "string",
+                                "example": "เช้า"
+                              }
+                            }
+                          },
+                          "starting": {
+                            "type": "string",
+                            "example": "10:33:35"
+                          },
+                          "check_in_status": {
+                            "type": "object",
+                            "items": {
+                              "check_in_status_name": {
+                                "type": "string",
+                                "example": "เข้างาน"
+                              }
+                            }
+                          },
+                          "ending": {
+                            "type": "string",
+                            "example": "10:34:00"
+                          },
+                          "check_out_status": {
+                            "type": "object",
+                            "items": {
+                              "check_out_status_name": {
+                                "type": "string",
+                                "example": "ออกก่อนเวลา"
+                              }
+                            }
+                          },
+                          "created_at": {
+                            "type": "date",
+                            "example": "2025-03-19T05:34:20.000Z"
+                          },
+                          "created_by": {
+                            "type": "string",
+                            "example": "admin"
+                          },
+                          "updated_at": {
+                            "type": "date",
+                            "example": "2025-03-19T05:34:20.000Z"
+                          },
+                          "updated_by": {
+                            "type": "string",
+                            "example": "admin"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ข้อมูลจาก Client ไม่ถูกต้อง",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "การเข้าถึงถูกปฏิเสธ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Server ปฏิเสธการร้องขอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ( Not found )",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีข้อมูลบน Database!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/publicAPI/searchDateAttendanceRecord/{date_start}/{date_end}": {
+      "get": {
+        "tags": [
+          "AttendanceRecord"
+        ],
+        "summary": "สำหรับดึงข้อมูล AttendanceRecord",
+        "description": "สำหรับดึงข้อมูลทั้งหมดของ AttendanceRecord",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          },
+          {
+            "name": "date_start",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            },
+            "description": "date_start ของ AttendanceRecord ที่ต้องการหาข้อมูล"
+          },
+          {
+            "name": "date_end",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            },
+            "description": "date_end ของ AttendanceRecord ที่ต้องการหาข้อมูล"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "attendance_record_id": {
+                            "type": "integer",
+                            "example": 1
+                          },
+                          "users": {
+                            "type": "object",
+                            "items": {
+                              "fullname_thai": {
+                                "type": "string",
+                                "example": "นายดำ ขำแห้ง"
+                              }
+                            }
+                          },
+                          "shift_types": {
+                            "type": "object",
+                            "items": {
+                              "shift_type_name": {
+                                "type": "string",
+                                "example": "OnCall"
+                              }
+                            }
+                          },
+                          "shifts": {
+                            "type": "object",
+                            "items": {
+                              "shift_name": {
+                                "type": "string",
+                                "example": "เช้า"
+                              }
+                            }
+                          },
+                          "starting": {
+                            "type": "string",
+                            "example": "10:33:35"
+                          },
+                          "check_in_status": {
+                            "type": "object",
+                            "items": {
+                              "check_in_status_name": {
+                                "type": "string",
+                                "example": "เข้างาน"
+                              }
+                            }
+                          },
+                          "ending": {
+                            "type": "string",
+                            "example": "10:34:00"
+                          },
+                          "check_out_status": {
+                            "type": "object",
+                            "items": {
+                              "check_out_status_name": {
+                                "type": "string",
+                                "example": "ออกก่อนเวลา"
+                              }
+                            }
+                          },
+                          "created_at": {
+                            "type": "date",
+                            "example": "2025-03-19T05:34:20.000Z"
+                          },
+                          "created_by": {
+                            "type": "string",
+                            "example": "admin"
+                          },
+                          "updated_at": {
+                            "type": "date",
+                            "example": "2025-03-19T05:34:20.000Z"
+                          },
+                          "updated_by": {
+                            "type": "string",
+                            "example": "admin"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ข้อมูลจาก Client ไม่ถูกต้อง",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "การเข้าถึงถูกปฏิเสธ! || กรุณากรอกข้อมูลให้ครบถ้วน || วันที่ไม่ถูกต้อง กรุณาระบุในรูปแบบ YYYY-MM-DD!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Server ปฏิเสธการร้องขอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ( Not found )",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีข้อมูลบน Database!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/publicAPI/getCarousels": {
+      "get": {
+        "tags": [
+          "Carousel"
+        ],
+        "summary": "สำหรับดึงข้อมูล Carousel",
+        "description": "สำหรับดึงข้อมูลทั้งหมดของ Carousel",
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "carousel_id": {
+                            "type": "integer",
+                            "example": 1
+                          },
+                          "carousel_name": {
+                            "type": "string",
+                            "example": "นโยบายงดการให้และรับของขวัญ"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2025-02-19T08:55:57.000Z"
+                          },
+                          "created_by": {
+                            "type": "string",
+                            "example": "admin"
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2025-02-19T08:55:57.000Z"
+                          },
+                          "updated_by": {
+                            "type": "string",
+                            "example": "admin"
+                          },
+                          "image_url": {
+                            "type": "string",
+                            "example": "/carousel-image/1"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีข้อมูลบน Database!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/publicAPI/carouselShowImage/:carousel_id": {
+      "get": {
+        "tags": [
+          "Carousel"
+        ],
+        "summary": "สำหรับดึงข้อมูล Carousel",
+        "description": "สำหรับดึงข้อมูลทั้งหมดของ Carousel",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            },
+            "description": "ID ของ Carousel ที่ต้องการลบ"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ส่งคืนรูปภาพขนาดจริงเรียบร้อย",
+            "content": {
+              "image/jpeg/jpg/gif": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่พบภาพหรือข้อมูลที่เกี่ยวข้อง"
                     }
                   }
                 }

@@ -1,4 +1,5 @@
 const express = require('express');
+const { upload } = require('../../middleware/setting/upload');
 const router = express.Router();
 const { authCheckToken, authCheckTokenAdmin } = require('../../middleware/auth/authAdmin');
 
@@ -9,6 +10,9 @@ const { getAllDataApiVersionDetails, insertDataApiVersionDetail, updateDataApiVe
 // Akathospital Version
 const { getAllDataAkathospitalVersions, insertDataAkathospitalVersion, updateDataAkathospitalVersion, removeDataAkathospitalVersion } = require('../../controllers/setting/akathospitalVersionController');
 const { getAllDataAkathospitalVersionDetails, insertDataAkathospitalVersionDetail, updateDataAkathospitalVersionDetail, removeDataAkathospitalVersionDetail } = require('../../controllers/setting/akathospitalVersionDetailController');
+
+// Akathospital Setting
+const { getAllDataSettingCarousels, insertDataSettingCarousel, updateDataSettingCarousel, removeDataSettingCarousel } = require('../../controllers/setting/carouselController');
 
 // Attendance Record Setting
 const { getAllDataComplaintTopics, insertDataComplaintTopic, updateDataComplaintTopic, removeDataComplaintTopic } = require('../../controllers/setting/complaintTopicController');
@@ -25,63 +29,71 @@ const { getAllDataReviewStatus, insertDataReviewStatus, updateDataReviewStatus, 
 const { getAllDataOverallFinding, insertDataOverallFinding, updateDataOverallFinding, removeDataOverallFinding } = require('../../controllers/setting/overallFindingController');
 const { getAllDataContentOfMedicalRecords, insertDataContentOfMedicalRecord, updateDataContentOfMedicalRecord, removeDataContentOfMedicalRecord } = require('../../controllers/setting/contentOfMedicalRecordController');
 
-// ApiVersion
-router.get('/getApiVersions', authCheckTokenAdmin, getAllDataApiVersions);
-router.post('/insertApiVersion', authCheckTokenAdmin, insertDataApiVersion);
-router.put('/updateApiVersion/:id', authCheckTokenAdmin, updateDataApiVersion);
-router.delete('/removeApiVersion/:id', authCheckTokenAdmin, removeDataApiVersion);
+// API Version Setting Start
+    // ApiVersion
+    router.get('/getApiVersions', authCheckTokenAdmin, getAllDataApiVersions);
+    router.post('/insertApiVersion', authCheckTokenAdmin, insertDataApiVersion);
+    router.put('/updateApiVersion/:id', authCheckTokenAdmin, updateDataApiVersion);
+    router.delete('/removeApiVersion/:id', authCheckTokenAdmin, removeDataApiVersion);
 
-// ApiVersionDetail
-router.get('/getApiVersionDetails', authCheckTokenAdmin, getAllDataApiVersionDetails);
-router.post('/insertApiVersionDetail', authCheckTokenAdmin, insertDataApiVersionDetail);
-router.put('/updateApiVersionDetail/:id', authCheckTokenAdmin, updateDataApiVersionDetail);
-router.delete('/removeApiVersionDetail/:id', authCheckTokenAdmin, removeDataApiVersionDetail);
+    // ApiVersionDetail
+    router.get('/getApiVersionDetails', authCheckTokenAdmin, getAllDataApiVersionDetails);
+    router.post('/insertApiVersionDetail', authCheckTokenAdmin, insertDataApiVersionDetail);
+    router.put('/updateApiVersionDetail/:id', authCheckTokenAdmin, updateDataApiVersionDetail);
+    router.delete('/removeApiVersionDetail/:id', authCheckTokenAdmin, removeDataApiVersionDetail);
+// API Version Setting End
 
-// AkathospitalVersion
-router.get('/getAkathospitalVersions', authCheckTokenAdmin, getAllDataAkathospitalVersions);
-router.post('/insertAkathospitalVersion', authCheckTokenAdmin, insertDataAkathospitalVersion);
-router.put('/updateAkathospitalVersion/:id', authCheckTokenAdmin, updateDataAkathospitalVersion);
-router.delete('/removeAkathospitalVersion/:id', authCheckTokenAdmin, removeDataAkathospitalVersion);
+// Akathospital Version Setting Start
+    // AkathospitalVersion
+    router.get('/getAkathospitalVersions', authCheckTokenAdmin, getAllDataAkathospitalVersions);
+    router.post('/insertAkathospitalVersion', authCheckTokenAdmin, insertDataAkathospitalVersion);
+    router.put('/updateAkathospitalVersion/:id', authCheckTokenAdmin, updateDataAkathospitalVersion);
+    router.delete('/removeAkathospitalVersion/:id', authCheckTokenAdmin, removeDataAkathospitalVersion);
 
-// AkathospitalVersionDetail
-router.get('/getAkathospitalVersionDetails', authCheckTokenAdmin, getAllDataAkathospitalVersionDetails);
-router.post('/insertAkathospitalVersionDetail', authCheckTokenAdmin, insertDataAkathospitalVersionDetail);
-router.put('/updateAkathospitalVersionDetail/:id', authCheckTokenAdmin, updateDataAkathospitalVersionDetail);
-router.delete('/removeAkathospitalVersionDetail/:id', authCheckTokenAdmin, removeDataAkathospitalVersionDetail);
+    // AkathospitalVersionDetail
+    router.get('/getAkathospitalVersionDetails', authCheckTokenAdmin, getAllDataAkathospitalVersionDetails);
+    router.post('/insertAkathospitalVersionDetail', authCheckTokenAdmin, insertDataAkathospitalVersionDetail);
+    router.put('/updateAkathospitalVersionDetail/:id', authCheckTokenAdmin, updateDataAkathospitalVersionDetail);
+    router.delete('/removeAkathospitalVersionDetail/:id', authCheckTokenAdmin, removeDataAkathospitalVersionDetail);
+// Akathospital Version Setting End
 
-// ComplaintTopics
-router.get('/getComplaintTopics', getAllDataComplaintTopics);
-router.post('/insertComplaintTopics', insertDataComplaintTopic);
-router.put('/updateComplaintTopics/:id', authCheckTokenAdmin, updateDataComplaintTopic);
-router.delete('/removeComplaintTopics/:id', authCheckTokenAdmin, removeDataComplaintTopic);
+// Complaint Setting Start
+    // ComplaintTopics
+    router.get('/getComplaintTopics', getAllDataComplaintTopics);
+    router.post('/insertComplaintTopics', insertDataComplaintTopic);
+    router.put('/updateComplaintTopics/:id', authCheckTokenAdmin, updateDataComplaintTopic);
+    router.delete('/removeComplaintTopics/:id', authCheckTokenAdmin, removeDataComplaintTopic);
+// Complaint Setting End
 
-// CheckInStatus
-router.get('/getCheckInStatus', authCheckTokenAdmin, getAllDataCheckInStatus);
-router.post('/insertCheckInStatus', authCheckTokenAdmin, insertDataCheckInStatus);
-router.put('/updateCheckInStatus/:id', authCheckTokenAdmin, updateDataCheckInStatus);
-router.delete('/removeCheckInStatus/:id', authCheckTokenAdmin, removeDataCheckInStatus);
+// CheckIn & CheckOut Setting Start
+    // CheckInStatus
+    router.get('/getCheckInStatus', authCheckTokenAdmin, getAllDataCheckInStatus);
+    router.post('/insertCheckInStatus', authCheckTokenAdmin, insertDataCheckInStatus);
+    router.put('/updateCheckInStatus/:id', authCheckTokenAdmin, updateDataCheckInStatus);
+    router.delete('/removeCheckInStatus/:id', authCheckTokenAdmin, removeDataCheckInStatus);
 
-// CheckOutStatus
-router.get('/getCheckOutStatus', authCheckTokenAdmin, getAllDataCheckOutStatus);
-router.post('/insertCheckOutStatus', authCheckTokenAdmin, insertDataCheckOutStatus);
-router.put('/updateCheckOutStatus/:id', authCheckTokenAdmin, updateDataCheckOutStatus);
-router.delete('/removeCheckOutStatus/:id', authCheckTokenAdmin, removeDataCheckOutStatus);
+    // CheckOutStatus
+    router.get('/getCheckOutStatus', authCheckTokenAdmin, getAllDataCheckOutStatus);
+    router.post('/insertCheckOutStatus', authCheckTokenAdmin, insertDataCheckOutStatus);
+    router.put('/updateCheckOutStatus/:id', authCheckTokenAdmin, updateDataCheckOutStatus);
+    router.delete('/removeCheckOutStatus/:id', authCheckTokenAdmin, removeDataCheckOutStatus);
 
-// Holiday
-router.get('/getHolidays', authCheckTokenAdmin, getAllDataHolidays);
-router.post('/syncHolidays', authCheckTokenAdmin, syncDataHoliday);
+    // Holiday
+    router.get('/getHolidays', authCheckTokenAdmin, getAllDataHolidays);
+    router.post('/syncHolidays', authCheckTokenAdmin, syncDataHoliday);
 
-// ShiftType
-router.get('/getShiftTypes', authCheckTokenAdmin, getAllDataShiftTypes);
-router.post('/insertShiftType', authCheckTokenAdmin, insertDataShiftType);
-router.put('/updateShiftType/:id', authCheckTokenAdmin, updateDataShiftType);
-router.delete('/removeShiftType/:id', authCheckTokenAdmin, removeDataShiftType);
+    // ShiftType
+    router.get('/getShiftTypes', authCheckTokenAdmin, getAllDataShiftTypes);
+    router.post('/insertShiftType', authCheckTokenAdmin, insertDataShiftType);
+    router.put('/updateShiftType/:id', authCheckTokenAdmin, updateDataShiftType);
+    router.delete('/removeShiftType/:id', authCheckTokenAdmin, removeDataShiftType);
 
-// Shift
-router.get('/getShifts', authCheckTokenAdmin, getAllDataShifts);
-router.post('/insertShift', authCheckTokenAdmin, insertDataShift);
-router.put('/updateShift/:id', authCheckTokenAdmin, updateDataShift);
-router.delete('/removeShift/:id', authCheckTokenAdmin, removeDataShift);
+    // Shift
+    router.get('/getShifts', authCheckTokenAdmin, getAllDataShifts);
+    router.post('/insertShift', authCheckTokenAdmin, insertDataShift);
+    router.put('/updateShift/:id', authCheckTokenAdmin, updateDataShift);
+    router.delete('/removeShift/:id', authCheckTokenAdmin, removeDataShift);
+// CheckIn & CheckOut Setting End
 
 // ActivityTopic
 router.get('/getActivityTopics', authCheckTokenAdmin, getAllDataActivityTopics);
@@ -89,28 +101,37 @@ router.post('/insertActivityTopic', authCheckTokenAdmin, insertDataActivityTopic
 // router.put('/updateActivityTopic/:id', authCheckTokenAdmin, updateDataActivityTopic);
 // router.delete('/removeActivityTopic/:id', authCheckTokenAdmin, removeDataActivityTopic);
 
-// PatientService
-router.get('/getPatientServices', authCheckTokenAdmin, getAllDataPatientServices);
-router.post('/insertPatientService', authCheckTokenAdmin, insertDataPatientService);
-router.put('/updatePatientService/:id', authCheckTokenAdmin, updateDataPatientService);
-router.delete('/removePatientService/:id', authCheckTokenAdmin, removeDataPatientService);
+// Madical record audit Setting Start
+    // PatientService
+    router.get('/getPatientServices', authCheckTokenAdmin, getAllDataPatientServices);
+    router.post('/insertPatientService', authCheckTokenAdmin, insertDataPatientService);
+    router.put('/updatePatientService/:id', authCheckTokenAdmin, updateDataPatientService);
+    router.delete('/removePatientService/:id', authCheckTokenAdmin, removeDataPatientService);
 
-// ReviewStatus
-router.get('/getReviewStatus', authCheckTokenAdmin, getAllDataReviewStatus);
-router.post('/insertReviewStatus', authCheckTokenAdmin, insertDataReviewStatus);
-router.put('/updateReviewStatus/:id', authCheckTokenAdmin, updateDataReviewStatus);
-router.delete('/removeReviewStatus/:id', authCheckTokenAdmin, removeDataReviewStatus);
+    // ReviewStatus
+    router.get('/getReviewStatus', authCheckTokenAdmin, getAllDataReviewStatus);
+    router.post('/insertReviewStatus', authCheckTokenAdmin, insertDataReviewStatus);
+    router.put('/updateReviewStatus/:id', authCheckTokenAdmin, updateDataReviewStatus);
+    router.delete('/removeReviewStatus/:id', authCheckTokenAdmin, removeDataReviewStatus);
 
-// OverallFinding
-router.get('/getOverallFinding', authCheckTokenAdmin, getAllDataOverallFinding);
-router.post('/insertOverallFinding', authCheckTokenAdmin, insertDataOverallFinding);
-router.put('/updateOverallFinding/:id', authCheckTokenAdmin, updateDataOverallFinding);
-router.delete('/removeOverallFinding/:id', authCheckTokenAdmin, removeDataOverallFinding);
+    // OverallFinding
+    router.get('/getOverallFinding', authCheckTokenAdmin, getAllDataOverallFinding);
+    router.post('/insertOverallFinding', authCheckTokenAdmin, insertDataOverallFinding);
+    router.put('/updateOverallFinding/:id', authCheckTokenAdmin, updateDataOverallFinding);
+    router.delete('/removeOverallFinding/:id', authCheckTokenAdmin, removeDataOverallFinding);
 
-// ContentOfMedicalRecord
-router.get('/getContentOfMedicalRecords', authCheckTokenAdmin, getAllDataContentOfMedicalRecords);
-router.post('/insertContentOfMedicalRecord', authCheckTokenAdmin, insertDataContentOfMedicalRecord);
-router.put('/updateContentOfMedicalRecord/:id', authCheckTokenAdmin, updateDataContentOfMedicalRecord);
-router.delete('/removeContentOfMedicalRecord/:id', authCheckTokenAdmin, removeDataContentOfMedicalRecord);
+    // ContentOfMedicalRecord
+    router.get('/getContentOfMedicalRecords', authCheckTokenAdmin, getAllDataContentOfMedicalRecords);
+    router.post('/insertContentOfMedicalRecord', authCheckTokenAdmin, insertDataContentOfMedicalRecord);
+    router.put('/updateContentOfMedicalRecord/:id', authCheckTokenAdmin, updateDataContentOfMedicalRecord);
+    router.delete('/removeContentOfMedicalRecord/:id', authCheckTokenAdmin, removeDataContentOfMedicalRecord);
+// Madical record audit Setting End
+
+// Akathospital Setting Start
+    router.get('/getSettingCarousels', authCheckTokenAdmin, getAllDataSettingCarousels);
+    router.post('/insertSettingCarousel', authCheckTokenAdmin, upload.single('carousel_image'), insertDataSettingCarousel);
+    router.put('/updateSettingCarousel/:id', authCheckTokenAdmin, upload.single('carousel_image'), updateDataSettingCarousel);
+    router.delete('/removeSettingCarousel/:id', authCheckTokenAdmin, removeDataSettingCarousel);
+// Akathospital Setting End
 
 module.exports = router;
