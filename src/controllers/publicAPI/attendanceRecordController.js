@@ -440,8 +440,8 @@ exports.checkInVerifyOtp = async (req, res) => {
                     request_method: req.method,
                     endpoint: req.originalUrl,
                     execution_time: endTime,
-                    row_count: insertData ? 1 : 0,
-                    status: insertData ? 'Verify OTP successfully' : 'Verify OTP failed'
+                    row_count: updateData ? 1 : 0,
+                    status: updateData ? 'Verify OTP successfully' : 'Verify OTP failed'
                 }
             });
 

@@ -13,6 +13,7 @@ const { getAllDataAkathospitalVersionDetails, insertDataAkathospitalVersionDetai
 
 // Akathospital Setting
 const { getAllDataSettingCarousels, insertDataSettingCarousel, updateDataSettingCarousel, removeDataSettingCarousel } = require('../../controllers/setting/carouselController');
+const { getAllDataDepartments, syncDataDepartments } = require('../../controllers/setting/departmentController');
 
 // Attendance Record Setting
 const { getAllDataComplaintTopics, insertDataComplaintTopic, updateDataComplaintTopic, removeDataComplaintTopic } = require('../../controllers/setting/complaintTopicController');
@@ -132,6 +133,10 @@ router.post('/insertActivityTopic', authCheckTokenAdmin, insertDataActivityTopic
     router.post('/insertSettingCarousel', authCheckTokenAdmin, upload.single('carousel_image'), insertDataSettingCarousel);
     router.put('/updateSettingCarousel/:id', authCheckTokenAdmin, upload.single('carousel_image'), updateDataSettingCarousel);
     router.delete('/removeSettingCarousel/:id', authCheckTokenAdmin, removeDataSettingCarousel);
+
+    // Department
+    router.get('/getDepartments', authCheckTokenAdmin, getAllDataDepartments);
+    router.post('/syncDepartments', authCheckTokenAdmin, syncDataDepartments);
 // Akathospital Setting End
 
 module.exports = router;
