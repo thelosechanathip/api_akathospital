@@ -11,6 +11,8 @@ const NodeCache = require("node-cache");
 const otpCache = new NodeCache({ stdTTL: 300 }); // รหัส OTP หมดอายุใน 5 นาที (300 วินาที)
 const moment = require('moment');
 const pm = require('../../config/prisma');
+const db_b = require('../../config/db_b');
+const os = require('os');
 
 // ฟังก์ชันสร้างรหัส OTP (เฉพาะตัวเลข)
 const generateOtp = (identifier) => {
@@ -38,79 +40,150 @@ const sendTelegramMessage = async (chatId, otpCode) => {
 
 // Function generate User
 exports.authRegister = async (req, res) => {
-    const botToken = process.env.TELEGRAM_BOT_TOKEN;
-    const getTelegramApiUrl = `https://api.telegram.org/bot${botToken}/getUpdates`;
     try {
-        const bytes = CryptoJS.AES.decrypt(req.body.national_id, process.env.PASS_KEY);
-        const national_id = bytes.toString(CryptoJS.enc.Utf8);
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
 
-        const checkNationalIdOnBackOfficeResult = await checkNationalIdOnBackOffice(national_id);
-        if(!checkNationalIdOnBackOfficeResult) return msg(res, 400, { message: 'ไม่สามารถ Generate User ได้เนื่องจากไม่ใช่เจ้าหน้าที่ของโรงพยาบาล!' });
-        
-        const checkTelegramChatIdResult = await axios.get(getTelegramApiUrl);
+        await pm.notify_users.deleteMany();
+  
+        const maxIdResult_1 = await pm.$queryRaw`SELECT COALESCE(MAX(user_id), 0) + 1 AS nextId FROM notify_users`;
+        const nextId_1 = maxIdResult_1[0].nextId_1 || 1;
+  
+        await pm.$executeRawUnsafe(`ALTER TABLE notify_users AUTO_INCREMENT = ${nextId_1}`);
 
-        // ตัวแปรเก็บ chatId ที่ match (เก็บแค่ตัวแรกที่เจอ)
-        let matchedChatId = null;
+        await pm.users.deleteMany();
+  
+        const maxIdResult_2 = await pm.$queryRaw`SELECT COALESCE(MAX(user_id), 0) + 1 AS nextId FROM users`;
+        const nextId_2 = maxIdResult_2[0].nextId_2 || 1;
+  
+        await pm.$executeRawUnsafe(`ALTER TABLE users AUTO_INCREMENT = ${nextId_2}`);
 
-        for (const i of checkTelegramChatIdResult.data.result) {
-            const chatUser = i.message.chat;
-            const fullnameEnglish = chatUser.first_name + ' ' + chatUser.last_name;
+        const [fetchAllDataInBackOffice] = await db_b.query(
+            `
+                SELECT 
+                    u.email,
+                    u.username,
+                    u.password,
+                    hpr.HR_PREFIX_NAME AS prefix_name,
+                    u.name AS fullname,
+                    hp.HR_EN_NAME AS fullname_eng,
+                    hp.HR_CID,
+                    u.status,
+                    hpo.HR_POSITION_NAME AS position,
+                    hdss.HR_DEPARTMENT_SUB_SUB_NAME AS department_subsub,
+                    ns.service,
+                    ns.chat_id
+                FROM users AS u
+                INNER JOIN hrd_person AS hp ON u.PERSON_ID = hp.id
+                INNER JOIN hrd_prefix AS hpr ON hp.HR_PREFIX_ID = hpr.HR_PREFIX_ID
+                INNER JOIN hrd_position AS hpo ON hp.HR_POSITION_ID = hpo.HR_POSITION_ID
+                INNER JOIN hrd_department_sub_sub AS hdss ON hp.HR_DEPARTMENT_SUB_SUB_ID = hdss.HR_DEPARTMENT_SUB_SUB_ID
+                INNER JOIN notify_user AS ns ON u.PERSON_ID = ns.person_id
+                WHERE 
+                    ns.service = 'telegram'
+            `
+        );
 
-            if(fullnameEnglish === checkNationalIdOnBackOfficeResult.fullname_eng) {
-                const chatId = chatUser.id;
-
-                // ถ้ายังไม่เจอ chatId ที่ match หรือยังไม่ได้เก็บ chatId ใดๆ มาก่อน
-                if (matchedChatId === null) {
-                    matchedChatId = chatId;
-                }
-            }
+        if (!fetchAllDataInBackOffice || fetchAllDataInBackOffice.length === 0) {
+            res.write(`data: {"status": 400, "progress": "error", "message": "ไม่สามารถ Generate User ได้เนื่องจากไม่ใช่เจ้าหน้าที่ของโรงพยาบาล!!"}\n\n`);
+            return res.end();
         }
 
-        const checkNationalIdOnAkathospital = await pm.users.findFirst({
-            where: {
-                national_id: national_id
+        // ** นับจำนวนทั้งหมด **
+        const totalRecords = fetchAllDataInBackOffice.length;
+        let currentProgress = 0;
+  
+        const startTime = Date.now();
+        let updatedRows = 0; // นับจำนวนข้อมูลที่ถูกอัปเดตหรือเพิ่ม
+
+        for (const u of fetchAllDataInBackOffice) {
+            // ดึง prefix_id
+            const fetchPrefix = await pm.prefixes.findFirst({
+                where: { prefix_name: u.prefix_name },
+                select: { prefix_id: true }
+            });
+            if (!fetchPrefix) {
+                // return msg(res, 404, { message: `ไม่มีข้อมูล ${u.prefix_name} อยู่ใน Database!` });
+                res.write(`data: {"status": 404, "progress": "error", "message": "ไม่มีข้อมูล ${u.prefix_name} อยู่ใน Database!"}\n\n`);
+                return res.end();
             }
-        });
 
-        // ประกาศ telegramIdAsString นอก if-else เพื่อให้อยู่ใน scope เดียวกัน
-        const telegramIdAsString = matchedChatId != null ? matchedChatId.toString() : null;
+            // ดึง position_id
+            const fetchPosition = await pm.positions.findFirst({
+                where: { position_name: u.position },
+                select: { position_id: true }
+            });
+            if (!fetchPosition) {
+                res.write(`data: {"status": 404, "progress": "error", "message": "ไม่มีข้อมูล ${u.position} อยู่ใน Database!"}\n\n`);
+                return res.end();
+            }
 
-        if(checkNationalIdOnAkathospital) {
-            await pm.users.update({
-                where: {
-                    national_id: national_id
-                },
+            // ดึง department_id
+            const fetchDepartment = await pm.departments.findFirst({
+                where: { department_name: u.department_subsub },
+                select: { department_id: true }
+            });
+            if (!fetchDepartment) {
+                res.write(`data: {"status": 404, "progress": "error", "message": "ไม่มีข้อมูล ${u.department_subsub} อยู่ใน Database!"}\n\n`);
+                return res.end();
+            }
+
+            // สร้างผู้ใช้ในตาราง users
+            const generateUserInUsers = await pm.users.create({
                 data: {
-                    password: checkNationalIdOnBackOfficeResult.password,
-                    prefix: checkNationalIdOnBackOfficeResult.prefix_name,
-                    fullname_thai: checkNationalIdOnBackOfficeResult.fullname,
-                    fullname_english: checkNationalIdOnBackOfficeResult.fullname_eng,
-                    position: checkNationalIdOnBackOfficeResult.position,
-                    department: checkNationalIdOnBackOfficeResult.department_subsub,
-                    telegram_chat_id: telegramIdAsString,
-                    status: checkNationalIdOnBackOfficeResult.status
+                    username: u.username,
+                    email: u.email,
+                    password: u.password,
+                    prefix_id: fetchPrefix.prefix_id, // ใช้ค่าโดยตรง ไม่ต้องแปลงเป็น Number
+                    fullname_thai: u.fullname,
+                    fullname_english: u.fullname_eng,
+                    national_id: u.HR_CID,
+                    position_id: fetchPosition.position_id, // ใช้ค่าโดยตรง
+                    department_id: fetchDepartment.department_id, // ใช้ค่าโดยตรง
+                    status: u.status
                 }
             });
-            return msg(res, 200, { message: 'Update successfully!' });
+
+            const fetchUserId = await pm.users.findFirst({ where: { username: u.username }, select: {user_id: true } });
+            
+                const generateNotifyInNotify = await pm.notify_users.create({
+                    data: {
+                        notify_user_service: u.service,
+                        notify_user_token: u.chat_id,
+                        user_id: fetchUserId.user_id,
+                        created_by: os.hostname(),
+                        updated_by: os.hostname()
+                    }
+                });
+
+            if (generateUserInUsers) updatedRows++; // นับจำนวนที่ถูกอัปเดตหรือเพิ่ม
+
+            // ** อัปเดต Progress และส่งข้อมูลกลับไปที่ Frontend **
+            currentProgress++;
+            console.log(`Syncing: ${currentProgress}/${totalRecords}`);
+
+            res.write(`data: {"status": 200, "progress": "${currentProgress}/${totalRecords}"}\n\n`);
         }
 
-        await pm.users.create({
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง auth_log
+        await pm.auth_log.create({
             data: {
-                username: checkNationalIdOnBackOfficeResult.username,
-                email: checkNationalIdOnBackOfficeResult.email,
-                password: checkNationalIdOnBackOfficeResult.password,
-                prefix: checkNationalIdOnBackOfficeResult.prefix_name,
-                fullname_thai: checkNationalIdOnBackOfficeResult.fullname,
-                fullname_english: checkNationalIdOnBackOfficeResult.fullname_eng,
-                national_id: national_id,
-                position: checkNationalIdOnBackOfficeResult.position,
-                department: checkNationalIdOnBackOfficeResult.department_subsub,
-                telegram_chat_id: telegramIdAsString,
-                status: checkNationalIdOnBackOfficeResult.status
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: os.hostname(),
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: updatedRows,  // ใช้ค่าที่สะสมไว้
+                status: updatedRows > 0 ? 'Success' : 'No Data'
             }
         });
 
-        return msg(res, 200, { message: 'Generate users successfully!!' });
+        // ** เมื่อเสร็จแล้วให้ส่งข้อความสุดท้าย และปิดการเชื่อมต่อ **
+        res.write(`data: {"status": 200, "progress": "complete", "message": "Sync user data successfully!"}\n\n`);
+        res.end();
     } catch (error) {
         console.error("Error register data:", error.message);
         return msg(res, 500, { message: "Internal Server Error" });
@@ -132,8 +205,7 @@ exports.authLogin = async (req, res) => {
             select: {
                 user_id: true,
                 fullname_thai: true,
-                password: true,
-                telegram_chat_id: true
+                password: true
             }
         });
         if(!checkUsername) return msg(res, 404, { message: 'ไม่มี User นี้อยู่ในระบบกรุณา Register ก่อนใช้งานระบบขอบคุณครับ/คะ!' });
@@ -141,11 +213,12 @@ exports.authLogin = async (req, res) => {
         const isMath = await bcrypt.compare(password, checkUsername.password);
         if(!isMath) return msg(res, 400, { message: 'รหัสผ่านไม่ถูกต้องกรุณาตรวจสอบรหัสผ่าน!' });
 
-        if(!checkUsername.telegram_chat_id) return msg(res, 400, { message: 'ไม่มี telegramChatId อยู่ใน User ของท่านกรุณาติดต่อ Admin เพื่อทำการเพิ่มข้อมูลก่อนใช้งานระบบ!' });
-        
         const fullname = checkUsername.fullname_thai;
         const userId = checkUsername.user_id;
-        const telegramChatId = checkUsername.telegram_chat_id;
+
+        const fetchToken = await pm.notify_users.findFirst({ where: { user_id: userId }, select: { notify_user_token: true } });
+
+        const telegramChatId = fetchToken.notify_user_token;
 
         const token = await jwt.sign(
             { userId, telegramChatId, expiresIn: "1h" },
