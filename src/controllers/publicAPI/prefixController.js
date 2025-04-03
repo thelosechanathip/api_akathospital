@@ -35,6 +35,13 @@ exports.getAllDataPrefixes = async (req, res) => {
 // Function Sync ข้อมูลจากระบบ HoSXP มาบันทึกในระบบ Akathospital
 exports.syncDataPrefixes = async (req, res) => {
     try {
+        await pm.prefixes.deleteMany();
+  
+        const maxIdResult = await pm.$queryRaw`SELECT COALESCE(MAX(prefix_id), 0) + 1 AS nextId FROM prefixes`;
+        const nextId = maxIdResult[0].nextId || 1;
+  
+        await pm.$executeRawUnsafe(`ALTER TABLE prefixes AUTO_INCREMENT = ${nextId}`);
+
         res.setHeader('Content-Type', 'text/event-stream');
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
@@ -51,13 +58,6 @@ exports.syncDataPrefixes = async (req, res) => {
             res.write(`data: {"status": 404, "progress": "error", "message": "ไม่พบข้อมูลคำนำหน้าจากระบบ BackOffice!"}\n\n`);
             return res.end();
         }
-  
-        await pm.prefixes.deleteMany();
-  
-        const maxIdResult = await pm.$queryRaw`SELECT COALESCE(MAX(prefix_id), 0) + 1 AS nextId FROM prefixes`;
-        const nextId = maxIdResult[0].nextId || 1;
-  
-        await pm.$executeRawUnsafe(`ALTER TABLE prefixes AUTO_INCREMENT = ${nextId}`);
   
         // ** นับจำนวนทั้งหมด **
         const totalRecords = fetchDataPrefixInBackOffice.length;

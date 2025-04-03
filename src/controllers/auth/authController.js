@@ -1,6 +1,6 @@
-const {
-    checkNationalIdOnBackOffice
-} = require('../../models/auth/authModel');
+// const {
+//     checkNationalIdOnBackOffice
+// } = require('../../models/auth/authModel');
 const jwt = require("jsonwebtoken");
 const bcrypt = require('bcryptjs');
 const { msg } = require("../../utils/message");
@@ -41,23 +41,8 @@ const sendTelegramMessage = async (chatId, otpCode) => {
 // Function generate User
 exports.authRegister = async (req, res) => {
     try {
-        res.setHeader('Content-Type', 'text/event-stream');
-        res.setHeader('Cache-Control', 'no-cache');
-        res.setHeader('Connection', 'keep-alive');
-
-        await pm.notify_users.deleteMany();
-  
-        const maxIdResult_1 = await pm.$queryRaw`SELECT COALESCE(MAX(user_id), 0) + 1 AS nextId FROM notify_users`;
-        const nextId_1 = maxIdResult_1[0].nextId_1 || 1;
-  
-        await pm.$executeRawUnsafe(`ALTER TABLE notify_users AUTO_INCREMENT = ${nextId_1}`);
-
-        await pm.users.deleteMany();
-  
-        const maxIdResult_2 = await pm.$queryRaw`SELECT COALESCE(MAX(user_id), 0) + 1 AS nextId FROM users`;
-        const nextId_2 = maxIdResult_2[0].nextId_2 || 1;
-  
-        await pm.$executeRawUnsafe(`ALTER TABLE users AUTO_INCREMENT = ${nextId_2}`);
+        const bytes = CryptoJS.AES.decrypt(req.body.national_id, process.env.PASS_KEY);
+        const national_id = bytes.toString(CryptoJS.enc.Utf8);
 
         const [fetchAllDataInBackOffice] = await db_b.query(
             `
@@ -82,90 +67,78 @@ exports.authRegister = async (req, res) => {
                 INNER JOIN notify_user AS ns ON u.PERSON_ID = ns.person_id
                 WHERE 
                     ns.service = 'telegram'
-            `
+                    AND hp.HR_CID = ?
+            `,
+            [national_id]
         );
 
-        if (!fetchAllDataInBackOffice || fetchAllDataInBackOffice.length === 0) {
-            res.write(`data: {"status": 400, "progress": "error", "message": "ไม่สามารถ Generate User ได้เนื่องจากไม่ใช่เจ้าหน้าที่ของโรงพยาบาล!!"}\n\n`);
-            return res.end();
-        }
+        if (!fetchAllDataInBackOffice || fetchAllDataInBackOffice.length === 0) return msg(res, 404, { message: 'ไม่ใช่เจ้าหน้าที่ภายในโรงพยาบาลหรือไม่มีข้อมูลในระบบ BackOffice!' });
 
-        // ** นับจำนวนทั้งหมด **
-        const totalRecords = fetchAllDataInBackOffice.length;
-        let currentProgress = 0;
-  
+        const fetchPrefix = await pm.prefixes.findFirst({
+            where: { prefix_name: fetchAllDataInBackOffice[0].prefix_name },
+            select: { prefix_id: true }
+        });
+        if(!fetchPrefix) return msg(res, 404, { message: `ไม่มีข้อมูล ${fetchAllDataInBackOffice[0].prefix_name} อยู่ใน Database!` });
+
+        const fetchPosition = await pm.positions.findFirst({
+            where: { position_name: fetchAllDataInBackOffice[0].position },
+            select: { position_id: true }
+        });
+        if (!fetchPosition) return msg(res, 404, { message: `ไม่มีข้อมูล ${fetchAllDataInBackOffice[0].position} อยู่ใน Database!` });
+
+        const fetchDepartment = await pm.departments.findFirst({
+            where: { department_name: fetchAllDataInBackOffice[0].department_subsub },
+            select: { department_id: true }
+        });
+        if (!fetchDepartment) return msg(res, 404, { message: `ไม่มีข้อมูล ${fetchAllDataInBackOffice[0].department_subsub} อยู่ใน Database!` });
+
         const startTime = Date.now();
-        let updatedRows = 0; // นับจำนวนข้อมูลที่ถูกอัปเดตหรือเพิ่ม
-
-        for (const u of fetchAllDataInBackOffice) {
-            // ดึง prefix_id
-            const fetchPrefix = await pm.prefixes.findFirst({
-                where: { prefix_name: u.prefix_name },
-                select: { prefix_id: true }
-            });
-            if (!fetchPrefix) {
-                // return msg(res, 404, { message: `ไม่มีข้อมูล ${u.prefix_name} อยู่ใน Database!` });
-                res.write(`data: {"status": 404, "progress": "error", "message": "ไม่มีข้อมูล ${u.prefix_name} อยู่ใน Database!"}\n\n`);
-                return res.end();
+        const generateUserInUsers = await pm.users.upsert({
+            where: { username: fetchAllDataInBackOffice[0].username },
+            update: {
+                password: fetchAllDataInBackOffice[0].password,
+                prefix_id: fetchPrefix.prefix_id, // ใช้ค่าโดยตรง ไม่ต้องแปลงเป็น Number
+                fullname_thai: fetchAllDataInBackOffice[0].fullname,
+                fullname_english: fetchAllDataInBackOffice[0].fullname_eng,
+                national_id: fetchAllDataInBackOffice[0].HR_CID,
+                position_id: fetchPosition.position_id, // ใช้ค่าโดยตรง
+                department_id: fetchDepartment.department_id, // ใช้ค่าโดยตรง
+                status: fetchAllDataInBackOffice[0].status
+            },
+            create: {
+                username: fetchAllDataInBackOffice[0].username,
+                email: fetchAllDataInBackOffice[0].email,
+                password: fetchAllDataInBackOffice[0].password,
+                prefix_id: fetchPrefix.prefix_id, // ใช้ค่าโดยตรง ไม่ต้องแปลงเป็น Number
+                fullname_thai: fetchAllDataInBackOffice[0].fullname,
+                fullname_english: fetchAllDataInBackOffice[0].fullname_eng,
+                national_id: fetchAllDataInBackOffice[0].HR_CID,
+                position_id: fetchPosition.position_id, // ใช้ค่าโดยตรง
+                department_id: fetchDepartment.department_id, // ใช้ค่าโดยตรง
+                status: fetchAllDataInBackOffice[0].status
             }
+        });
 
-            // ดึง position_id
-            const fetchPosition = await pm.positions.findFirst({
-                where: { position_name: u.position },
-                select: { position_id: true }
+        if(generateUserInUsers) {
+            const fetchUserId = await pm.users.findFirst({ 
+                where: { national_id: fetchAllDataInBackOffice[0].HR_CID }, select: {user_id: true } 
             });
-            if (!fetchPosition) {
-                res.write(`data: {"status": 404, "progress": "error", "message": "ไม่มีข้อมูล ${u.position} อยู่ใน Database!"}\n\n`);
-                return res.end();
-            }
-
-            // ดึง department_id
-            const fetchDepartment = await pm.departments.findFirst({
-                where: { department_name: u.department_subsub },
-                select: { department_id: true }
-            });
-            if (!fetchDepartment) {
-                res.write(`data: {"status": 404, "progress": "error", "message": "ไม่มีข้อมูล ${u.department_subsub} อยู่ใน Database!"}\n\n`);
-                return res.end();
-            }
-
-            // สร้างผู้ใช้ในตาราง users
-            const generateUserInUsers = await pm.users.create({
-                data: {
-                    username: u.username,
-                    email: u.email,
-                    password: u.password,
-                    prefix_id: fetchPrefix.prefix_id, // ใช้ค่าโดยตรง ไม่ต้องแปลงเป็น Number
-                    fullname_thai: u.fullname,
-                    fullname_english: u.fullname_eng,
-                    national_id: u.HR_CID,
-                    position_id: fetchPosition.position_id, // ใช้ค่าโดยตรง
-                    department_id: fetchDepartment.department_id, // ใช้ค่าโดยตรง
-                    status: u.status
+            const generateNotify = await pm.notify_users.upsert({
+                where: { user_id: Number(fetchUserId.user_id) },
+                update: {
+                    notify_user_service: fetchAllDataInBackOffice[0].service,
+                    notify_user_token: fetchAllDataInBackOffice[0].chat_id,
+                    updated_by: os.hostname()
+                },
+                create: {
+                    notify_user_service: fetchAllDataInBackOffice[0].service,
+                    notify_user_token: fetchAllDataInBackOffice[0].chat_id,
+                    user_id: fetchUserId.user_id,
+                    created_by: os.hostname(),
+                    updated_by: os.hostname()
                 }
             });
-
-            const fetchUserId = await pm.users.findFirst({ where: { username: u.username }, select: {user_id: true } });
-            
-                const generateNotifyInNotify = await pm.notify_users.create({
-                    data: {
-                        notify_user_service: u.service,
-                        notify_user_token: u.chat_id,
-                        user_id: fetchUserId.user_id,
-                        created_by: os.hostname(),
-                        updated_by: os.hostname()
-                    }
-                });
-
-            if (generateUserInUsers) updatedRows++; // นับจำนวนที่ถูกอัปเดตหรือเพิ่ม
-
-            // ** อัปเดต Progress และส่งข้อมูลกลับไปที่ Frontend **
-            currentProgress++;
-            console.log(`Syncing: ${currentProgress}/${totalRecords}`);
-
-            res.write(`data: {"status": 200, "progress": "${currentProgress}/${totalRecords}"}\n\n`);
         }
-
         const endTime = Date.now() - startTime;
 
         // บันทึกข้อมูลไปยัง auth_log
@@ -176,17 +149,15 @@ exports.authRegister = async (req, res) => {
                 request_method: req.method,
                 endpoint: req.originalUrl,
                 execution_time: endTime,
-                row_count: updatedRows,  // ใช้ค่าที่สะสมไว้
-                status: updatedRows > 0 ? 'Success' : 'No Data'
+                row_count: generateUserInUsers ? 1 : 0,
+                status: generateUserInUsers ? 'Success' : 'Failed'
             }
         });
 
-        // ** เมื่อเสร็จแล้วให้ส่งข้อความสุดท้าย และปิดการเชื่อมต่อ **
-        res.write(`data: {"status": 200, "progress": "complete", "message": "Sync user data successfully!"}\n\n`);
-        res.end();
-    } catch (error) {
-        console.error("Error register data:", error.message);
-        return msg(res, 500, { message: "Internal Server Error" });
+        return msg(res, 200, { message: 'successfully!' });
+    } catch (err) {
+        console.log('authRegister : ', err);
+        return msg(res, 500, { message: err.message });
     }
 };
 
@@ -382,66 +353,30 @@ exports.authVerifyToken = async (req, res) => {
     }
 };
 
-// Function สำหรับ Remove User ออกจาก Database => medical_record_audit
-exports.authRemoveUser = async (req, res) => {
+// Function Generate Signature
+exports.generateSignature = async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
-        const { password } = req.body;
+        const { signature_user_token } = req.body;
+        const dateNow = moment(); // Current date
+        const futureDate = dateNow.add(2, 'years'); // Add 2 years for expiration
 
-        if(!password) return msg(res, 400, { message: 'กรุณากรอกรหัสผ่านเพื่อยืนยันการลบข้อมูล!' });
+        // Remove the data URI prefix if it exists
+        const base64String = signature_user_token.replace(/^data:image\/\w+;base64,/, '');
 
-        if(id === req.user.user_id) return msg(res, 400, { message: "ไม่สามารถลบ User ตัวเราเองในขณะที่อยู่ในระบบได้!" });
-
-        const fetchOneDataUser = await pm.users.findFirst({
-            where: {
-                user_id: req.user.user_id,
-            },
-            select: {
-                user_id: true,
-                fullname_thai: true
-            }
-        });
-        if(!fetchOneDataUser) return msg(res, 404, { message: "ไม่มี User นี้ในระบบกรุณาตรวจสอบ!!" });
-
-        const isMath = await bcrypt.compare(password, req.user.password);
-        if (!isMath) return msg(res, 400, "รหัสผ่านไม่ถูกต้อง!");
-
-        const fullname = req.user.fullname_thai;
-
-        const startTime = Date.now();
-        const removeData = await pm.users.delete({
-            where: {
-                user_id: id
-            }
-        });
-        const endTime = Date.now() - startTime;
-
-        // บันทึกข้อมูลไปยัง auth_log
-        await pm.auth_log.create({
+        await pm.signature_users.create({
             data: {
-                ip_address: req.headers['x-forwarded-for'] || req.ip,
-                name: fullname,
-                request_method: req.method,
-                endpoint: req.originalUrl,
-                execution_time: endTime,
-                row_count: removeData ? 1 : 0,
-                status: removeData ? 'Remove successfully' : 'Remove failed'
+                signature_user_token: base64String, // Use the cleaned base64 string
+                user_id: fetchUserId.user_id,
+                expired: futureDate.toDate(), // Convert moment object to JS Date
+                created_by: os.hostname(),
+                updated_by: os.hostname()
             }
         });
-
-        // ดึงค่า MAX(user_id)
-        const maxIdResult = await pm.$queryRaw`SELECT COALESCE(MAX(user_id), 0) + 1 AS nextId FROM users`;
-
-        // รีเซ็ตค่า AUTO_INCREMENT
-        await pm.$executeRawUnsafe(`ALTER TABLE users AUTO_INCREMENT = ${maxIdResult[0].nextId}`);
-
-        return msg(res, 200, { message: 'ลบข้อมูลเสร็จสิ้น!' });
-        
-    } catch (err) {
-        console.error(err.message);
-        return msg(res, 500, 'Internel server errors');
+    } catch (error) {
+        console.error("Error generateSignature:", error.message);
+        return msg(res, 500, { message: "Internal Server Errors" });
     }
-};
+}
 
 // Function สำหรับการ Logout ออกจากระบบ
 exports.authLogout = async (req, res) => {

@@ -531,11 +531,12 @@ model notify_users {
   notify_user_id      Int      @id @default(autoincrement())
   notify_user_service String   @db.VarChar(100)
   notify_user_token   String   @db.VarChar(255)
-  user_id             Int
+  user_id             Int      @unique(map: "user_id")
   created_at          DateTime @default(now()) @db.Timestamp(0)
   created_by          String?  @default("admin") @db.VarChar(100)
   updated_at          DateTime @default(now()) @db.Timestamp(0)
   updated_by          String?  @default("admin") @db.VarChar(100)
+  users               users    @relation(fields: [user_id], references: [user_id], onUpdate: Restrict, map: "notify_users_on_users")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -780,6 +781,8 @@ model users {
   activity_rooms     activity_rooms[]
   attendance_records attendance_records[]
   auth_tokens        auth_tokens[]
+  notify_users       notify_users?
+  signature_users    signature_users?
   departments        departments?         @relation(fields: [department_id], references: [department_id], onDelete: Restrict, onUpdate: Restrict, map: "users_on_departments")
   positions          positions?           @relation(fields: [position_id], references: [position_id], onDelete: Restrict, onUpdate: Restrict, map: "users_on_positions")
   prefixes           prefixes             @relation(fields: [prefix_id], references: [prefix_id], onUpdate: Restrict, map: "users_on_prefixes")
@@ -787,4 +790,30 @@ model users {
   @@index([department_id], map: "users_on_departments")
   @@index([position_id], map: "users_on_positions")
   @@index([prefix_id], map: "users_on_prefixes")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model signature_users {
+  signature_user_id    Int      @id @default(autoincrement())
+  signature_user_token Bytes
+  user_id              Int      @unique(map: "user_id")
+  expired              DateTime @default(now()) @db.Timestamp(0)
+  created_at           DateTime @default(now()) @db.Timestamp(0)
+  created_by           String?  @default("admin") @db.VarChar(100)
+  updated_at           DateTime @default(now()) @db.Timestamp(0)
+  updated_by           String?  @default("admin") @db.VarChar(100)
+  users                users    @relation(fields: [user_id], references: [user_id], onUpdate: Restrict, map: "signature_users_on_users_lbfk_1")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model signature_users_log {
+  signature_user_log_id Int      @id @default(autoincrement())
+  ip_address            String   @db.VarChar(100)
+  name                  String   @db.VarChar(100)
+  request_method        String   @db.VarChar(100)
+  endpoint              String   @db.VarChar(100)
+  execution_time        Float    @db.Float
+  row_count             Float    @db.Float
+  status                String   @db.VarChar(100)
+  created_at            DateTime @default(now()) @db.Timestamp(0)
 }
