@@ -321,11 +321,21 @@ exports.authVerifyToken = async (req, res) => {
                 user_id: Number(req.user.user_id)
             },
             select: {
+                // Fields from users table
                 fullname_thai: true,
                 fullname_english: true,
-                position: true,
-                department: true,
-                status: true
+                status: true,
+                // Relations
+                positions: {
+                    select: {
+                        position_name: true
+                    }
+                },
+                departments: {
+                    select: {
+                        department_name: true
+                    }
+                }
             }
         });
         const endTime = Date.now() - startTime;
