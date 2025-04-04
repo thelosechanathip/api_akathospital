@@ -25,3 +25,9 @@ exports.validatePhoneNumber = async(telephone_number) => {
     const phoneRegex = /^0[6-9][0-9]{8}$/; // เบอร์ไทย เช่น 0812345678
     return phoneRegex.test(telephone_number);
 }
+
+// Function ในการตรวจสอบรูปแบบของ Base 64
+exports.isBase64Png  = async(data) => {
+    const regex = /^data:image\/png;base64,[A-Za-z0-9+/=]+$/;
+    return regex.test(data);
+}

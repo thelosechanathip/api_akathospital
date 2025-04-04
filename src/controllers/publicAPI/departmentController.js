@@ -47,7 +47,7 @@ exports.syncDataDepartments = async (req, res) => {
         `);
   
         if (!fetchDataDepartmentInBackOffice || fetchDataDepartmentInBackOffice.length === 0) {
-            res.write(`data: {"status": 404, "progress": "error", "message": "ไม่พบข้อมูลวันหยุดจากระบบ BackOffice!"}\n\n`);
+            res.write(`data: {"status": 404, "progress": "error", "message": "ไม่พบข้อมูลวันแผนกจากระบบ BackOffice!"}\n\n`);
             return res.end();
         }
   

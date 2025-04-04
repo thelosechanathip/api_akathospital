@@ -1,27 +1,25 @@
-// const {
-//     checkNationalIdOnBackOffice
-// } = require('../../models/auth/authModel');
 const jwt = require("jsonwebtoken");
 const bcrypt = require('bcryptjs');
 const { msg } = require("../../utils/message");
 require("dotenv").config();
 const CryptoJS = require("crypto-js");
-const axios = require("axios"); // เพิ่ม axios สำหรับเรียก Telegram API
-const NodeCache = require("node-cache");
-const otpCache = new NodeCache({ stdTTL: 300 }); // รหัส OTP หมดอายุใน 5 นาที (300 วินาที)
 const moment = require('moment');
 const pm = require('../../config/prisma');
 const db_b = require('../../config/db_b');
 const os = require('os');
+const axios = require("axios"); // เพิ่ม axios สำหรับเรียก Telegram API
+const NodeCache = require("node-cache");
+const otpCache = new NodeCache({ stdTTL: 300 }); // รหัส OTP หมดอายุใน 5 นาที (300 วินาที)
+const { isBase64Png } = require('../../utils/allCheck');
 
-// ฟังก์ชันสร้างรหัส OTP (เฉพาะตัวเลข)
-const generateOtp = (identifier) => {
+// Generate OTP
+const generateOtp = async (identifier) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString(); // สร้างตัวเลข 6 หลัก
     otpCache.set(identifier, otp);
     return otp;
 };
 
-// ฟังก์ชันส่งข้อความผ่าน Telegram
+// Send Message To Application Telegram
 const sendTelegramMessage = async (chatId, otpCode) => {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const telegramApiUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
@@ -154,7 +152,7 @@ exports.authRegister = async (req, res) => {
             }
         });
 
-        return msg(res, 200, { message: 'successfully!' });
+        return msg(res, 200, { message: 'Generate user successfully!' });
     } catch (err) {
         console.log('authRegister : ', err);
         return msg(res, 500, { message: err.message });
@@ -198,7 +196,7 @@ exports.authLogin = async (req, res) => {
         );
 
         // สร้างและส่ง OTP ไปยัง Telegram
-        const otpCode = generateOtp(telegramChatId);
+        const otpCode = await generateOtp(telegramChatId);
         await sendTelegramMessage(telegramChatId, otpCode); // ส่ง OTP ไปยัง Telegram
         if (token) {
             try {
@@ -258,6 +256,7 @@ exports.authVerifyOtp = async (req, res) => {
 
         // ตรวจสอบ OTP ที่กรอกเข้ามาว่าถูกต้องหรือไม่
         const cachedOtp = otpCache.get(chatId); // ใช้ chatId จาก decoded
+        console.log(cachedOtp);
         if (!cachedOtp) return msg(res, 400, { message: "OTP หมดอายุหรือไม่ถูกต้อง" });
 
         if (cachedOtp === otpCode) {
@@ -367,23 +366,205 @@ exports.authVerifyToken = async (req, res) => {
 exports.generateSignature = async (req, res) => {
     try {
         const { signature_user_token } = req.body;
+        if(!signature_user_token) return msg(res, 200, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน!' });
+        if(!isBase64Png(signature_user_token)) return msg(res, 400, { message: `${signature_user_token} ไม่ใช่รูปแบบ PNG base64 ที่ถูกต้อง` });
+
         const dateNow = moment(); // Current date
         const futureDate = dateNow.add(2, 'years'); // Add 2 years for expiration
+        const fullname = req.user.fullname_thai;
 
         // Remove the data URI prefix if it exists
         const base64String = signature_user_token.replace(/^data:image\/\w+;base64,/, '');
 
-        await pm.signature_users.create({
-            data: {
+        const startTime = Date.now();
+        const generateSignature = await pm.signature_users.upsert({
+            where: { user_id: req.user.user_id },
+            update: {
                 signature_user_token: base64String, // Use the cleaned base64 string
-                user_id: fetchUserId.user_id,
                 expired: futureDate.toDate(), // Convert moment object to JS Date
-                created_by: os.hostname(),
-                updated_by: os.hostname()
+                updated_by: fullname
+            },
+            create: {
+                signature_user_token: base64String, // Use the cleaned base64 string
+                user_id: req.user.user_id,
+                expired: futureDate.toDate(), // Convert moment object to JS Date
+                created_by: fullname,
+                updated_by: fullname
             }
         });
+        const endTime = Date.now() - startTime;
+
+        // บันทึก Log
+        await pm.signature_users_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: generateSignature ? 1 : 0,
+                status: generateSignature ? 'Success' : 'Failed'
+            }
+        });
+
+        return msg(res, 200, { message: 'Generate signature successfully!' });
     } catch (error) {
         console.error("Error generateSignature:", error.message);
+        return msg(res, 500, { message: "Internal Server Errors" });
+    }
+};
+
+// Function Remove User
+exports.removeUser = async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        if(id === req.user.user_id) return msg(res, 400, { message: 'ไม่สามารถลบ User ตัวเองได้!' });
+
+        const { password } = req.body;
+        if(!password) return msg(res, 400, { message: 'กรุณากรอกรหัสผ่านเพื่อยืนยันการลบข้อมูล!' });
+
+        const fullname = req.user.fullname_thai;
+
+        const fetchPassword = await pm.users.findFirst({
+            where: { user_id: req.user.user_id },
+            select: { password: true }
+        });
+        if(!fetchPassword) return msg(res, 404, { message: 'ไม่มี User นี้ในระบบกรุณาตรวจสอบ!' });
+
+        const isMath = await bcrypt.compare(password, fetchPassword.password);
+        if(!isMath) return msg(res, 400, { message: 'รหัสผ่านไม่ถูกต้องกรุณาตรวจสอบรหัสผ่าน!' });
+
+        // Check Table signature_users AND Remove Data
+        const fetchSignature = await pm.signature_users.findFirst({
+            where: { user_id: id },
+            select: { signature_user_id: true }
+        });
+        if(fetchSignature) {
+            const startTime = Date.now();
+            const removeSignature = await pm.signature_users.delete({
+                where: { signature_user_id: fetchSignature.signature_user_id }
+            });
+            const endTime = Date.now() - startTime;
+
+            // บันทึก Log
+            await pm.signature_users_log.create({
+                data: {
+                    ip_address: req.headers['x-forwarded-for'] || req.ip,
+                    name: fullname,
+                    request_method: req.method,
+                    endpoint: req.originalUrl,
+                    execution_time: endTime,
+                    row_count: removeSignature ? 1 : 0,
+                    status: removeSignature ? 'Success' : 'Failed'
+                }
+            });
+
+            // ดึงค่า MAX(signature_user_id)
+            const maxIdResult = await pm.$queryRaw`SELECT COALESCE(MAX(signature_user_id), 0) + 1 AS nextId FROM signature_users`;
+
+            // รีเซ็ตค่า AUTO_INCREMENT
+            await pm.$executeRawUnsafe(`ALTER TABLE signature_users AUTO_INCREMENT = ${maxIdResult[0].nextId}`);
+        }
+
+        // Check Table notify_users AND Remove Data
+        const fetchNotify = await pm.notify_users.findFirst({
+            where: { user_id: id },
+            select: { notify_user_id: true }
+        });
+        if(fetchNotify) {
+            const startTime = Date.now();
+            const removeNotifyUser = await pm.notify_users.delete({
+                where: { notify_user_id: fetchNotify.notify_user_id }
+            });
+            const endTime = Date.now() - startTime;
+
+            // บันทึก Log
+            await pm.notify_users_log.create({
+                data: {
+                    ip_address: req.headers['x-forwarded-for'] || req.ip,
+                    name: fullname,
+                    request_method: req.method,
+                    endpoint: req.originalUrl,
+                    execution_time: endTime,
+                    row_count: removeNotifyUser ? 1 : 0,
+                    status: removeNotifyUser ? 'Success' : 'Failed'
+                }
+            });
+
+            // ดึงค่า MAX(notify_user_id)
+            const maxIdResult = await pm.$queryRaw`SELECT COALESCE(MAX(notify_user_id), 0) + 1 AS nextId FROM notify_users`;
+
+            // รีเซ็ตค่า AUTO_INCREMENT
+            await pm.$executeRawUnsafe(`ALTER TABLE notify_users AUTO_INCREMENT = ${maxIdResult[0].nextId}`);
+        }
+
+        // ตรวจสอบว่ามี Foreign Key หรือไม่
+        const checkForeignKey = await pm.$queryRaw`
+            SELECT TABLE_NAME, COLUMN_NAME
+            FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+            WHERE REFERENCED_TABLE_NAME = 'users'
+            AND REFERENCED_COLUMN_NAME = 'user_id'
+            AND EXISTS (
+                SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = KEY_COLUMN_USAGE.TABLE_NAME
+            )
+        `;
+
+        if (checkForeignKey.length > 0) {
+            let hasReference = false;
+            let referencedTables = [];
+
+            // ตรวจสอบแต่ละตารางว่ามีข้อมูลอ้างอิงอยู่หรือไม่
+            for (const row of checkForeignKey) {
+                const tableName = row.TABLE_NAME;
+                const columnName = row.COLUMN_NAME;
+
+                const checkData = await pm.$queryRawUnsafe(`
+                    SELECT 1 FROM ${tableName} WHERE ${columnName} = ${Number(req.params.id)} LIMIT 1
+                `);
+
+                if (checkData.length > 0) {
+                    hasReference = true;
+                    referencedTables.push(tableName);
+                }
+            }
+
+            // ถ้ามีตารางที่อ้างอิงอยู่ → ห้ามลบ
+            if (hasReference) {
+                return msg(res, 400, { 
+                    message: `ไม่สามารถลบได้ เนื่องจาก user_id ถูกใช้งานอยู่ในตาราง: ${referencedTables.join(', ')} กรุณาลบข้อมูลที่เกี่ยวข้องก่อน!` 
+                });
+            }
+        }
+
+        const startTime = Date.now();
+        const removeUser = await pm.users.delete({
+            where: { user_id: id }
+        });
+        const endTime = Date.now() - startTime;
+
+        // บันทึก Log
+        await pm.auth_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: removeUser ? 1 : 0,
+                status: removeUser ? 'Success' : 'Failed'
+            }
+        });
+
+        // ดึงค่า MAX(user_id)
+        const maxIdResult = await pm.$queryRaw`SELECT COALESCE(MAX(user_id), 0) + 1 AS nextId FROM users`;
+
+        // รีเซ็ตค่า AUTO_INCREMENT
+        await pm.$executeRawUnsafe(`ALTER TABLE users AUTO_INCREMENT = ${maxIdResult[0].nextId}`);
+
+        return msg(res, 200, { data: 'Remove user successfully!' });
+
+    } catch (error) {
+        console.error("Error removeUser:", error.message);
         return msg(res, 500, { message: "Internal Server Errors" });
     }
 }
