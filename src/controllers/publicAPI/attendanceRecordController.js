@@ -352,6 +352,7 @@ exports.checkIn = async (req, res) => {
             where: { user_id: user_id },
             select: { signature_user_id: true }
         });
+        if(!fetchSignature) return msg(res, 404, { message: 'User ยังไม่มีลายเซ็น Digital กรุณาเพิ่มลายเซ็น Digital ก่อนใช้งานระบบ!' });
 
         const startTime = Date.now();
         const insertAttendanceRecord = await pm.attendance_records.create({
