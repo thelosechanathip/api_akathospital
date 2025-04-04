@@ -243,10 +243,15 @@ exports.checkIn = async (req, res) => {
 
         const checkUser = await pm.users.findFirst({
             where: { national_id },
-            select: { user_id: true, fullname_thai: true, telegram_chat_id: true }
+            select: { user_id: true, fullname_thai: true }
         });
         if(!checkUser) return msg(res, 404, { message: 'ไม่มี User นี้อยู่ในระบบ กรุณา Register ก่อนใช้งาน!' });
-        if(!checkUser.telegram_chat_id) return msg(res, 400, { message: 'ไม่มี TelegramChatId ใน User กรุณาติดต่อ Admin เพื่อเพิ่มข้อมูล!' });
+
+        const fetchNotify = await pm.notify_users.findFirst({
+            where: { user_id: checkUser.user_id },
+            select: { notify_user_token: true }
+        });
+        if(!fetchNotify.notify_user_token) return msg(res, 400, { message: 'ไม่มี TelegramChatId ใน User กรุณาติดต่อ Admin เพื่อเพิ่มข้อมูล!' });
 
         const fullname = checkUser.fullname_thai;
 
@@ -340,7 +345,13 @@ exports.checkIn = async (req, res) => {
 
         if (!fetchDataOneCheckInStatus) return msg(res, 400, { message: "เกิดข้อผิดพลาดในการดึงข้อมูลกะการทำงานหรือสถานะเช็คอิน" });
 
-        const { user_id, telegram_chat_id } = checkUser;
+        const { user_id } = checkUser;
+        const { notify_user_token } = fetchNotify;
+
+        const fetchSignature = await pm.signature_users.findFirst({
+            where: { user_id: user_id },
+            select: { signature_user_id: true }
+        });
 
         const startTime = Date.now();
         const insertAttendanceRecord = await pm.attendance_records.create({
@@ -349,6 +360,7 @@ exports.checkIn = async (req, res) => {
                 shift_type_id: Number(req.body.shift_type_id),
                 shift_id: fetchDataOneShift,
                 starting: timeNow,
+                starting_signature_id: fetchSignature.signature_user_id,
                 check_in_status_id: fetchDataOneCheckInStatus.check_in_status_id,
                 created_by: fullname,
                 updated_by: fullname
@@ -373,17 +385,17 @@ exports.checkIn = async (req, res) => {
             { 
                 attendance_record_id: insertAttendanceRecord.attendance_record_id, 
                 userId: user_id, 
-                telegramChatId: telegram_chat_id, 
+                telegramChatId: notify_user_token, 
                 expiresIn: "20s" 
             },
             process.env.SECRET_KEY,
             { expiresIn: "20s" }
         );
 
-        const otpCode = generateOtp(telegram_chat_id);
-        await sendTelegramMessage(telegram_chat_id, otpCode);
+        const otpCode = generateOtp(notify_user_token);
+        await sendTelegramMessage(notify_user_token, otpCode);
 
-        if (token) return msg(res, 200, token);
+        if (token) return msg(res, 200, { token: token });
         
     } catch (error) {
         console.error("Error checkIn:", error.message);
@@ -532,6 +544,13 @@ exports.checkOut = async (req, res) => {
 
         let attendanceRecordCreatedAt = checkDataAttendanceRecord.created_at;
         let attendanceData = moment(attendanceRecordCreatedAt).format('YYYY-MM-DD');
+
+        const fetchSignature = await pm.signature_users.findFirst({
+            where: { user_id: checkUser.user_id },
+            select: { signature_user_id: true }
+        });
+        if(!fetchSignature) return msg(res, 404, { message: 'User ยังไม่มีลายเซ็น Digital กรุณาเพิ่มลายเซ็น Digital ก่อนใช้งานระบบ!' });
+        const { signature_user_id } = fetchSignature;
         
         if(checkDataAttendanceRecord.shift_id === null) {
             const fetchOneCheckOutStatus = await pm.check_out_status.findFirst({
@@ -551,6 +570,7 @@ exports.checkOut = async (req, res) => {
                 },
                 data: {
                     ending: timeNow,
+                    ending_signature_id: signature_user_id,
                     check_out_status_id: fetchOneCheckOutStatus.check_out_status_id 
                 }
             });
@@ -622,6 +642,7 @@ exports.checkOut = async (req, res) => {
                     },
                     data: {
                         ending: timeNow,
+                        ending_signature_id: signature_user_id,
                         check_out_status_id: fetchOneCheckOutStatus.check_out_status_id 
                     }
                 });

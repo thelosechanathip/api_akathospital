@@ -163,30 +163,36 @@ model api_versions_log {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model attendance_records {
-  attendance_record_id Int               @id @default(autoincrement())
-  user_id              Int
-  shift_type_id        Int?
-  shift_id             Int?
-  starting             String?           @db.VarChar(50)
-  check_in_status_id   Int?
-  ending               String?           @db.VarChar(50)
-  check_out_status_id  Int?
-  otp_verified         Boolean?          @default(false)
-  created_at           DateTime          @default(now()) @db.Timestamp(0)
-  created_by           String            @default("admin") @db.VarChar(50)
-  updated_at           DateTime          @default(now()) @db.Timestamp(0)
-  updated_by           String            @default("admin") @db.VarChar(50)
-  check_in_status      check_in_status?  @relation(fields: [check_in_status_id], references: [check_in_status_id], onDelete: Restrict, onUpdate: Restrict, map: "attendance_records_on_check_in_status")
-  check_out_status     check_out_status? @relation(fields: [check_out_status_id], references: [check_out_status_id], onDelete: Restrict, onUpdate: Restrict, map: "attendance_records_on_check_out_status")
-  shift_types          shift_types?      @relation(fields: [shift_type_id], references: [shift_type_id], onDelete: Restrict, onUpdate: Restrict, map: "attendance_records_on_shift_types")
-  shifts               shifts?           @relation(fields: [shift_id], references: [shift_id], onDelete: Restrict, onUpdate: Restrict, map: "attendance_records_on_shifts")
-  users                users             @relation(fields: [user_id], references: [user_id], onUpdate: Restrict, map: "attendance_records_on_users")
+  attendance_record_id                                                      Int               @id @default(autoincrement())
+  user_id                                                                   Int
+  shift_type_id                                                             Int?
+  shift_id                                                                  Int?
+  starting                                                                  String?           @db.VarChar(50)
+  starting_signature_id                                                     Int?
+  check_in_status_id                                                        Int?
+  ending                                                                    String?           @db.VarChar(50)
+  ending_signature_id                                                       Int?
+  check_out_status_id                                                       Int?
+  otp_verified                                                              Boolean?          @default(false)
+  created_at                                                                DateTime          @default(now()) @db.Timestamp(0)
+  created_by                                                                String            @default("admin") @db.VarChar(50)
+  updated_at                                                                DateTime          @default(now()) @db.Timestamp(0)
+  updated_by                                                                String            @default("admin") @db.VarChar(50)
+  check_in_status                                                           check_in_status?  @relation(fields: [check_in_status_id], references: [check_in_status_id], onDelete: Restrict, onUpdate: Restrict, map: "attendance_records_on_check_in_status")
+  check_out_status                                                          check_out_status? @relation(fields: [check_out_status_id], references: [check_out_status_id], onDelete: Restrict, onUpdate: Restrict, map: "attendance_records_on_check_out_status")
+  shift_types                                                               shift_types?      @relation(fields: [shift_type_id], references: [shift_type_id], onDelete: Restrict, onUpdate: Restrict, map: "attendance_records_on_shift_types")
+  shifts                                                                    shifts?           @relation(fields: [shift_id], references: [shift_id], onDelete: Restrict, onUpdate: Restrict, map: "attendance_records_on_shifts")
+  signature_users_attendance_records_starting_signature_idTosignature_users signature_users?  @relation("attendance_records_starting_signature_idTosignature_users", fields: [starting_signature_id], references: [signature_user_id], onDelete: Restrict, onUpdate: Restrict, map: "attendance_records_on_signature_users_lbfk_1")
+  signature_users_attendance_records_ending_signature_idTosignature_users   signature_users?  @relation("attendance_records_ending_signature_idTosignature_users", fields: [ending_signature_id], references: [signature_user_id], onDelete: Restrict, onUpdate: Restrict, map: "attendance_records_on_signature_users_lbfk_2")
+  users                                                                     users             @relation(fields: [user_id], references: [user_id], onUpdate: Restrict, map: "attendance_records_on_users")
 
   @@index([check_in_status_id], map: "attendance_records_on_check_in_status")
   @@index([check_out_status_id], map: "attendance_records_on_check_out_status")
   @@index([shift_type_id], map: "attendance_records_on_shift_types")
   @@index([shift_id], map: "attendance_records_on_shifts")
   @@index([user_id], map: "attendance_records_on_users")
+  @@index([starting_signature_id], map: "attendance_records_on_signature_users_lbfk_1")
+  @@index([ending_signature_id], map: "attendance_records_on_signature_users_lbfk_2")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -794,15 +800,17 @@ model users {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model signature_users {
-  signature_user_id    Int      @id @default(autoincrement())
-  signature_user_token Bytes
-  user_id              Int      @unique(map: "user_id")
-  expired              DateTime @default(now()) @db.Timestamp(0)
-  created_at           DateTime @default(now()) @db.Timestamp(0)
-  created_by           String?  @default("admin") @db.VarChar(100)
-  updated_at           DateTime @default(now()) @db.Timestamp(0)
-  updated_by           String?  @default("admin") @db.VarChar(100)
-  users                users    @relation(fields: [user_id], references: [user_id], onUpdate: Restrict, map: "signature_users_on_users_lbfk_1")
+  signature_user_id                                                            Int                  @id @default(autoincrement())
+  signature_user_token                                                         Bytes
+  user_id                                                                      Int                  @unique(map: "user_id")
+  expired                                                                      DateTime             @default(now()) @db.Timestamp(0)
+  created_at                                                                   DateTime             @default(now()) @db.Timestamp(0)
+  created_by                                                                   String?              @default("admin") @db.VarChar(100)
+  updated_at                                                                   DateTime             @default(now()) @db.Timestamp(0)
+  updated_by                                                                   String?              @default("admin") @db.VarChar(100)
+  attendance_records_attendance_records_starting_signature_idTosignature_users attendance_records[] @relation("attendance_records_starting_signature_idTosignature_users")
+  attendance_records_attendance_records_ending_signature_idTosignature_users   attendance_records[] @relation("attendance_records_ending_signature_idTosignature_users")
+  users                                                                        users                @relation(fields: [user_id], references: [user_id], onUpdate: Restrict, map: "signature_users_on_users_lbfk_1")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
