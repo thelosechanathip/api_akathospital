@@ -340,6 +340,12 @@ exports.authVerifyToken = async (req, res) => {
         const endTime = Date.now() - startTime;
         if(!fetchOneDataUser) return msg(res, 404, { message: 'Data not found!' });
 
+        const fetchSignature = await pm.signature_users.findFirst({
+            where: { user_id: Number(req.user.user_id) },
+            select: { signature_user_id: true }
+        });
+        if(!fetchSignature) return msg(res, 404, { signature_status: false });
+
         const fullname = fetchOneDataUser.fullname_thai;
 
         // บันทึกข้อมูลไปยัง auth_log

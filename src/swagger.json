@@ -522,6 +522,10 @@
                     "message": {
                       "type": "string",
                       "example": "Data not found!"
+                    },
+                    "signature_status": {
+                      "type": "string",
+                      "example": "true || false"
                     }
                   }
                 }
