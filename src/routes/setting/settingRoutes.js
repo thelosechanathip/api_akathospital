@@ -6,6 +6,9 @@ const { authCheckToken, authCheckTokenAdmin } = require('../../middleware/auth/a
 // Log
 const { clearLog } = require('../../controllers/setting/logController');
 
+// Hcode
+const { getAllDataHcodes, upsertDataHcode, removeDataHcode } = require('../../controllers/setting/hcodeController');
+
 // Api Version
 const { getAllDataApiVersions, insertDataApiVersion, updateDataApiVersion, removeDataApiVersion } = require('../../controllers/setting/apiVersionController');
 const { getAllDataApiVersionDetails, insertDataApiVersionDetail, updateDataApiVersionDetail, removeDataApiVersionDetail } = require('../../controllers/setting/apiVersionDetailController');
@@ -140,5 +143,11 @@ router.post('/insertActivityTopic', authCheckTokenAdmin, insertDataActivityTopic
 // Log Start
     router.post('/clearLog', authCheckTokenAdmin, clearLog);
 // Log End
+
+// Hcode Start
+    router.get('/getSettingHcodes', authCheckTokenAdmin, getAllDataHcodes);
+    router.post('/upsertSettingHcode', authCheckTokenAdmin, upsertDataHcode);
+    router.delete('/removeSettingHcode/:id', authCheckTokenAdmin, removeDataHcode);
+// Hcode End
 
 module.exports = router;

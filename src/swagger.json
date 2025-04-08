@@ -25,6 +25,10 @@
       "description": "Endpoints สำหรับการจัดการข้อมูลของ Log"
     },
     {
+      "name": "Hcode",
+      "description": "Endpoints สำหรับการจัดการข้อมูลของสถานะพยาบาล"
+    },
+    {
       "name": "ComplaintTopic",
       "description": "Endpoints สำหรับการจัดการข้อมูลของหัวข้อเรื่องร้องเรียน"
     },
@@ -977,6 +981,373 @@
                     "message": {
                       "type": "string",
                       "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/setting/getSettingHcodes": {
+      "get": {
+        "tags": [
+          "Hcode"
+        ],
+        "summary": "สำหรับดึงข้อมูล Hcode",
+        "description": "สำหรับดึงข้อมูลทั้งหมดของ Hcode และตรวจสอบ Token เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "hcode_id": {
+                            "type": "integer",
+                            "example": 1
+                          },
+                          "hcode": {
+                            "type": "string",
+                            "example": "11098"
+                          },
+                          "hcode_name": {
+                            "type": "string",
+                            "example": "โรงพยาบาลอากาศอำนวย"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2025-02-19T08:55:57.000Z"
+                          },
+                          "created_by": {
+                            "type": "string",
+                            "example": "admin"
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2025-02-19T08:55:57.000Z"
+                          },
+                          "updated_by": {
+                            "type": "string",
+                            "example": "admin"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Server ไม่สามารถประมวลผลคำร้องขอเนื่องจากข้อผิดพลาดของ Client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "การเข้าถึงถูกปฏิเสธ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Server ปฏิเสธการร้องขอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีข้อมูลบน Database!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/setting/upsertSettingHcode": {
+      "post": {
+        "tags": [
+          "Hcode"
+        ],
+        "summary": "สำหรับบันทึกข้อมูล Hcode",
+        "description": "สำหรับบันทึกข้อมูลทั้งหมดของ Hcode และตรวจสอบ Token เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "hcode": {
+                    "type": "string",
+                    "example": "11098"
+                  },
+                  "hcode_name": {
+                    "type": "string",
+                    "example": "โรงพยาบาลอากาศอำนวย"
+                  }
+                },
+                "required": [
+                  "hcode",
+                  "hcode_name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Upsert data successfully!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ข้อมูลจาก Client ไม่ถูกต้อง",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "การเข้าถึงถูกปฏิเสธ! || กรุณากรอกข้อมูลให้ครบถ้วน!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || Token ไม่ถูกต้อง! || Tokenไม่อนุญาติให้ใช้งาน! || ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Server ปฏิเสธการร้องขอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีสิทธิ์การใช้งานในส่วนของระบบนี้!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/setting/removeSettingHcode/{id}": {
+      "delete": {
+        "tags": [
+          "Hcode"
+        ],
+        "summary": "สำหรับลบข้อมูล Hcode",
+        "description": "สำหรับลบข้อมูลทั้งหมดของ Hcode",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            },
+            "description": "ID ของ Hcode ที่ต้องการลบ"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Deleted successfully!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Server ไม่สามารถประมวลผลคำร้องขอเนื่องจากข้อผิดพลาดของ Client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่สามารถลบได้ เนื่องจาก hcode_id ถูกใช้งานอยู่ในตาราง: ${referencedTables.join(', ')} กรุณาลบข้อมูลที่เกี่ยวข้องก่อน!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่มีข้อมูล ( ID: ${hcodeId} ) อยู่ในระบบ!"
                     }
                   }
                 }
