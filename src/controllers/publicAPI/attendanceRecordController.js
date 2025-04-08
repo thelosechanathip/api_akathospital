@@ -52,7 +52,7 @@ exports.fetchDataAllAttendanceRecord = async (req, res) => {
             },
             select: {
                 attendance_record_id: true,
-                users: { select: { prefix: true, fullname_thai: true } },
+                users: { select: { prefixes: { select: { prefix_name: true } }, fullname_thai: true } },
                 shift_types: { select: { shift_type_name: true } },
                 shifts: { select: { shift_name: true } },
                 starting: true,
@@ -81,7 +81,7 @@ exports.fetchDataAllAttendanceRecord = async (req, res) => {
         });
 
         if (resultData.length === 0) {
-            console.log("No data found for the specified range");
+            // console.log("No data found for the specified range");
             return msg(res, 404, { message: 'ไม่มีข้อมูลบน Database!' });
         }
 
@@ -178,7 +178,7 @@ exports.searchAttendanceRecords = async (req, res) => {
                     {
                         users: {
                             OR: [
-                                { prefix: { contains: keyword } },
+                                { prefixes: { prefix_name: { contains: keyword } } },
                                 { fullname_thai: { contains: keyword } }
                             ]
                         }
@@ -193,7 +193,7 @@ exports.searchAttendanceRecords = async (req, res) => {
             },
             select: {
                 attendance_record_id: true,
-                users: { select: { prefix: true, fullname_thai: true } },
+                users: { select: { prefixes: { select: { prefix_name: true } } , fullname_thai: true } },
                 shift_types: { select: { shift_type_name: true } },
                 shifts: { select: { shift_name: true } },
                 starting: true,
