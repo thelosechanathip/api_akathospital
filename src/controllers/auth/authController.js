@@ -344,7 +344,7 @@ exports.authVerifyToken = async (req, res) => {
             where: { user_id: Number(req.user.user_id) },
             select: { signature_user_id: true }
         });
-        if(!fetchSignature) return msg(res, 404, { signature_status: false });
+        if(!fetchSignature) fetchOneDataUser.signature_status = false;
         fetchOneDataUser.signature_status = true;
 
         const fullname = fetchOneDataUser.fullname_thai;

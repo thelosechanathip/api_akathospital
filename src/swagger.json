@@ -466,12 +466,22 @@
                           "example": "Dum KamHang"
                         },
                         "position": {
-                          "type": "string",
-                          "example": "ตำแหน่งนักดำน้ำใต้โลก"
+                          "type": "object",
+                          "properties": {
+                            "position_name": {
+                              "type": "string",
+                              "example": "ตำแหน่งนักดำน้ำใต้โลก"
+                            }
+                          }
                         },
                         "department": {
-                          "type": "string",
-                          "example": "แผนกรักป่ารักเขา"
+                          "type": "object",
+                          "properties": {
+                            "department_name": {
+                              "type": "string",
+                              "example": "แผนกรักป่ารักเขา"
+                            }
+                          }
                         },
                         "status": {
                           "type": "string",
