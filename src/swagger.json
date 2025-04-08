@@ -476,6 +476,10 @@
                         "status": {
                           "type": "string",
                           "example": "ADMIN"
+                        },
+                        "signature_status": {
+                          "type": "string",
+                          "example": "true"
                         }
                       }
                     }
