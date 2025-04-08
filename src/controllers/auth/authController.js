@@ -349,10 +349,22 @@ exports.authVerifyToken = async (req, res) => {
             const currentDate = moment().format('YYYY-MM-DD HH:mm:ss');
             const expired = moment(fetchSignature.expired).format('YYYY-MM-DD HH:mm:ss');
             
-            if(currentDate <= expired) status = true;
+            if(currentDate <= expired) {
+                status = true;
+            } else {
+                await pm.signature_users.delete({
+                    where: { signature_user_id: fetchSignature.signature_user_id }
+                });
+
+                // ดึงค่า MAX(signature_user_id)
+                const maxIdResult = await pm.$queryRaw`SELECT COALESCE(MAX(signature_user_id), 0) + 1 AS nextId FROM signature_users`;
+
+                // รีเซ็ตค่า AUTO_INCREMENT
+                await pm.$executeRawUnsafe(`ALTER TABLE signature_users AUTO_INCREMENT = ${maxIdResult[0].nextId}`);
+            }
         }
         fetchOneDataUser.signature_status = status;
-        
+
         const fullname = fetchOneDataUser.fullname_thai;
 
         // บันทึกข้อมูลไปยัง auth_log
