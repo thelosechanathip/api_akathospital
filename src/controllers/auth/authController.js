@@ -340,6 +340,7 @@ exports.authVerifyToken = async (req, res) => {
         const endTime = Date.now() - startTime;
         if(!fetchOneDataUser) return msg(res, 404, { message: 'Data not found!' });
 
+        fetchOneDataUser.signature_status = false;
         const fetchSignature = await pm.signature_users.findFirst({
             where: { user_id: Number(req.user.user_id) },
             select: { signature_user_id: true }
