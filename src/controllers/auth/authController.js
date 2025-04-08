@@ -340,13 +340,14 @@ exports.authVerifyToken = async (req, res) => {
         const endTime = Date.now() - startTime;
         if(!fetchOneDataUser) return msg(res, 404, { message: 'Data not found!' });
 
-        fetchOneDataUser.signature_status = false;
+        let status = false;
         const fetchSignature = await pm.signature_users.findFirst({
             where: { user_id: Number(req.user.user_id) },
             select: { signature_user_id: true }
         });
-        if(!fetchSignature) fetchOneDataUser.signature_status = false;
-        fetchOneDataUser.signature_status = true;
+        if(fetchSignature) status = true;
+        
+        fetchOneDataUser.signature_status = status;
 
         const fullname = fetchOneDataUser.fullname_thai;
 
