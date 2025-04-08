@@ -32,9 +32,7 @@ exports.getAllDataCarousels = async (req, res) => {
 exports.getCarouselImage = async (req, res) => {
     try {
         const { carousel_id } = req.params;  // ดึง id ของ carousel
-        const carousel = await pm.carousels.findUnique({
-            where: { carousel_id: Number(carousel_id) }
-        });
+        const carousel = await pm.carousels.findUnique({ where: { carousel_id: Number(carousel_id) } });
 
         if (!carousel || !carousel.carousel_image) return res.status(404).json({ message: 'ไม่พบภาพหรือข้อมูลที่เกี่ยวข้อง' });
 

@@ -11,6 +11,7 @@ const axios = require("axios"); // เพิ่ม axios สำหรับเ�
 const NodeCache = require("node-cache");
 const otpCache = new NodeCache({ stdTTL: 300 }); // รหัส OTP หมดอายุใน 5 นาที (300 วินาที)
 const { isBase64Png } = require('../../utils/allCheck');
+const sharp = require('sharp');
 
 // Generate OTP
 const generateOtp = async (identifier) => {
@@ -439,6 +440,31 @@ exports.generateSignature = async (req, res) => {
     }
 };
 
+// Function สำหรับ Fetch Signature ที่เป็นรูปภาพไปให้ FrontEnd
+exports.fetchSignature = async (req, res) => {
+    try {
+        const userId = req.user.user_id;
+        const fetchSignature = await pm.signature_users.findUnique({
+            where: { user_id: userId },
+            select: { signature_user_token: true }
+        });
+
+        if (!fetchSignature || !fetchSignature.signature_user_token) return msg(res, 404, { message: "Signature not found" });
+
+        const resizedImage = await sharp(fetchSignature.signature_user_token)
+            .resize(1000)  // ปรับขนาดความกว้างของภาพเป็น 1000px
+            .sharpen()  // เพิ่มความชัดให้กับภาพ
+            .toBuffer();  // เปลี่ยนเป็น buffer ที่สามารถส่งกลับไปได้
+        
+        // ตั้งค่า Content-Type เป็น image/jpeg หรือ image/png ขึ้นอยู่กับประเภทของภาพ
+        res.setHeader('Content-Type', 'image/jpeg');  // หรือ 'image/png' ขึ้นอยู่กับประเภทของภาพ
+        res.send(resizedImage);  // ส่งภาพที่มีขนาดใหม่ไปยัง Client
+    } catch (error) {
+        console.error("Error fetchSignature:", error.message);
+        return msg(res, 500, { message: "Internal Server Errors" });
+    }
+};
+
 // Function Remove User
 exports.removeUser = async (req, res) => {
     try {
@@ -592,7 +618,7 @@ exports.removeUser = async (req, res) => {
         console.error("Error removeUser:", error.message);
         return msg(res, 500, { message: "Internal Server Errors" });
     }
-}
+};
 
 // Function สำหรับการ Logout ออกจากระบบ
 exports.authLogout = async (req, res) => {
