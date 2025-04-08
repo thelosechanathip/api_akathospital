@@ -3,6 +3,9 @@ const { upload } = require('../../middleware/setting/upload');
 const router = express.Router();
 const { authCheckToken, authCheckTokenAdmin } = require('../../middleware/auth/authAdmin');
 
+// Log
+const { clearLog } = require('../../controllers/setting/logController');
+
 // Api Version
 const { getAllDataApiVersions, insertDataApiVersion, updateDataApiVersion, removeDataApiVersion } = require('../../controllers/setting/apiVersionController');
 const { getAllDataApiVersionDetails, insertDataApiVersionDetail, updateDataApiVersionDetail, removeDataApiVersionDetail } = require('../../controllers/setting/apiVersionDetailController');
@@ -133,5 +136,9 @@ router.post('/insertActivityTopic', authCheckTokenAdmin, insertDataActivityTopic
     router.put('/updateSettingCarousel/:id', authCheckTokenAdmin, upload.single('carousel_image'), updateDataSettingCarousel);
     router.delete('/removeSettingCarousel/:id', authCheckTokenAdmin, removeDataSettingCarousel);
 // Akathospital Setting End
+
+// Log Start
+    router.post('/clearLog', authCheckTokenAdmin, clearLog);
+// Log End
 
 module.exports = router;
