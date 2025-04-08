@@ -343,12 +343,16 @@ exports.authVerifyToken = async (req, res) => {
         let status = false;
         const fetchSignature = await pm.signature_users.findFirst({
             where: { user_id: Number(req.user.user_id) },
-            select: { signature_user_id: true }
+            select: { signature_user_id: true, expired: true }
         });
-        if(fetchSignature) status = true;
-        
+        if(fetchSignature) {
+            const currentDate = moment().format('YYYY-MM-DD HH:mm:ss');
+            const expired = moment(fetchSignature.expired).format('YYYY-MM-DD HH:mm:ss');
+            
+            if(currentDate <= expired) status = true;
+        }
         fetchOneDataUser.signature_status = status;
-
+        
         const fullname = fetchOneDataUser.fullname_thai;
 
         // บันทึกข้อมูลไปยัง auth_log
