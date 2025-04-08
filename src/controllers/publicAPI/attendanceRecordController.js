@@ -193,7 +193,7 @@ exports.searchAttendanceRecords = async (req, res) => {
             },
             select: {
                 attendance_record_id: true,
-                users: { select: { prefixes: { select: { prefix_name: true } } , fullname_thai: true } },
+                users: { select: { prefixes: { select: { prefix_name: true } }, fullname_thai: true } },
                 shift_types: { select: { shift_type_name: true } },
                 shifts: { select: { shift_name: true } },
                 starting: true,
@@ -232,11 +232,45 @@ exports.searchAttendanceRecords = async (req, res) => {
     }
 };
 
+// Function ในการตรวจสอบวันปัจจุบันว่าเป็นวันหยุดหรือไม่?
+exports.fetchHolidays = async (req, res) => {
+    try {
+        const currentMonth = moment().format('MM');
+        
+        const fetchHolidays = await pm.$queryRaw`
+            SELECT holiday_name, holiday_date
+            FROM holidays
+            WHERE EXTRACT(MONTH FROM holiday_date) = ${parseInt(currentMonth)}
+        `;
+
+        let checkHoliday = "วันปกติ";
+
+        const dateNow = moment().format('YYYY-MM-DD');
+
+        for (const holiday of fetchHolidays) {
+            // แปลง holiday_date ให้เป็น string รูปแบบ YYYY-MM-DD
+            const holidayDate = moment(holiday.holiday_date).format('YYYY-MM-DD');
+            if (dateNow === holidayDate) checkHoliday = "วันหยุดหรือวันหยุดราชการ";
+        }
+
+        const fetchShiftType = await pm.shift_types.findFirst({
+            where: { shift_type_name: checkHoliday },
+            select: { shift_type_id: true, shift_type_name: true }
+        });
+
+        return msg(res, 200, { data: fetchShiftType });
+    } catch (error) {
+        console.error("Error fetchHolidays:", error.message);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+// Function ในการลงเวลาเข้าทำงาน
 exports.checkIn = async (req, res) => {
     try {
         let timeNow = moment().format('HH:mm:ss'); // ดึงเวลาปัจจุบัน
 
-        if(!req.body.national_id || !req.body.shift_type_id) return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน' });
+        if (!req.body.national_id || !req.body.shift_type_id) return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน' });
 
         const bytes = CryptoJS.AES.decrypt(req.body.national_id, process.env.PASS_KEY);
         const national_id = bytes.toString(CryptoJS.enc.Utf8);
@@ -245,13 +279,13 @@ exports.checkIn = async (req, res) => {
             where: { national_id },
             select: { user_id: true, fullname_thai: true }
         });
-        if(!checkUser) return msg(res, 404, { message: 'ไม่มี User นี้อยู่ในระบบ กรุณา Register ก่อนใช้งาน!' });
+        if (!checkUser) return msg(res, 404, { message: 'ไม่มี User นี้อยู่ในระบบ กรุณา Register ก่อนใช้งาน!' });
 
         const fetchNotify = await pm.notify_users.findFirst({
             where: { user_id: checkUser.user_id },
             select: { notify_user_token: true }
         });
-        if(!fetchNotify.notify_user_token) return msg(res, 400, { message: 'ไม่มี TelegramChatId ใน User กรุณาติดต่อ Admin เพื่อเพิ่มข้อมูล!' });
+        if (!fetchNotify.notify_user_token) return msg(res, 400, { message: 'ไม่มี TelegramChatId ใน User กรุณาติดต่อ Admin เพื่อเพิ่มข้อมูล!' });
 
         const fullname = checkUser.fullname_thai;
 
@@ -261,28 +295,23 @@ exports.checkIn = async (req, res) => {
                 ending: null,
                 check_out_status_id: null
             },
-            select: {
-                attendance_record_id: true
-            }
+            select: { attendance_record_id: true }
         });
-        if(checkDataAttendanceRecord) return msg(res, 409, { message: 'มีข้อมูลซ้ำที่ยังไม่ได้ Check Out กรุณา Check Out ก่อน!' });
+        if (checkDataAttendanceRecord) return msg(res, 409, { message: 'มีข้อมูลซ้ำที่ยังไม่ได้ Check Out กรุณา Check Out ก่อน!' });
 
         // ตรวจสอบว่า shift_type_id มีอยู่จริงหรือไม่
         const checkShiftTypeId = await pm.shift_types.findFirst({
             where: { shift_type_id: Number(req.body.shift_type_id) },
             select: { shift_type_id: true }
         });
-        if(!checkShiftTypeId) return msg(res, 404, { message: 'ไม่มีข้อมูลประเภทกะการทำงาน กรุณาเพิ่มข้อมูลก่อน!' });
+        if (!checkShiftTypeId) return msg(res, 404, { message: 'ไม่มีข้อมูลประเภทกะการทำงาน กรุณาเพิ่มข้อมูลก่อน!' });
 
         let fetchDataOneCheckInStatus = null;
         let fetchDataOneShift = null;
 
-        if(req.body.shift_type_id === 1) { // เวลาปกติ
+        if (req.body.shift_type_id === 1) { // เวลาปกติ
             const fetchDataOneShiftResult = await pm.shifts.findFirst({
-                where: {
-                    shift_starting: { lte: timeNow },
-                    shift_ending: { gte: timeNow }
-                },
+                where: { shift_starting: { lte: timeNow }, shift_ending: { gte: timeNow } },
                 select: {
                     shift_id: true,
                     shift_name: true,
@@ -290,25 +319,17 @@ exports.checkIn = async (req, res) => {
                     shift_starting: true,
                     shift_ending: true
                 }
-            });            
+            });
             if (!fetchDataOneShiftResult) return msg(res, 400, { message: "ไม่พบกะการทำงานที่ตรงกับเวลาปัจจุบัน" });
             fetchDataOneShift = fetchDataOneShiftResult.shift_id
 
             fetchDataOneCheckInStatus = await pm.check_in_status.findFirst({
-                where: {
-                    check_in_status_name: timeNow > fetchDataOneShiftResult.shift_late ? 'มาสาย' : 'เข้างาน'
-                },
-                select: {
-                    check_in_status_id: true,
-                    check_in_status_name: true
-                }
+                where: { check_in_status_name: timeNow > fetchDataOneShiftResult.shift_late ? 'มาสาย' : 'เข้างาน' },
+                select: { check_in_status_id: true, check_in_status_name: true }
             });
-        } else if(req.body.shift_type_id === 2) {
+        } else if (req.body.shift_type_id === 2) {
             const fetchDataOneShiftResult = await pm.shifts.findFirst({
-                where: {
-                    shift_starting: { lte: timeNow },
-                    shift_ending: { gte: timeNow }
-                },
+                where: { shift_starting: { lte: timeNow }, shift_ending: { gte: timeNow } },
                 select: {
                     shift_id: true,
                     shift_name: true,
@@ -316,30 +337,23 @@ exports.checkIn = async (req, res) => {
                     shift_starting: true,
                     shift_ending: true
                 }
-            });            
+            });
             if (!fetchDataOneShiftResult) return msg(res, 400, { message: "ไม่พบกะการทำงานที่ตรงกับเวลาปัจจุบัน" });
             fetchDataOneShift = fetchDataOneShiftResult.shift_id
 
             fetchDataOneCheckInStatus = await pm.check_in_status.findFirst({
-                where: {
-                    check_in_status_name: timeNow > fetchDataOneShiftResult.shift_late ? 'มาสาย' : 'เข้างาน'
-                },
+                where: { check_in_status_name: timeNow > fetchDataOneShiftResult.shift_late ? 'มาสาย' : 'เข้างาน' },
                 select: {
                     check_in_status_id: true,
                     check_in_status_name: true
                 }
             });
-        } else if(req.body.shift_type_id === 3) {
+        } else if (req.body.shift_type_id === 3) {
             fetchDataOneShift = null;
 
             fetchDataOneCheckInStatus = await pm.check_in_status.findFirst({
-                where: {
-                    check_in_status_name: 'เข้างาน'
-                },
-                select: {
-                    check_in_status_id: true,
-                    check_in_status_name: true
-                }
+                where: { check_in_status_name: 'เข้างาน' },
+                select: { check_in_status_id: true, check_in_status_name: true }
             });
         }
 
@@ -352,7 +366,7 @@ exports.checkIn = async (req, res) => {
             where: { user_id: user_id },
             select: { signature_user_id: true }
         });
-        if(!fetchSignature) return msg(res, 404, { message: 'User ยังไม่มีลายเซ็น Digital กรุณาเพิ่มลายเซ็น Digital ก่อนใช้งานระบบ!' });
+        if (!fetchSignature) return msg(res, 404, { message: 'User ยังไม่มีลายเซ็น Digital กรุณาเพิ่มลายเซ็น Digital ก่อนใช้งานระบบ!' });
 
         const startTime = Date.now();
         const insertAttendanceRecord = await pm.attendance_records.create({
@@ -383,11 +397,11 @@ exports.checkIn = async (req, res) => {
         });
 
         const token = jwt.sign(
-            { 
-                attendance_record_id: insertAttendanceRecord.attendance_record_id, 
-                userId: user_id, 
-                telegramChatId: notify_user_token, 
-                expiresIn: "20s" 
+            {
+                attendance_record_id: insertAttendanceRecord.attendance_record_id,
+                userId: user_id,
+                telegramChatId: notify_user_token,
+                expiresIn: "20s"
             },
             process.env.SECRET_KEY,
             { expiresIn: "20s" }
@@ -397,13 +411,14 @@ exports.checkIn = async (req, res) => {
         await sendTelegramMessage(notify_user_token, otpCode);
 
         if (token) return msg(res, 200, { token: token });
-        
+
     } catch (error) {
         console.error("Error checkIn:", error.message);
         return msg(res, 500, { message: "Internal Server Error" });
     }
 };
 
+// Function ในการตรวจสอบ OTP หลังจากลงเวลาเข้าทำงาน
 exports.checkInVerifyOtp = async (req, res) => {
     const authHeader = req.headers.authorization;
     if (!authHeader) return msg(res, 400, { message: 'การเข้าถึงถูกปฏิเสธ!' });
@@ -473,15 +488,15 @@ exports.checkInVerifyOtp = async (req, res) => {
                     starting: true
                 }
             });
-    
+
             const timeNow = new Date();
             const nowInSeconds = timeNow.getHours() * 3600 + timeNow.getMinutes() * 60 + timeNow.getSeconds();
-    
+
             for (const record of fetchDataOneAttendanceRecord) {
                 const [startHours, startMinutes, startSeconds] = record.starting.split(":").map(Number);
                 const startInSeconds = startHours * 3600 + startMinutes * 60 + startSeconds;
                 const diffInSeconds = Math.abs(nowInSeconds - startInSeconds);
-    
+
                 if (diffInSeconds >= 20) {
                     // ลบข้อมูล
                     await pm.attendance_records.delete({
@@ -489,30 +504,31 @@ exports.checkInVerifyOtp = async (req, res) => {
                             attendance_record_id: record.attendance_record_id
                         }
                     });
-    
+
                     // ดึงค่า MAX(attendance_record_id)
                     const maxIdResult = await pm.$queryRaw`SELECT COALESCE(MAX(attendance_record_id), 0) + 1 AS nextId FROM attendance_records`;
-    
+
                     // รีเซ็ตค่า AUTO_INCREMENT
                     await pm.$executeRawUnsafe(`ALTER TABLE attendance_records AUTO_INCREMENT = ${maxIdResult[0].nextId}`);
                 }
             }
-    
+
             return msg(res, 401, { message: 'TokenExpiredError!' });
         } else if (err.name === 'JsonWebTokenError') {
             return msg(res, 401, { message: 'JsonWebTokenError!' });
         }
         console.error('Error verifyToken :', err);
         return msg(res, 500, { message: 'Internal Server Error!' });
-    }    
+    }
 };
 
+// Function ในการลงเวลาออกงาน
 exports.checkOut = async (req, res) => {
     try {
         let dateNow = moment().format('YYYY-MM-DD');
         let timeNow = moment().format('HH:mm:ss'); // ดึงเวลาปัจจุบัน
         // let timeNow = "15:30:01";
-        if(!req.body.national_id) return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน!' });
+        if (!req.body.national_id) return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน!' });
 
         const bytes = CryptoJS.AES.decrypt(req.body.national_id, process.env.PASS_KEY);
         const national_id = bytes.toString(CryptoJS.enc.Utf8);
@@ -522,7 +538,7 @@ exports.checkOut = async (req, res) => {
             select: { user_id: true, fullname_thai: true }
         });
         const fullname = checkUser.fullname_thai;
-        if(!checkUser) return msg(res, 404, { message: 'ไม่มี User นี้อยู่ในระบบ กรุณา Register ก่อนใช้งาน!' });
+        if (!checkUser) return msg(res, 404, { message: 'ไม่มี User นี้อยู่ในระบบ กรุณา Register ก่อนใช้งาน!' });
 
         const checkDataAttendanceRecord = await pm.attendance_records.findFirst({
             where: {
@@ -541,7 +557,7 @@ exports.checkOut = async (req, res) => {
                 }
             }
         });
-        if(!checkDataAttendanceRecord) return msg(res, 404, { message: "User นี้ไม่มีการ CheckIn เข้าทำงาน!" });
+        if (!checkDataAttendanceRecord) return msg(res, 404, { message: "User นี้ไม่มีการ CheckIn เข้าทำงาน!" });
 
         let attendanceRecordCreatedAt = checkDataAttendanceRecord.created_at;
         let attendanceData = moment(attendanceRecordCreatedAt).format('YYYY-MM-DD');
@@ -550,10 +566,10 @@ exports.checkOut = async (req, res) => {
             where: { user_id: checkUser.user_id },
             select: { signature_user_id: true }
         });
-        if(!fetchSignature) return msg(res, 404, { message: 'User ยังไม่มีลายเซ็น Digital กรุณาเพิ่มลายเซ็น Digital ก่อนใช้งานระบบ!' });
+        if (!fetchSignature) return msg(res, 404, { message: 'User ยังไม่มีลายเซ็น Digital กรุณาเพิ่มลายเซ็น Digital ก่อนใช้งานระบบ!' });
         const { signature_user_id } = fetchSignature;
-        
-        if(checkDataAttendanceRecord.shift_id === null) {
+
+        if (checkDataAttendanceRecord.shift_id === null) {
             const fetchOneCheckOutStatus = await pm.check_out_status.findFirst({
                 where: {
                     check_out_status_name: "ออกงาน"
@@ -562,7 +578,7 @@ exports.checkOut = async (req, res) => {
                     check_out_status_id: true
                 }
             });
-            if(!fetchOneCheckOutStatus) return msg(res, 404, { message: 'ไม่มีข้อมูล (สถานะการออกงาน) กรุณาเพิ่มข้อมูลก่อน!' });
+            if (!fetchOneCheckOutStatus) return msg(res, 404, { message: 'ไม่มีข้อมูล (สถานะการออกงาน) กรุณาเพิ่มข้อมูลก่อน!' });
 
             const startTime_1 = Date.now();
             const updateData_1 = await pm.attendance_records.update({
@@ -572,7 +588,7 @@ exports.checkOut = async (req, res) => {
                 data: {
                     ending: timeNow,
                     ending_signature_id: signature_user_id,
-                    check_out_status_id: fetchOneCheckOutStatus.check_out_status_id 
+                    check_out_status_id: fetchOneCheckOutStatus.check_out_status_id
                 }
             });
             const endTime_1 = Date.now() - startTime_1;
@@ -589,7 +605,7 @@ exports.checkOut = async (req, res) => {
                     status: updateData_1 ? 'Check out successfully' : 'Check out failed'
                 }
             });
-        } else if(attendanceData != dateNow) {
+        } else if (attendanceData != dateNow) {
             const fetchOneCheckOutStatus = await pm.check_out_status.findFirst({
                 where: {
                     check_out_status_name: "ไม่มีการเช็คออกงาน"
@@ -598,7 +614,7 @@ exports.checkOut = async (req, res) => {
                     check_out_status_id: true
                 }
             });
-            if(!fetchOneCheckOutStatus) return msg(res, 404, { message: 'ไม่มีข้อมูล (สถานะการออกงาน) กรุณาเพิ่มข้อมูลก่อน!' });
+            if (!fetchOneCheckOutStatus) return msg(res, 404, { message: 'ไม่มีข้อมูล (สถานะการออกงาน) กรุณาเพิ่มข้อมูลก่อน!' });
 
             const startTime_2 = Date.now();
             const updateData_2 = await pm.attendance_records.update({
@@ -607,7 +623,7 @@ exports.checkOut = async (req, res) => {
                 },
                 data: {
                     ending: timeNow,
-                    check_out_status_id: fetchOneCheckOutStatus.check_out_status_id 
+                    check_out_status_id: fetchOneCheckOutStatus.check_out_status_id
                 }
             });
             const endTime_2 = Date.now() - startTime_2;
@@ -625,7 +641,7 @@ exports.checkOut = async (req, res) => {
                 }
             });
         } else {
-            if(timeNow < checkDataAttendanceRecord.shifts.shift_early) {
+            if (timeNow < checkDataAttendanceRecord.shifts.shift_early) {
                 const fetchOneCheckOutStatus = await pm.check_out_status.findFirst({
                     where: {
                         check_out_status_name: "ออกก่อนเวลา"
@@ -634,8 +650,8 @@ exports.checkOut = async (req, res) => {
                         check_out_status_id: true
                     }
                 });
-                if(!fetchOneCheckOutStatus) return msg(res, 404, { message: 'ไม่มีข้อมูล (สถานะการออกงาน) กรุณาเพิ่มข้อมูลก่อน!' });
-    
+                if (!fetchOneCheckOutStatus) return msg(res, 404, { message: 'ไม่มีข้อมูล (สถานะการออกงาน) กรุณาเพิ่มข้อมูลก่อน!' });
+
                 const startTime_3 = Date.now();
                 const updateData_3 = await pm.attendance_records.update({
                     where: {
@@ -644,7 +660,7 @@ exports.checkOut = async (req, res) => {
                     data: {
                         ending: timeNow,
                         ending_signature_id: signature_user_id,
-                        check_out_status_id: fetchOneCheckOutStatus.check_out_status_id 
+                        check_out_status_id: fetchOneCheckOutStatus.check_out_status_id
                     }
                 });
                 const endTime_3 = Date.now() - startTime_3;
@@ -661,7 +677,7 @@ exports.checkOut = async (req, res) => {
                         status: updateData_3 ? 'Check out successfully' : 'Check out failed'
                     }
                 });
-            } else if(timeNow > checkDataAttendanceRecord.shifts.shift_ending) {
+            } else if (timeNow > checkDataAttendanceRecord.shifts.shift_ending) {
                 const fetchOneCheckOutStatus = await pm.check_out_status.findFirst({
                     where: {
                         check_out_status_name: "ไม่มีการเช็คออกงาน"
@@ -670,8 +686,8 @@ exports.checkOut = async (req, res) => {
                         check_out_status_id: true
                     }
                 });
-                if(!fetchOneCheckOutStatus) return msg(res, 404, { message: 'ไม่มีข้อมูล (สถานะการออกงาน) กรุณาเพิ่มข้อมูลก่อน!' });
-    
+                if (!fetchOneCheckOutStatus) return msg(res, 404, { message: 'ไม่มีข้อมูล (สถานะการออกงาน) กรุณาเพิ่มข้อมูลก่อน!' });
+
                 const startTime_4 = Date.now();
                 const updateData_4 = await pm.attendance_records.update({
                     where: {
@@ -679,7 +695,7 @@ exports.checkOut = async (req, res) => {
                     },
                     data: {
                         ending: timeNow,
-                        check_out_status_id: fetchOneCheckOutStatus.check_out_status_id 
+                        check_out_status_id: fetchOneCheckOutStatus.check_out_status_id
                     }
                 });
                 const endTime_4 = Date.now() - startTime_4;
@@ -705,8 +721,8 @@ exports.checkOut = async (req, res) => {
                         check_out_status_id: true
                     }
                 });
-                if(!fetchOneCheckOutStatus) return msg(res, 404, { message: 'ไม่มีข้อมูล (สถานะการออกงาน) กรุณาเพิ่มข้อมูลก่อน!' });
-    
+                if (!fetchOneCheckOutStatus) return msg(res, 404, { message: 'ไม่มีข้อมูล (สถานะการออกงาน) กรุณาเพิ่มข้อมูลก่อน!' });
+
                 const startTime_5 = Date.now();
                 const updateData_5 = await pm.attendance_records.update({
                     where: {
@@ -714,7 +730,7 @@ exports.checkOut = async (req, res) => {
                     },
                     data: {
                         ending: timeNow,
-                        check_out_status_id: fetchOneCheckOutStatus.check_out_status_id 
+                        check_out_status_id: fetchOneCheckOutStatus.check_out_status_id
                     }
                 });
                 const endTime_5 = Date.now() - startTime_5;

@@ -7,7 +7,7 @@ const { getAllDataHcodes } = require('../../controllers/publicAPI/hcodeControlle
 
 const { authCheckToken, authCheckTokenAdmin } = require('../../middleware/auth/authAdmin');
 const { getAllDataComplaints, insertDataComplaint, removeDataComplaint } = require('../../controllers/publicAPI/complaintController');
-const { fetchDataAllAttendanceRecord, searchDateAttendanceRecord, searchAttendanceRecords, checkIn, checkInVerifyOtp, checkOut } = require('../../controllers/publicAPI/attendanceRecordController');
+const { fetchDataAllAttendanceRecord, searchDateAttendanceRecord, searchAttendanceRecords, fetchHolidays, checkIn, checkInVerifyOtp, checkOut } = require('../../controllers/publicAPI/attendanceRecordController');
 
 // Sycn Setting
 const { getAllDataDepartments, syncDataDepartments } = require('../../controllers/publicAPI/departmentController');
@@ -23,6 +23,7 @@ router.delete('/removeComplaint/:id', authCheckTokenAdmin, removeDataComplaint);
 router.get('/fetchDataAllAttendanceRecord', authCheckToken, fetchDataAllAttendanceRecord);
 router.get('/searchDateAttendanceRecord/:date_start/:date_end', authCheckToken, searchDateAttendanceRecord);
 router.get('/searchAttendanceRecords/:keyword', authCheckToken, searchAttendanceRecords);
+router.get('/fetchHolidays', fetchHolidays);
 router.post('/checkIn', checkIn);
 router.post('/checkInVerifyOtp', checkInVerifyOtp);
 router.post('/checkOut', checkOut);
