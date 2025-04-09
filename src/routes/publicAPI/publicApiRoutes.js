@@ -20,7 +20,7 @@ router.post('/insertComplaint', insertDataComplaint);
 router.delete('/removeComplaint/:id', authCheckTokenAdmin, removeDataComplaint);
 
 // AttendanceRecord( ระบบลงเวลาเข้าทำงาน )
-router.get('/signatureShowImage/:signature_id', authCheckToken, getSignatureImage);
+router.get('/signatureShowImage/:signature_id', getSignatureImage);
 router.get('/fetchDataAllAttendanceRecord', authCheckToken, fetchDataAllAttendanceRecord);
 router.get('/searchDateAttendanceRecord/:date_start/:date_end', authCheckToken, searchDateAttendanceRecord);
 router.get('/searchAttendanceRecords/:keyword', authCheckToken, searchAttendanceRecords);
