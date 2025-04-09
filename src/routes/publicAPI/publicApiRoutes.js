@@ -7,7 +7,7 @@ const { getAllDataHcodes } = require('../../controllers/publicAPI/hcodeControlle
 
 const { authCheckToken, authCheckTokenAdmin } = require('../../middleware/auth/authAdmin');
 const { getAllDataComplaints, insertDataComplaint, removeDataComplaint } = require('../../controllers/publicAPI/complaintController');
-const { fetchDataAllAttendanceRecord, searchDateAttendanceRecord, searchAttendanceRecords, fetchHolidays, checkIn, checkInVerifyOtp, checkOut } = require('../../controllers/publicAPI/attendanceRecordController');
+const { getSignatureImage, fetchDataAllAttendanceRecord, searchDateAttendanceRecord, searchAttendanceRecords, fetchHolidays, checkIn, checkInVerifyOtp, checkOut } = require('../../controllers/publicAPI/attendanceRecordController');
 
 // Sycn Setting
 const { getAllDataDepartments, syncDataDepartments } = require('../../controllers/publicAPI/departmentController');
@@ -20,6 +20,7 @@ router.post('/insertComplaint', insertDataComplaint);
 router.delete('/removeComplaint/:id', authCheckTokenAdmin, removeDataComplaint);
 
 // AttendanceRecord( ระบบลงเวลาเข้าทำงาน )
+router.get('/signatureShowImage/:signature_id', authCheckToken, getSignatureImage);
 router.get('/fetchDataAllAttendanceRecord', authCheckToken, fetchDataAllAttendanceRecord);
 router.get('/searchDateAttendanceRecord/:date_start/:date_end', authCheckToken, searchDateAttendanceRecord);
 router.get('/searchAttendanceRecords/:keyword', authCheckToken, searchAttendanceRecords);

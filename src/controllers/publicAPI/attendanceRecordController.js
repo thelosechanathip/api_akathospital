@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require('bcryptjs');
 const { msg } = require("../../utils/message");
+const { blobToBase64 } = require("../../utils/allCheck");
 require("dotenv").config();
 const CryptoJS = require("crypto-js");
 const axios = require("axios"); // เพิ่ม axios สำหรับเรียก Telegram API
@@ -8,6 +9,7 @@ const NodeCache = require("node-cache");
 const otpCache = new NodeCache({ stdTTL: 20 }); // รหัส OTP หมดอายุใน 20 วินาที
 const moment = require('moment');
 const pm = require('../../config/prisma');
+const sharp = require('sharp');
 
 // Function สร้างรหัส OTP (เฉพาะตัวเลข)
 const generateOtp = (identifier) => {
@@ -33,6 +35,30 @@ const sendTelegramMessage = async (chatId, otpCode) => {
     }
 };
 
+// Function ในการแสดง Signature ที่เป็น Image
+exports.getSignatureImage = async (req, res) => {
+    try {
+        const { signature_id } = req.params;
+        const signture = await pm.signature_users.findUnique({ where: { signature_user_id: Number(signature_id) } });
+
+        if(!signture || !signture.signature_user_token) return msg(res, 404, { message: 'ไม่พบภาพหรือข้อมูลที่เกี่ยวข้อง!' });
+
+        // ใช้ sharp เพื่อปรับขนาดภาพ (ตัวอย่าง: ปรับขนาดเป็น 500px wide)
+        const resizedImage = await sharp(signture.signature_user_token)
+            .resize(1000)  // ปรับขนาดความกว้างของภาพเป็น 1000px
+            .sharpen()  // เพิ่มความชัดให้กับภาพ
+            .toBuffer();  // เปลี่ยนเป็น buffer ที่สามารถส่งกลับไปได้
+
+        // ตั้งค่า Content-Type เป็น image/jpeg หรือ image/png ขึ้นอยู่กับประเภทของภาพ
+        res.setHeader('Content-Type', 'image/jpeg');  // หรือ 'image/png' ขึ้นอยู่กับประเภทของภาพ
+        res.send(resizedImage);  // ส่งภาพที่มีขนาดใหม่ไปยัง Client
+    } catch (err) {
+        console.error('Error getSignatureImage: ', err);
+        res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงภาพ' });
+    }
+};
+
+// Function ในการ Fetch ข้อมูลทั้งหมด
 exports.fetchDataAllAttendanceRecord = async (req, res) => {
     try {
         // คำนวณวันที่เริ่มต้นและสิ้นสุดของเดือนปัจจุบัน
@@ -56,8 +82,10 @@ exports.fetchDataAllAttendanceRecord = async (req, res) => {
                 shift_types: { select: { shift_type_name: true } },
                 shifts: { select: { shift_name: true } },
                 starting: true,
+                starting_signature_id: true,
                 check_in_status: { select: { check_in_status_name: true } },
                 ending: true,
+                ending_signature_id: true,
                 check_out_status: { select: { check_out_status_name: true } },
                 created_at: true,
                 created_by: true,
@@ -66,6 +94,16 @@ exports.fetchDataAllAttendanceRecord = async (req, res) => {
             }
         });
         const endTime = Date.now() - startTime;
+
+        const resultWithImageUrl = resultData.map((attendanceRecord) => {
+            const startImageBlobUrl = `/signatureShowImage/${attendanceRecord.starting_signature_id}`;
+            const endImageBlobUrl = `/signatureShowImage/${attendanceRecord.ending_signature_id}`;
+            return {
+                ...attendanceRecord,
+                starting_signature: startImageBlobUrl,
+                ending_signature: endImageBlobUrl
+            }
+        });
 
         // บันทึกข้อมูลไปยัง attendance_records_log
         await pm.attendance_records_log.create({
@@ -80,18 +118,16 @@ exports.fetchDataAllAttendanceRecord = async (req, res) => {
             }
         });
 
-        if (resultData.length === 0) {
-            // console.log("No data found for the specified range");
-            return msg(res, 404, { message: 'ไม่มีข้อมูลบน Database!' });
-        }
+        if (resultData.length === 0)  return msg(res, 404, { message: 'ไม่มีข้อมูลบน Database!' });
 
-        return msg(res, 200, { data: resultData });
+        return msg(res, 200, { data: resultWithImageUrl });
     } catch (error) {
         console.error("Error fetchDataAllAttendanceRecord:", error.message);
         return msg(res, 500, { message: "Internal Server Error" });
     }
 };
 
+// Function สำหรับการค้นหาด้วยวันที่
 exports.searchDateAttendanceRecord = async (req, res) => {
     try {
         const { date_start, date_end } = req.params;
@@ -124,8 +160,10 @@ exports.searchDateAttendanceRecord = async (req, res) => {
                 shift_types: { select: { shift_type_name: true } },
                 shifts: { select: { shift_name: true } },
                 starting: true,
+                starting_signature_id: true,
                 check_in_status: { select: { check_in_status_name: true } },
                 ending: true,
+                ending_signature_id: true,
                 check_out_status: { select: { check_out_status_name: true } },
                 created_at: true,
                 created_by: true,
@@ -134,6 +172,16 @@ exports.searchDateAttendanceRecord = async (req, res) => {
             }
         });
         const endTime = Date.now() - startTime;
+
+        const resultWithImageUrl = resultData.map((attendanceRecord) => {
+            const startImageBlobUrl = `/signatureShowImage/${attendanceRecord.starting_signature_id}`;
+            const endImageBlobUrl = `/signatureShowImage/${attendanceRecord.ending_signature_id}`;
+            return {
+                ...attendanceRecord,
+                starting_signature: startImageBlobUrl,
+                ending_signature: endImageBlobUrl
+            }
+        });
 
         // บันทึกข้อมูลไปยัง attendance_records_log
         await pm.attendance_records_log.create({
@@ -148,18 +196,16 @@ exports.searchDateAttendanceRecord = async (req, res) => {
             }
         });
 
-        if (resultData.length === 0) {
-            console.log("No data found for the specified range");
-            return msg(res, 404, { message: 'ไม่มีข้อมูลบน Database!' });
-        }
+        if (resultData.length === 0) {  return msg(res, 404, { message: 'ไม่มีข้อมูลบน Database!' }); }
 
-        return msg(res, 200, { data: resultData });
+        return msg(res, 200, { data: resultWithImageUrl });
     } catch (error) {
         console.error("Error searchDateAttendanceRecord:", error.message);
         return msg(res, 500, { message: "Internal Server Error" });
     }
 };
 
+// Function สำหรับค้นหาแบบหลายเงื่อนไข
 exports.searchAttendanceRecords = async (req, res) => {
     try {
         const { keyword } = req.params;
@@ -197,8 +243,10 @@ exports.searchAttendanceRecords = async (req, res) => {
                 shift_types: { select: { shift_type_name: true } },
                 shifts: { select: { shift_name: true } },
                 starting: true,
+                starting_signature_id: true,
                 check_in_status: { select: { check_in_status_name: true } },
                 ending: true,
+                ending_signature_id: true,
                 check_out_status: { select: { check_out_status_name: true } },
                 created_at: true,
                 created_by: true,
@@ -207,6 +255,16 @@ exports.searchAttendanceRecords = async (req, res) => {
             }
         });
         const endTime = Date.now() - startTime;
+
+        const resultWithImageUrl = resultData.map((attendanceRecord) => {
+            const startImageBlobUrl = `/signatureShowImage/${attendanceRecord.starting_signature_id}`;
+            const endImageBlobUrl = `/signatureShowImage/${attendanceRecord.ending_signature_id}`;
+            return {
+                ...attendanceRecord,
+                starting_signature: startImageBlobUrl,
+                ending_signature: endImageBlobUrl
+            }
+        });
 
         // บันทึกข้อมูลไปยัง attendance_records_log
         await pm.attendance_records_log.create({
@@ -221,11 +279,9 @@ exports.searchAttendanceRecords = async (req, res) => {
             }
         });
 
-        if (resultData.length === 0) {
-            return res.status(404).json({ message: 'ไม่มีข้อมูลบน Database!' });
-        }
+        if (resultData.length === 0) { return res.status(404).json({ message: 'ไม่มีข้อมูลบน Database!' }); }
 
-        return res.status(200).json({ data: resultData });
+        return res.status(200).json({ data: resultWithImageUrl });
     } catch (error) {
         console.error("Error searchAttendanceRecords:", error.message);
         return res.status(500).json({ message: "Internal Server Error" });

@@ -31,3 +31,10 @@ exports.isBase64Png  = async(data) => {
     const regex = /^data:image\/png;base64,[A-Za-z0-9+/=]+$/;
     return regex.test(data);
 }
+
+// Function ในการแปลงจาก BLOB ไปเป็น Base64
+exports.blobToBase64 = async(blob) => {
+    // แปลงข้อมูล BLOB (Buffer) เป็น Base64 string
+    const base64String = blob.toString('base64');
+    return base64String;
+}
