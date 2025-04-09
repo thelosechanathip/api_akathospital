@@ -120,7 +120,7 @@ exports.searchDateAttendanceRecord = async (req, res) => {
             },
             select: {
                 attendance_record_id: true,
-                users: { select: { prefix: true, fullname_thai: true } },
+                users: { select: { prefixes: { select: { prefix_name: true } }, fullname_thai: true } },
                 shift_types: { select: { shift_type_name: true } },
                 shifts: { select: { shift_name: true } },
                 starting: true,

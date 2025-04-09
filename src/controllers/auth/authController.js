@@ -517,7 +517,7 @@ exports.fetchImage = async (req, res) => {
         console.error("Error fetchImage:", error.message);
         return msg(res, 500, { message: "Internal Server Errors" });
     }
-}
+};
 
 // Function ในการแก้ไขข้อมูลของผู้ใช้งานระบบ
 exports.editUser = async (req, res) => {
