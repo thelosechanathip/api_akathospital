@@ -43,6 +43,12 @@ exports.authRegister = async (req, res) => {
         const bytes = CryptoJS.AES.decrypt(req.body.national_id, process.env.PASS_KEY);
         const national_id = bytes.toString(CryptoJS.enc.Utf8);
 
+        const fetchUser = await pm.users.findFirst({
+            where: { national_id: national_id },
+            select: { user_id: true }
+        });
+        if(fetchUser) return msg(res, 404, { message: `มีข้อมูล ${national_id} อยู่ในระบบแล้ว!` });
+
         const [fetchAllDataInBackOffice] = await db_b.query(
             `
                 SELECT 
@@ -92,19 +98,8 @@ exports.authRegister = async (req, res) => {
         if (!fetchDepartment) return msg(res, 404, { message: `ไม่มีข้อมูล ${fetchAllDataInBackOffice[0].department_subsub} อยู่ใน Database!` });
 
         const startTime = Date.now();
-        const generateUserInUsers = await pm.users.upsert({
-            where: { username: fetchAllDataInBackOffice[0].username },
-            update: {
-                password: fetchAllDataInBackOffice[0].password,
-                prefix_id: fetchPrefix.prefix_id, // ใช้ค่าโดยตรง ไม่ต้องแปลงเป็น Number
-                fullname_thai: fetchAllDataInBackOffice[0].fullname,
-                fullname_english: fetchAllDataInBackOffice[0].fullname_eng,
-                national_id: fetchAllDataInBackOffice[0].HR_CID,
-                position_id: fetchPosition.position_id, // ใช้ค่าโดยตรง
-                department_id: fetchDepartment.department_id, // ใช้ค่าโดยตรง
-                status: fetchAllDataInBackOffice[0].status
-            },
-            create: {
+        const generateUserInUsers = await pm.users.create({
+            data: {
                 username: fetchAllDataInBackOffice[0].username,
                 email: fetchAllDataInBackOffice[0].email,
                 password: fetchAllDataInBackOffice[0].password,
