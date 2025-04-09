@@ -583,7 +583,7 @@ exports.checkOut = async (req, res) => {
     try {
         let dateNow = moment().format('YYYY-MM-DD');
         let timeNow = moment().format('HH:mm:ss'); // ดึงเวลาปัจจุบัน
-        // let timeNow = "15:30:01";
+        
         if (!req.body.national_id) return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน!' });
 
         const bytes = CryptoJS.AES.decrypt(req.body.national_id, process.env.PASS_KEY);

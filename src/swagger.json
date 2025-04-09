@@ -10787,6 +10787,72 @@
         }
       }
     },
+    "/akatApi/publicAPI/signatureShowImage/:signature_id": {
+      "get": {
+        "tags": [
+          "AttendanceRecord"
+        ],
+        "summary": "สำหรับดึงข้อมูล AttendanceRecord",
+        "description": "สำหรับดึงข้อมูลทั้งหมดของ AttendanceRecord",
+        "parameters": [
+          {
+            "name": "signature_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            },
+            "description": "ID ของ Signature ที่ต้องการค้นหา"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ส่งคืนรูปภาพขนาดจริงเรียบร้อย",
+            "content": {
+              "image/jpeg/jpg/gif": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ไม่พบภาพหรือข้อมูลที่เกี่ยวข้อง"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/akatApi/publicAPI/searchAttendanceRecords/{keyword}": {
       "get": {
         "tags": [
