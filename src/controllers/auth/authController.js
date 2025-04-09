@@ -503,7 +503,7 @@ exports.fetchImage = async (req, res) => {
             }
         });
 
-        if (!fetchImage || !fetchImage.image) return msg(res, 404, { message: "Signature not found" });
+        if (!fetchImage || !fetchImage.image) return msg(res, 404, { message: "Image not found" });
 
         const resizedImage = await sharp(fetchImage.image)
             .resize(1000)  // ปรับขนาดความกว้างของภาพเป็น 1000px
