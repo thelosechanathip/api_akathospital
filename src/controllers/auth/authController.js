@@ -186,9 +186,9 @@ exports.authLogin = async (req, res) => {
         const telegramChatId = fetchToken.notify_user_token;
 
         const token = await jwt.sign(
-            { userId, telegramChatId, expiresIn: "1h" },
+            { userId, telegramChatId, expiresIn: "8h" },
             process.env.SECRET_KEY,
-            { expiresIn: "1h" }
+            { expiresIn: "8h" }
         );
 
         // สร้างและส่ง OTP ไปยัง Telegram

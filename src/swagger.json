@@ -10787,7 +10787,7 @@
         }
       }
     },
-    "/akatApi/publicAPI/signatureShowImage/:signature_id": {
+    "/akatApi/publicAPI/signatureShowImage/:token/:signature_id": {
       "get": {
         "tags": [
           "AttendanceRecord"
@@ -10795,6 +10795,16 @@
         "summary": "สำหรับดึงข้อมูล AttendanceRecord",
         "description": "สำหรับดึงข้อมูลทั้งหมดของ AttendanceRecord",
         "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token เพื่อนำไปตรวจสอบในส่วนของความปลอดภัยระบบ"
+          },
           {
             "name": "signature_id",
             "in": "path",
