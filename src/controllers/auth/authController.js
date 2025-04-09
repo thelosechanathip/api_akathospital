@@ -439,9 +439,26 @@ exports.generateSignature = async (req, res) => {
 exports.fetchSignature = async (req, res) => {
     try {
         const userId = req.user.user_id;
+        const fullname = req.user.fullname_thai;
+
+        const startTime = Date.now();
         const fetchSignature = await pm.signature_users.findUnique({
             where: { user_id: userId },
             select: { signature_user_token: true }
+        });
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง signature_users_log
+        await pm.signature_users_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: fetchSignature ? 1 : 0,
+                status: fetchSignature ? 'Success' : 'No Data'
+            }
         });
 
         if (!fetchSignature || !fetchSignature.signature_user_token) return msg(res, 404, { message: "Signature not found" });
@@ -456,6 +473,94 @@ exports.fetchSignature = async (req, res) => {
         res.send(resizedImage);  // ส่งภาพที่มีขนาดใหม่ไปยัง Client
     } catch (error) {
         console.error("Error fetchSignature:", error.message);
+        return msg(res, 500, { message: "Internal Server Errors" });
+    }
+};
+
+// Function สำหรับ Fetch Image ที่เป็นรูปภาพไปให้ FrontEnd
+exports.fetchImage = async (req, res) => {
+    try {
+        const userId = req.user.user_id;
+        const fullname = req.user.fullname_thai;
+
+        const startTime = Date.now();
+        const fetchImage = await pm.users.findUnique({
+            where: { user_id: userId },
+            select: { image: true }
+        });
+        const endTime = Date.now() - startTime;
+
+        // บันทึกข้อมูลไปยัง auth_log
+        await pm.auth_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: fetchImage ? 1 : 0,
+                status: fetchImage ? 'Success' : 'No Data'
+            }
+        });
+
+        if (!fetchImage || !fetchImage.image) return msg(res, 404, { message: "Signature not found" });
+
+        const resizedImage = await sharp(fetchImage.image)
+            .resize(1000)  // ปรับขนาดความกว้างของภาพเป็น 1000px
+            .sharpen()  // เพิ่มความชัดให้กับภาพ
+            .toBuffer();  // เปลี่ยนเป็น buffer ที่สามารถส่งกลับไปได้
+        
+        // ตั้งค่า Content-Type เป็น image/jpeg หรือ image/png ขึ้นอยู่กับประเภทของภาพ
+        res.setHeader('Content-Type', 'image/jpeg');  // หรือ 'image/png' ขึ้นอยู่กับประเภทของภาพ
+        res.send(resizedImage);  // ส่งภาพที่มีขนาดใหม่ไปยัง Client
+    } catch (error) {
+        console.error("Error fetchImage:", error.message);
+        return msg(res, 500, { message: "Internal Server Errors" });
+    }
+}
+
+// Function ในการแก้ไขข้อมูลของผู้ใช้งานระบบ
+exports.editUser = async (req, res) => {
+    try {
+        const userId = req.user.user_id;
+        const fullname = req.user.fullname_thai;
+        const { image, position_id, department_id, ...userData } = req.body;
+
+        if(!isBase64Png(userData.image)) return msg(res, 400, { message: `${image} ไม่ใช่รูปแบบ PNG base64 ที่ถูกต้อง` });
+
+        // Remove the data URI prefix if it exists
+        const base64String = image.replace(/^data:image\/\w+;base64,/, '');
+
+        const payload = {
+            ...userData,
+            positions: { connect: { position_id: Number(position_id) } },
+            departments: { connect: { department_id: Number(department_id) } },
+            image: base64String
+        }
+
+        const startTime = Date.now();
+        const editData = await pm.users.update({
+            where: { user_id: Number(userId) },
+            data: { ...payload }
+        });
+        const endTime = Date.now() - startTime;
+
+        // บันทึก Log
+        await pm.auth_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: editData ? 1 : 0,
+                status: editData ? 'Success' : 'Failed'
+            }
+        });
+
+        return msg(res, 200, { message: 'Edit user successfully!' });
+    } catch (error) {
+        console.error("Error editUser:", error.message);
         return msg(res, 500, { message: "Internal Server Errors" });
     }
 };

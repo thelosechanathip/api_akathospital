@@ -729,6 +729,177 @@
         }
       }
     },
+    "/akatApi/auth/fetchImage": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Fetch Image",
+        "description": "ใช้งานสำหรับแสดงผล Image สำหรับ Users นั้นๆ และตรวจสอบ Token เพื่อยืนยันตัวตน โดย Token ส่งผ่าน Header",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ส่งคืนรูปภาพขนาดจริงเรียบร้อย",
+            "content": {
+              "image/jpeg/jpg/gif": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource ไม่พบ( Not found )",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Signature not found"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/akatApi/auth/editUser": {
+      "put": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "editUser",
+        "description": "แก้ไขข้อมูลของ user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "user@gmail.com"
+                  },
+                  "fullname_thai": {
+                    "type": "string",
+                    "example": "นายดำ ค้ำเครียด"
+                  },
+                  "fullname_english": {
+                    "type": "string",
+                    "example": "Mr.Dum ComCuis"
+                  },
+                  "position_id": {
+                    "type": "int",
+                    "example": 60
+                  },
+                  "department_id": {
+                    "type": "int",
+                    "example": 41
+                  },
+                  "image": {
+                    "type": "string",
+                    "format": "byte",
+                    "description": "Base64-encoded image data",
+                    "example": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAAAAAAAAD"
+                  }
+                },
+                "required": [
+                  "email",
+                  "fullname_thai",
+                  "fullname_english",
+                  "position_id",
+                  "department_id",
+                  "image"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Edit user successfully!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Server ไม่สามารถประมวลผลคำร้องขอเนื่องจากข้อผิดพลาดของ Client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "${image} ไม่ใช่รูปแบบ PNG base64 ที่ถูกต้อง"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/akatApi/auth/removeUser/{id}": {
       "delete": {
         "tags": [
