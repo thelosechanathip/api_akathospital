@@ -91,6 +91,69 @@ exports.authCheckToken = async (req, res, next) => {
 }
 
 // สำหรับตรวจสอบสิทธิ์การเข้าใช้งานระบบโดยทั่วไป
+exports.authCheckTokenParams = async (req, res, next) => {
+    const authHeader = req.params.token;
+    if (!authHeader) return msg(res, 400, { message: 'การเข้าถึงถูกปฏิเสธ!' });
+
+    try {
+        // Verify token
+        const decoded = jwt.verify(authHeader, process.env.SECRET_KEY);
+        if (!decoded) return msg(res, 401, { message: 'Token ไม่ถูกต้อง!' });
+
+        const fetchOneDataBlackListToken = await pm.token_blacklist.findFirst({
+            where: {
+                token: authHeader
+            },
+            select: {
+                token_blacklist_id: true
+            }
+        });
+        if(fetchOneDataBlackListToken) return msg(res, 401, { message: 'Tokenไม่อนุญาติให้ใช้งาน!' });
+
+        const fetchOneDataAuthToken = await pm.auth_tokens.findFirst({
+            where: {
+                token: authHeader
+            },
+            select: {
+                otp_verified: true,
+                is_active: true
+            }
+        });
+        if(!fetchOneDataAuthToken.otp_verified) return msg(res, 401, { message: 'ไม่มีการยืนยันตัวตนด้วย OTP กรุณายืนยันตัวตนก่อนใช้งานระบบ!' }); 
+        if(!fetchOneDataAuthToken.is_active) return msg(res, 401, { message: 'Tokenไม่อนุญาติให้ใช้งาน!' });
+
+        const fetchOneDataUser = await pm.users.findFirst({
+            where: {
+                user_id: decoded.userId
+            },
+            select: {
+                user_id: true,
+                fullname_thai: true,
+                password: true,
+                status: true
+            }
+        });
+        req.data = {
+            token: authHeader,
+            expires_at: decoded.exp
+        };
+        
+        req.user = fetchOneDataUser;
+
+        next();
+
+    } catch (err) {
+        if (err.name === 'TokenExpiredError') {
+            return msg(res, 401, { message: 'TokenExpiredError!' });
+        } else if (err.name === 'JsonWebTokenError') {
+            return msg(res, 401, { message: 'JsonWebTokenError!' });
+        }
+        console.error('Error verifying token:', err);
+        return msg(res, 500, { message: 'Internal Server Error!' });
+    }
+}
+
+// สำหรับตรวจสอบสิทธิ์การเข้าใช้งานระบบโดยทั่วไป
 exports.authCheckTokenAdmin = async (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader) return msg(res, 400, { message: 'การเข้าถึงถูกปฏิเสธ!' });
