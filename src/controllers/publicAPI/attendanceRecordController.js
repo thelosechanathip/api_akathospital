@@ -786,6 +786,7 @@ exports.checkOut = async (req, res) => {
                     },
                     data: {
                         ending: timeNow,
+                        ending_signature_id: signature_user_id,
                         check_out_status_id: fetchOneCheckOutStatus.check_out_status_id
                     }
                 });
