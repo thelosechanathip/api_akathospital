@@ -499,7 +499,7 @@ model form_ipds {
   created_at                                 DateTime                                     @default(now()) @db.Timestamp(0)
   created_by                                 String                                       @db.VarChar(100)
   updated_at                                 DateTime                                     @default(now()) @db.Timestamp(0)
-  updaated_by                                String                                       @db.VarChar(100)
+  updated_by                                 String                                       @db.VarChar(100)
   form_ipd_content_of_medical_record_results form_ipd_content_of_medical_record_results[]
   form_ipd_overall_finding_results           form_ipd_overall_finding_results[]
   form_ipd_review_status_results             form_ipd_review_status_results[]
@@ -616,7 +616,7 @@ model patient_services_log {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model patients {
   patient_id              Int         @id @default(autoincrement())
-  hcode_id                String      @db.VarChar(255)
+  hcode_id                Int
   patient_fullname        String      @db.VarChar(255)
   patient_hn              String      @db.VarChar(255)
   patient_vn              String?     @unique(map: "vn") @db.VarChar(255)
@@ -629,6 +629,9 @@ model patients {
   updated_at              DateTime    @default(now()) @db.Timestamp(0)
   updated_by              String?     @default("admin") @db.VarChar(255)
   form_ipds               form_ipds[]
+  hcodes                  hcodes      @relation(fields: [hcode_id], references: [hcode_id], onUpdate: Restrict, map: "patients_on_hcodes_lbfk_1")
+
+  @@index([hcode_id], map: "patients_on_hcodes_lbfk_1")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -829,13 +832,14 @@ model signature_users_log {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model hcodes {
-  hcode_id   Int      @id @default(autoincrement())
-  hcode      String   @unique(map: "hcode") @db.VarChar(100)
-  hcode_name String   @unique(map: "hcode_name") @db.VarChar(100)
-  created_at DateTime @default(now()) @db.Timestamp(0)
-  created_by String?  @default("admin") @db.VarChar(100)
-  updated_at DateTime @default(now()) @db.Timestamp(0)
-  updated_by String?  @default("admin") @db.VarChar(100)
+  hcode_id   Int        @id @default(autoincrement())
+  hcode      String     @unique(map: "hcode") @db.VarChar(100)
+  hcode_name String     @unique(map: "hcode_name") @db.VarChar(100)
+  created_at DateTime   @default(now()) @db.Timestamp(0)
+  created_by String?    @default("admin") @db.VarChar(100)
+  updated_at DateTime   @default(now()) @db.Timestamp(0)
+  updated_by String?    @default("admin") @db.VarChar(100)
+  patients   patients[]
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments

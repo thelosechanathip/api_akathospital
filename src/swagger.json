@@ -664,7 +664,7 @@
       }
     },
     "/akatApi/auth/fetchSignature": {
-      "post": {
+      "get": {
         "tags": [
           "Auth"
         ],
@@ -730,7 +730,7 @@
       }
     },
     "/akatApi/auth/fetchImage": {
-      "post": {
+      "get": {
         "tags": [
           "Auth"
         ],

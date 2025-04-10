@@ -317,6 +317,7 @@ exports.authVerifyToken = async (req, res) => {
             },
             select: {
                 // Fields from users table
+                email: true,
                 fullname_thai: true,
                 fullname_english: true,
                 status: true,
@@ -447,7 +448,7 @@ exports.fetchSignature = async (req, res) => {
             select: { signature_user_token: true }
         });
         const endTime = Date.now() - startTime;
-
+        
         // บันทึกข้อมูลไปยัง signature_users_log
         await pm.signature_users_log.create({
             data: {
