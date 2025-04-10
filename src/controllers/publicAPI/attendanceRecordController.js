@@ -279,7 +279,7 @@ exports.searchAttendanceRecords = async (req, res) => {
                 ip_address: req.headers['x-forwarded-for'] || req.ip,
                 name: fullname,
                 request_method: req.method,
-                endpoint: req.originalUrl.slice(0, 255),
+                endpoint: req.originalUrl,
                 execution_time: endTime,
                 row_count: resultData.length,
                 status: resultData.length > 0 ? 'Search data success' : 'No Data'

@@ -201,7 +201,7 @@ model attendance_records_log {
   ip_address       String   @db.VarChar(100)
   name             String   @db.VarChar(100)
   request_method   String   @db.VarChar(100)
-  endpoint         String   @db.VarChar(100)
+  endpoint         String   @db.LongText
   execution_time   Float    @db.Float
   row_count        Float    @db.Float
   status           String   @db.VarChar(100)
