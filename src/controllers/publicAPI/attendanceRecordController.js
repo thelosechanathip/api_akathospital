@@ -39,19 +39,26 @@ const sendTelegramMessage = async (chatId, otpCode) => {
 exports.getSignatureImage = async (req, res) => {
     try {
         const { signature_id } = req.params;
-        const signture = await pm.signature_users.findUnique({ where: { signature_user_id: Number(signature_id) } });
 
-        if(!signture || !signture.signature_user_token) return msg(res, 404, { message: 'ไม่พบภาพหรือข้อมูลที่เกี่ยวข้อง!' });
+        if (!signature_id || isNaN(signature_id)) {
+            return res.status(400).json({ message: 'signature_id ไม่ถูกต้องหรือไม่ได้ระบุ' });
+        }
 
-        // ใช้ sharp เพื่อปรับขนาดภาพ (ตัวอย่าง: ปรับขนาดเป็น 500px wide)
+        const signture = await pm.signature_users.findUnique({
+            where: { signature_user_id: parseInt(signature_id) }
+        });
+
+        if (!signture || !signture.signature_user_token) {
+            return res.status(404).json({ message: 'ไม่พบภาพหรือข้อมูลที่เกี่ยวข้อง!' });
+        }
+
         const resizedImage = await sharp(signture.signature_user_token)
-            .resize(1000)  // ปรับขนาดความกว้างของภาพเป็น 1000px
-            .sharpen()  // เพิ่มความชัดให้กับภาพ
-            .toBuffer();  // เปลี่ยนเป็น buffer ที่สามารถส่งกลับไปได้
+            .resize(1000)
+            .sharpen()
+            .toBuffer();
 
-        // ตั้งค่า Content-Type เป็น image/jpeg หรือ image/png ขึ้นอยู่กับประเภทของภาพ
-        res.setHeader('Content-Type', 'image/jpeg');  // หรือ 'image/png' ขึ้นอยู่กับประเภทของภาพ
-        res.send(resizedImage);  // ส่งภาพที่มีขนาดใหม่ไปยัง Client
+        res.setHeader('Content-Type', 'image/jpeg');
+        res.send(resizedImage);
     } catch (err) {
         console.error('Error getSignatureImage: ', err);
         res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงภาพ' });
@@ -272,7 +279,7 @@ exports.searchAttendanceRecords = async (req, res) => {
                 ip_address: req.headers['x-forwarded-for'] || req.ip,
                 name: fullname,
                 request_method: req.method,
-                endpoint: req.originalUrl.slice(0, MAX_ENDPOINT_LENGTH),
+                endpoint: req.originalUrl.slice(0, 255),
                 execution_time: endTime,
                 row_count: resultData.length,
                 status: resultData.length > 0 ? 'Search data success' : 'No Data'
