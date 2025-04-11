@@ -93,6 +93,14 @@ exports.upsertFormIpd = async (req, res) => {
             if(insertFormIpd) {
                 const { patient_an, content } = formIpdData;
 
+                // ตรวจสอบว่า content_of_medical_record_id ซ้ำกันหรือไม่
+                const contentIds = content.map(item => item.content_of_medical_record_id);
+                const uniqueContentIds = new Set(contentIds);
+                if (uniqueContentIds.size !== contentIds.length) {
+                    // ถ้าจำนวน unique IDs ไม่เท่ากับจำนวนทั้งหมด แปลว่ามีซ้ำ
+                    return msg(res, 400, { error: `Duplicate ${contentIds} found in content` });
+                }
+
                 // คีย์ที่ไม่ต้องการให้รวมในการคำนวณ (ยกเว้น point_deducted ที่จะลบทีหลัง)
                 const excludedKeys = [
                     "content_of_medical_record_id",
@@ -101,7 +109,7 @@ exports.upsertFormIpd = async (req, res) => {
                     "point_deducted" // จะแยกไปลบทีหลัง
                 ];
 
-                const result = content.map(item => {
+                const resultFormIpdContentOfMedicalRecord = content.map(item => {
                     // ดึงทุก key จาก item และกรองเอาเฉพาะที่ไม่ใช่ excludedKeys
                     const itemSum = Object.keys(item)
                         .filter(key => !excludedKeys.includes(key))
@@ -112,13 +120,54 @@ exports.upsertFormIpd = async (req, res) => {
                     
                     // คืนค่า item พร้อม totalScore
                     return {
+                        form_ipd_id: insertFormIpd.form_ipd_id,
                         ...item,
-                        total_score: totalScore
+                        total_score: totalScore,
+                        ...userFullname
                     };
                 });
 
-                return msg(res, 200, { data: result });
-                
+                // Insert ข้อมูลทั้งหมดพร้อมกัน
+                const insertPromisesFormIpdContentOfMedicalRecord = resultFormIpdContentOfMedicalRecord.map(i =>
+                    pm.form_ipd_content_of_medical_record_results.create({
+                        data: i
+                    })
+                );
+
+                await Promise.all(insertPromisesFormIpdContentOfMedicalRecord);
+
+                if (insertPromisesFormIpdContentOfMedicalRecord) {
+                    const { overall } = req.body;
+                    
+                    // ตรวจสอบว่า content_of_medical_record_id ซ้ำกันหรือไม่
+                    const overallIds = overall.map(item => item.overall_finding_id);
+                    const uniqueOverallIds = new Set(overallIds);
+                    if (uniqueOverallIds.size !== overallIds.length) {
+                        // ถ้าจำนวน unique IDs ไม่เท่ากับจำนวนทั้งหมด แปลว่ามีซ้ำ
+                        return msg(res, 400, { error: `Duplicate ${overallIds} found in content` });
+                    }
+
+                    const resultFormIpdOverallFinding = overall.map(item => {
+                        return {
+                            form_ipd_id: insertFormIpd.form_ipd_id,
+                            ...item,
+                            ...userFullname
+                        };
+                    });
+
+                    const insertPromisesFormIpdOverallFinding = resultFormIpdOverallFinding.map(i =>
+                        pm.form_ipd_overall_finding_results.create({
+                            data: i
+                        })
+                    );
+
+                    await Promise.all(insertPromisesFormIpdOverallFinding);
+
+                    if(insertPromisesFormIpdOverallFinding) {
+                        const { patient_an, content, overall, ...reviewStatusData } = req.body;
+                        return msg(res, 200, { data: reviewStatusData });
+                    }
+                }
             }
         }
 

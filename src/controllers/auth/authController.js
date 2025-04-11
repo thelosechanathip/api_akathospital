@@ -324,11 +324,13 @@ exports.authVerifyToken = async (req, res) => {
                 // Relations
                 positions: {
                     select: {
+                        position_id: true,
                         position_name: true
                     }
                 },
                 departments: {
                     select: {
+                        department_id: true, 
                         department_name: true
                     }
                 }

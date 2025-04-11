@@ -462,7 +462,7 @@ model form_ipd_overall_finding_results {
   form_ipd_overall_finding_result_id Int             @id @default(autoincrement())
   form_ipd_id                        Int
   overall_finding_id                 Int
-  overall_finding_result             Int
+  overall_finding_result             Boolean
   created_at                         DateTime        @default(now()) @db.Timestamp(0)
   created_by                         String          @db.VarChar(100)
   updated_at                         DateTime        @default(now()) @db.Timestamp(0)
@@ -479,8 +479,8 @@ model form_ipd_review_status_results {
   form_ipd_review_status_result_id Int           @id @default(autoincrement())
   form_ipd_id                      Int
   review_status_id                 Int
-  review_status_result             Int
-  review_status_comment            String        @db.LongText
+  review_status_result             Boolean?
+  review_status_comment            String?       @db.LongText
   created_at                       DateTime      @default(now()) @db.Timestamp(0)
   created_by                       String        @db.VarChar(100)
   updated_at                       DateTime      @default(now()) @db.Timestamp(0)

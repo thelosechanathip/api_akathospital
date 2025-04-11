@@ -422,7 +422,7 @@ exports.checkIn = async (req, res) => {
 
         if (!fetchDataOneCheckInStatus) return msg(res, 400, { message: "เกิดข้อผิดพลาดในการดึงข้อมูลกะการทำงานหรือสถานะเช็คอิน" });
 
-        const { user_id } = checkUser;
+        const { user_id, fullname_thai } = checkUser;
         const { notify_user_token } = fetchNotify;
 
         const fetchSignature = await pm.signature_users.findFirst({
@@ -463,6 +463,7 @@ exports.checkIn = async (req, res) => {
             {
                 attendance_record_id: insertAttendanceRecord.attendance_record_id,
                 userId: user_id,
+                fullname: fullname_thai,
                 telegramChatId: notify_user_token,
                 expiresIn: "20s"
             },
