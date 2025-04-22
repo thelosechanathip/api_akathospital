@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { authCheckToken, authCheckTokenAdmin } = require('../../middleware/auth/authAdmin');
-const { upsertFormIpd } = require('../../controllers/privateAPI/medicalRecord/formIpdController');
+const { insertFormIpd, removeFormIpd } = require('../../controllers/privateAPI/medicalRecord/formIpdController');
 
 const medicalRecordAudit = 'medicalRecordAudit';
-router.post(`/${medicalRecordAudit}/upsertFormIpd`, authCheckToken, upsertFormIpd)
+router.post(`/${medicalRecordAudit}/insertFormIpd`, authCheckToken, insertFormIpd);
+router.delete(`/${medicalRecordAudit}/removeFormIpd/:an`, authCheckToken, removeFormIpd);
 
 module.exports = router;

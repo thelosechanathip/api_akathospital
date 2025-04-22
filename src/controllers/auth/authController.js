@@ -47,7 +47,7 @@ exports.authRegister = async (req, res) => {
             where: { national_id: national_id },
             select: { user_id: true }
         });
-        if(fetchUser) return msg(res, 404, { message: `มีข้อมูล ${national_id} อยู่ในระบบแล้ว!` });
+        if (fetchUser) return msg(res, 404, { message: `มีข้อมูล ${national_id} อยู่ในระบบแล้ว!` });
 
         const [fetchAllDataInBackOffice] = await db_b.query(
             `
@@ -83,7 +83,7 @@ exports.authRegister = async (req, res) => {
             where: { prefix_name: fetchAllDataInBackOffice[0].prefix_name },
             select: { prefix_id: true }
         });
-        if(!fetchPrefix) return msg(res, 404, { message: `ไม่มีข้อมูล ${fetchAllDataInBackOffice[0].prefix_name} อยู่ใน Database!` });
+        if (!fetchPrefix) return msg(res, 404, { message: `ไม่มีข้อมูล ${fetchAllDataInBackOffice[0].prefix_name} อยู่ใน Database!` });
 
         const fetchPosition = await pm.positions.findFirst({
             where: { position_name: fetchAllDataInBackOffice[0].position },
@@ -113,9 +113,9 @@ exports.authRegister = async (req, res) => {
             }
         });
 
-        if(generateUserInUsers) {
-            const fetchUserId = await pm.users.findFirst({ 
-                where: { national_id: fetchAllDataInBackOffice[0].HR_CID }, select: {user_id: true } 
+        if (generateUserInUsers) {
+            const fetchUserId = await pm.users.findFirst({
+                where: { national_id: fetchAllDataInBackOffice[0].HR_CID }, select: { user_id: true }
             });
             const generateNotify = await pm.notify_users.upsert({
                 where: { user_id: Number(fetchUserId.user_id) },
@@ -160,7 +160,7 @@ exports.authLogin = async (req, res) => {
     try {
         const { username, password } = req.body;
 
-        if(!username || !password) return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน!' });
+        if (!username || !password) return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน!' });
 
         // ตรวจสอบ Username
         const checkUsername = await pm.users.findFirst({
@@ -173,10 +173,10 @@ exports.authLogin = async (req, res) => {
                 password: true
             }
         });
-        if(!checkUsername) return msg(res, 404, { message: 'ไม่มี User นี้อยู่ในระบบกรุณา Register ก่อนใช้งานระบบขอบคุณครับ/คะ!' });
+        if (!checkUsername) return msg(res, 404, { message: 'ไม่มี User นี้อยู่ในระบบกรุณา Register ก่อนใช้งานระบบขอบคุณครับ/คะ!' });
 
         const isMath = await bcrypt.compare(password, checkUsername.password);
-        if(!isMath) return msg(res, 400, { message: 'รหัสผ่านไม่ถูกต้องกรุณาตรวจสอบรหัสผ่าน!' });
+        if (!isMath) return msg(res, 400, { message: 'รหัสผ่านไม่ถูกต้องกรุณาตรวจสอบรหัสผ่าน!' });
 
         const fullname = checkUsername.fullname_thai;
         const userId = checkUsername.user_id;
@@ -222,7 +222,7 @@ exports.authLogin = async (req, res) => {
                     }
                 });
 
-                if(insertDataToauthToken) return msg(res, 200, { token: token });
+                if (insertDataToauthToken) return msg(res, 200, { token: token });
             } catch (err) {
                 console.error("Error token:", err.message);
                 return msg(res, 500, { message: "Internal Server Error" });
@@ -318,37 +318,28 @@ exports.authVerifyToken = async (req, res) => {
             select: {
                 // Fields from users table
                 email: true,
+                prefixes: { select: { prefix_id: true, prefix_name: true } },
                 fullname_thai: true,
                 fullname_english: true,
                 status: true,
                 // Relations
-                positions: {
-                    select: {
-                        position_id: true,
-                        position_name: true
-                    }
-                },
-                departments: {
-                    select: {
-                        department_id: true, 
-                        department_name: true
-                    }
-                }
+                positions: { select: { position_id: true, position_name: true } },
+                departments: { select: { department_id: true, department_name: true } }
             }
         });
         const endTime = Date.now() - startTime;
-        if(!fetchOneDataUser) return msg(res, 404, { message: 'Data not found!' });
+        if (!fetchOneDataUser) return msg(res, 404, { message: 'Data not found!' });
 
         let status = false;
         const fetchSignature = await pm.signature_users.findFirst({
             where: { user_id: Number(req.user.user_id) },
             select: { signature_user_id: true, expired: true }
         });
-        if(fetchSignature) {
+        if (fetchSignature) {
             const currentDate = moment().format('YYYY-MM-DD HH:mm:ss');
             const expired = moment(fetchSignature.expired).format('YYYY-MM-DD HH:mm:ss');
-            
-            if(currentDate <= expired) {
+
+            if (currentDate <= expired) {
                 status = true;
             } else {
                 await pm.signature_users.delete({
@@ -390,8 +381,8 @@ exports.authVerifyToken = async (req, res) => {
 exports.generateSignature = async (req, res) => {
     try {
         const { signature_user_token } = req.body;
-        if(!signature_user_token) return msg(res, 200, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน!' });
-        if(!isBase64Png(signature_user_token)) return msg(res, 400, { message: `${signature_user_token} ไม่ใช่รูปแบบ PNG base64 ที่ถูกต้อง` });
+        if (!signature_user_token) return msg(res, 200, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน!' });
+        if (!isBase64Png(signature_user_token)) return msg(res, 400, { message: `${signature_user_token} ไม่ใช่รูปแบบ PNG base64 ที่ถูกต้อง` });
 
         const dateNow = moment(); // Current date
         const futureDate = dateNow.add(2, 'years'); // Add 2 years for expiration
@@ -450,7 +441,7 @@ exports.fetchSignature = async (req, res) => {
             select: { signature_user_token: true }
         });
         const endTime = Date.now() - startTime;
-        
+
         // บันทึกข้อมูลไปยัง signature_users_log
         await pm.signature_users_log.create({
             data: {
@@ -470,7 +461,7 @@ exports.fetchSignature = async (req, res) => {
             .resize(1000)  // ปรับขนาดความกว้างของภาพเป็น 1000px
             .sharpen()  // เพิ่มความชัดให้กับภาพ
             .toBuffer();  // เปลี่ยนเป็น buffer ที่สามารถส่งกลับไปได้
-        
+
         // ตั้งค่า Content-Type เป็น image/jpeg หรือ image/png ขึ้นอยู่กับประเภทของภาพ
         res.setHeader('Content-Type', 'image/jpeg');  // หรือ 'image/png' ขึ้นอยู่กับประเภทของภาพ
         res.send(resizedImage);  // ส่งภาพที่มีขนาดใหม่ไปยัง Client
@@ -486,39 +477,63 @@ exports.fetchImage = async (req, res) => {
         const userId = req.user.user_id;
         const fullname = req.user.fullname_thai;
 
-        const startTime = Date.now();
-        const fetchImage = await pm.users.findUnique({
+        // วัดเวลาการดึงข้อมูล
+        const start = Date.now();
+        const record = await pm.users.findUnique({
             where: { user_id: userId },
             select: { image: true }
         });
-        const endTime = Date.now() - startTime;
+        const execTime = Date.now() - start;
 
-        // บันทึกข้อมูลไปยัง auth_log
+        // บันทึก log
         await pm.auth_log.create({
             data: {
                 ip_address: req.headers['x-forwarded-for'] || req.ip,
                 name: fullname,
                 request_method: req.method,
                 endpoint: req.originalUrl,
-                execution_time: endTime,
-                row_count: fetchImage ? 1 : 0,
-                status: fetchImage ? 'Success' : 'No Data'
+                execution_time: execTime,
+                row_count: record && record.image ? 1 : 0,
+                status: record && record.image ? 'Success' : 'No Data'
             }
         });
 
-        if (!fetchImage || !fetchImage.image) return msg(res, 404, { message: "Image not found" });
+        if (!record || !record.image) {
+            return msg(res, 404, { message: "Image not found" });
+        }
 
-        const resizedImage = await sharp(fetchImage.image)
-            .resize(1000)  // ปรับขนาดความกว้างของภาพเป็น 1000px
-            .sharpen()  // เพิ่มความชัดให้กับภาพ
-            .toBuffer();  // เปลี่ยนเป็น buffer ที่สามารถส่งกลับไปได้
-        
-        // ตั้งค่า Content-Type เป็น image/jpeg หรือ image/png ขึ้นอยู่กับประเภทของภาพ
-        res.setHeader('Content-Type', 'image/jpeg');  // หรือ 'image/png' ขึ้นอยู่กับประเภทของภาพ
-        res.send(resizedImage);  // ส่งภาพที่มีขนาดใหม่ไปยัง Client
-    } catch (error) {
-        console.error("Error fetchImage:", error.message);
-        return msg(res, 500, { message: "Internal Server Errors" });
+        const buf = record.image;
+        const image = sharp(buf);
+        const meta = await image.metadata();
+        let outBuffer;
+
+        switch (meta.format) {
+            case 'gif':
+                // ไม่ resize เพื่อรักษา animation
+                outBuffer = buf;
+                break;
+            case 'jpeg':
+            case 'jpg':
+            case 'png':
+                // resize + sharpen
+                outBuffer = await image
+                    .resize({ width: 1000 })
+                    .sharpen()
+                    .toBuffer();
+                break;
+            default:
+                // กรณีอื่น ๆ ส่งเดิมไปก่อน
+                outBuffer = buf;
+        }
+
+        // map 'jpg' -> 'jpeg' สำหรับ Content-Type
+        const fmt = meta.format === 'jpg' ? 'jpeg' : meta.format;
+        res.setHeader('Content-Type', `image/${fmt}`);
+        return res.send(outBuffer);
+
+    } catch (err) {
+        console.error("Error fetchImage:", err);
+        return msg(res, 500, { message: "Internal Server Error" });
     }
 };
 
@@ -529,7 +544,7 @@ exports.editUser = async (req, res) => {
         const fullname = req.user.fullname_thai;
         const { image, position_id, department_id, ...userData } = req.body;
 
-        if(!isBase64Png(userData.image)) return msg(res, 400, { message: `${image} ไม่ใช่รูปแบบ PNG base64 ที่ถูกต้อง` });
+        if (!isBase64Png(userData.image)) return msg(res, 400, { message: `${image} ไม่ใช่รูปแบบ PNG base64 ที่ถูกต้อง` });
 
         // Remove the data URI prefix if it exists
         const base64String = image.replace(/^data:image\/\w+;base64,/, '');
@@ -572,10 +587,10 @@ exports.editUser = async (req, res) => {
 exports.removeUser = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        if(id === req.user.user_id) return msg(res, 400, { message: 'ไม่สามารถลบ User ตัวเองได้!' });
+        if (id === req.user.user_id) return msg(res, 400, { message: 'ไม่สามารถลบ User ตัวเองได้!' });
 
         const { password } = req.body;
-        if(!password) return msg(res, 400, { message: 'กรุณากรอกรหัสผ่านเพื่อยืนยันการลบข้อมูล!' });
+        if (!password) return msg(res, 400, { message: 'กรุณากรอกรหัสผ่านเพื่อยืนยันการลบข้อมูล!' });
 
         const fullname = req.user.fullname_thai;
 
@@ -583,17 +598,17 @@ exports.removeUser = async (req, res) => {
             where: { user_id: req.user.user_id },
             select: { password: true }
         });
-        if(!fetchPassword) return msg(res, 404, { message: 'ไม่มี User นี้ในระบบกรุณาตรวจสอบ!' });
+        if (!fetchPassword) return msg(res, 404, { message: 'ไม่มี User นี้ในระบบกรุณาตรวจสอบ!' });
 
         const isMath = await bcrypt.compare(password, fetchPassword.password);
-        if(!isMath) return msg(res, 400, { message: 'รหัสผ่านไม่ถูกต้องกรุณาตรวจสอบรหัสผ่าน!' });
+        if (!isMath) return msg(res, 400, { message: 'รหัสผ่านไม่ถูกต้องกรุณาตรวจสอบรหัสผ่าน!' });
 
         // Check Table signature_users AND Remove Data
         const fetchSignature = await pm.signature_users.findFirst({
             where: { user_id: id },
             select: { signature_user_id: true }
         });
-        if(fetchSignature) {
+        if (fetchSignature) {
             const startTime = Date.now();
             const removeSignature = await pm.signature_users.delete({
                 where: { signature_user_id: fetchSignature.signature_user_id }
@@ -625,7 +640,7 @@ exports.removeUser = async (req, res) => {
             where: { user_id: id },
             select: { notify_user_id: true }
         });
-        if(fetchNotify) {
+        if (fetchNotify) {
             const startTime = Date.now();
             const removeNotifyUser = await pm.notify_users.delete({
                 where: { notify_user_id: fetchNotify.notify_user_id }
@@ -684,8 +699,8 @@ exports.removeUser = async (req, res) => {
 
             // ถ้ามีตารางที่อ้างอิงอยู่ → ห้ามลบ
             if (hasReference) {
-                return msg(res, 400, { 
-                    message: `ไม่สามารถลบได้ เนื่องจาก user_id ถูกใช้งานอยู่ในตาราง: ${referencedTables.join(', ')} กรุณาลบข้อมูลที่เกี่ยวข้องก่อน!` 
+                return msg(res, 400, {
+                    message: `ไม่สามารถลบได้ เนื่องจาก user_id ถูกใช้งานอยู่ในตาราง: ${referencedTables.join(', ')} กรุณาลบข้อมูลที่เกี่ยวข้องก่อน!`
                 });
             }
         }
@@ -735,7 +750,7 @@ exports.authLogout = async (req, res) => {
                 expires_at: exp
             }
         });
-        if(!addDataTokenBlackList) return msg(res, 400, { message: 'เกิดข้อผิดพลาดระหว่างการทำงานกรุณาติดต่อ Admin ของระบบ!' });
+        if (!addDataTokenBlackList) return msg(res, 400, { message: 'เกิดข้อผิดพลาดระหว่างการทำงานกรุณาติดต่อ Admin ของระบบ!' });
 
         const startTime = Date.now();
         const updateDataAuthToken = await pm.auth_tokens.update({
@@ -746,7 +761,7 @@ exports.authLogout = async (req, res) => {
                 is_active: false
             }
         });
-        if(!updateDataAuthToken) return msg(res, 400, { message: 'เกิดข้อผิดพลาดระหว่างการทำงานกรุณาติดต่อ Admin ของระบบ!' });
+        if (!updateDataAuthToken) return msg(res, 400, { message: 'เกิดข้อผิดพลาดระหว่างการทำงานกรุณาติดต่อ Admin ของระบบ!' });
 
         const endTime = Date.now() - startTime;
 

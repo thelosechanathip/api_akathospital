@@ -854,3 +854,16 @@ model hcodes_log {
   status         String   @db.VarChar(100)
   created_at     DateTime @default(now()) @db.Timestamp(0)
 }
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model forms_log {
+  form_log_id    Int      @id @default(autoincrement())
+  ip_address     String   @db.VarChar(100)
+  name           String   @db.VarChar(100)
+  request_method String   @db.VarChar(100)
+  endpoint       String   @db.VarChar(100)
+  execution_time Float    @db.Float
+  row_count      Float    @db.Float
+  status         String   @db.VarChar(100)
+  created_at     DateTime @default(now()) @db.Timestamp(0)
+}
