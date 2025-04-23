@@ -37,6 +37,16 @@ const sendTelegramMessage = async (chatId, otpCode) => {
     }
 };
 
+// Function Fetch Data All
+exports.fetchDataAll = async (req, res) => {
+    try {
+
+    } catch (error) {
+        console.error("Error login data:", error.message);
+        return msg(res, 500, { message: "Internal Server Error" });
+    }
+};
+
 // Function generate User
 exports.authRegister = async (req, res) => {
     try {

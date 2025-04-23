@@ -37,13 +37,13 @@ const { getAllDataContentOfMedicalRecords, insertDataContentOfMedicalRecord, upd
 
 // API Version Setting Start
     // ApiVersion
-    router.get('/getApiVersions', authCheckTokenAdmin, getAllDataApiVersions);
+    router.get('/getApiVersions', authCheckToken, getAllDataApiVersions);
     router.post('/insertApiVersion', authCheckTokenAdmin, insertDataApiVersion);
     router.put('/updateApiVersion/:id', authCheckTokenAdmin, updateDataApiVersion);
     router.delete('/removeApiVersion/:id', authCheckTokenAdmin, removeDataApiVersion);
 
     // ApiVersionDetail
-    router.get('/getApiVersionDetails', authCheckTokenAdmin, getAllDataApiVersionDetails);
+    router.get('/getApiVersionDetails', authCheckToken, getAllDataApiVersionDetails);
     router.post('/insertApiVersionDetail', authCheckTokenAdmin, insertDataApiVersionDetail);
     router.put('/updateApiVersionDetail/:id', authCheckTokenAdmin, updateDataApiVersionDetail);
     router.delete('/removeApiVersionDetail/:id', authCheckTokenAdmin, removeDataApiVersionDetail);
@@ -51,13 +51,13 @@ const { getAllDataContentOfMedicalRecords, insertDataContentOfMedicalRecord, upd
 
 // Akathospital Version Setting Start
     // AkathospitalVersion
-    router.get('/getAkathospitalVersions', authCheckTokenAdmin, getAllDataAkathospitalVersions);
+    router.get('/getAkathospitalVersions', authCheckToken, getAllDataAkathospitalVersions);
     router.post('/insertAkathospitalVersion', authCheckTokenAdmin, insertDataAkathospitalVersion);
     router.put('/updateAkathospitalVersion/:id', authCheckTokenAdmin, updateDataAkathospitalVersion);
     router.delete('/removeAkathospitalVersion/:id', authCheckTokenAdmin, removeDataAkathospitalVersion);
 
     // AkathospitalVersionDetail
-    router.get('/getAkathospitalVersionDetails', authCheckTokenAdmin, getAllDataAkathospitalVersionDetails);
+    router.get('/getAkathospitalVersionDetails', authCheckToken, getAllDataAkathospitalVersionDetails);
     router.post('/insertAkathospitalVersionDetail', authCheckTokenAdmin, insertDataAkathospitalVersionDetail);
     router.put('/updateAkathospitalVersionDetail/:id', authCheckTokenAdmin, updateDataAkathospitalVersionDetail);
     router.delete('/removeAkathospitalVersionDetail/:id', authCheckTokenAdmin, removeDataAkathospitalVersionDetail);
