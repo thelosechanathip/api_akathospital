@@ -40,7 +40,42 @@ const sendTelegramMessage = async (chatId, otpCode) => {
 // Function Fetch Data All
 exports.fetchDataAll = async (req, res) => {
     try {
+        const userId = req.user.user_id;
 
+        // ดึงจำนวนการเข้างานปกติ
+        const fetchAttendaceRecordCheckInStatus3 = await pm.attendance_records.count({
+            where: { user_id: Number(userId), check_in_status_id: 3 }
+        });
+
+        // ดึงจำนวนการมาสาย
+        const fetchAttendaceRecordCheckInStatus2 = await pm.attendance_records.count({
+            where: { user_id: Number(userId), check_in_status_id: 2 }
+        });
+
+        // ดึงจำนวนออกก่อนเวลา
+        const fetchAttendaceRecordCheckOutStatus1 = await pm.attendance_records.count({
+            where: { user_id: Number(userId), check_out_status_id: 1 }
+        });
+
+        // ดึงจำนวนออกงาน
+        const fetchAttendaceRecordCheckOutStatus2 = await pm.attendance_records.count({
+            where: { user_id: Number(userId), check_out_status_id: 2 }
+        });
+        
+        // ดึงจำนวนไม่มีการเช็ตออกงาน
+        const fetchAttendaceRecordCheckOutStatus3 = await pm.attendance_records.count({
+            where: { user_id: Number(userId), check_out_status_id: 3 }
+        });
+
+        const setData = {
+            "เข้างาน": fetchAttendaceRecordCheckInStatus3,
+            "มาสาย": fetchAttendaceRecordCheckInStatus2,
+            "ออกก่อนเวลา": fetchAttendaceRecordCheckOutStatus1,
+            "ออกงาน": fetchAttendaceRecordCheckOutStatus2,
+            "ไม่มีการเช็คออกงาน": fetchAttendaceRecordCheckOutStatus3
+        } 
+
+        return msg(res, 200, { message: setData });
     } catch (error) {
         console.error("Error login data:", error.message);
         return msg(res, 500, { message: "Internal Server Error" });

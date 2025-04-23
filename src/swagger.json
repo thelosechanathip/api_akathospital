@@ -114,6 +114,114 @@
     }
   ],
   "paths": {
+    "/akatApi/auth/fetchDataAll": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "fetchDataAll",
+        "description": "ดึงข้อมูลทั้งหมดที่เกี่ยวข้องกับ User ตรวจสอบ Token เพื่อยืนยันตัวตน",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "description": "Token จากการล็อกอิน ส่งในรูปแบบ Bearer Token"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ความสำเร็จทั่วไป",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "properties": {
+                        "เข้างาน": {
+                          "type": "int",
+                          "example": 1
+                        },
+                        "มาสาย": {
+                          "type": "int",
+                          "example": 1
+                        },
+                        "ออกก่อนเวลา": {
+                          "type": "int",
+                          "example": 1
+                        },
+                        "ออกงาน": {
+                          "type": "int",
+                          "example": 1
+                        },
+                        "ไม่มีการเช็คออกงาน": {
+                          "type": "int",
+                          "example": 1
+                        }
+                      } 
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Server ไม่สามารถประมวลผลคำร้องขอเนื่องจากข้อผิดพลาดของ Client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "การเข้าถึงถูกปฏิเสธ! || OTP หมดอายุหรือไม่ถูกต้อง || OTP ไม่ถูกต้อง"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "การรับรองความถูกต้องล้มเหลว",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "TokenExpiredError! || JsonWebTokenError! || ไม่มี Chat ID ใน Token || Token ไม่ถูกต้อง"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ข้อผิดพลาดเซิร์ฟเวอร์",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "internal server errors"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/akatApi/auth/authRegister": {
       "post": {
         "tags": [
