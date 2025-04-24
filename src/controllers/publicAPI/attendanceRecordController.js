@@ -69,9 +69,9 @@ exports.getSignatureImage = async (req, res) => {
 exports.fetchDataAllAttendanceRecord = async (req, res) => {
     try {
         // คำนวณวันที่เริ่มต้นและสิ้นสุดของเดือนปัจจุบัน
-        const now = new Date(); // วันที่ปัจจุบัน (20 มี.ค. 2025)
-        const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1); // วันแรกของเดือนนี้
-        const endOfCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999); // วันสุดท้ายของเดือนนี้
+        // สร้างวันเริ่มต้นและวันสิ้นสุดของวันนี้
+        const startOfDay = moment().startOf('day').toDate();   // ex. 2025-03-20T00:00:00.000Z
+        const endOfDay = moment().endOf('day').toDate();     // ex. 2025-03-20T23:59:59.999Z
 
         const fullname = req.user.fullname_thai;
 
@@ -79,13 +79,18 @@ exports.fetchDataAllAttendanceRecord = async (req, res) => {
         const resultData = await pm.attendance_records.findMany({
             where: {
                 created_at: {
-                    gte: startOfCurrentMonth, // มากกว่าหรือเท่ากับวันแรกของเดือนปัจจุบัน
-                    lte: endOfCurrentMonth    // น้อยกว่าหรือเท่ากับวันสุดท้ายของเดือนปัจจุบัน
+                    gte: startOfDay,
+                    lte: endOfDay
                 }
             },
             select: {
                 attendance_record_id: true,
-                users: { select: { prefixes: { select: { prefix_name: true } }, fullname_thai: true } },
+                users: {
+                    select: {
+                        prefixes: { select: { prefix_name: true } },
+                        fullname_thai: true
+                    }
+                },
                 shift_types: { select: { shift_type_name: true } },
                 shifts: { select: { shift_name: true } },
                 starting: true,
@@ -125,7 +130,7 @@ exports.fetchDataAllAttendanceRecord = async (req, res) => {
             }
         });
 
-        if (resultData.length === 0)  return msg(res, 404, { message: 'ไม่มีข้อมูลบน Database!' });
+        if (resultData.length === 0) return msg(res, 404, { message: 'ไม่มีข้อมูลบน Database!' });
 
         return msg(res, 200, { data: resultWithImageUrl });
     } catch (error) {
@@ -203,7 +208,7 @@ exports.searchDateAttendanceRecord = async (req, res) => {
             }
         });
 
-        if (resultData.length === 0) {  return msg(res, 404, { message: 'ไม่มีข้อมูลบน Database!' }); }
+        if (resultData.length === 0) { return msg(res, 404, { message: 'ไม่มีข้อมูลบน Database!' }); }
 
         return msg(res, 200, { data: resultWithImageUrl });
     } catch (error) {
@@ -299,7 +304,7 @@ exports.searchAttendanceRecords = async (req, res) => {
 exports.fetchHolidays = async (req, res) => {
     try {
         const currentMonth = moment().format('MM');
-        
+
         const fetchHolidays = await pm.$queryRaw`
             SELECT holiday_name, holiday_date
             FROM holidays
@@ -591,7 +596,7 @@ exports.checkOut = async (req, res) => {
     try {
         let dateNow = moment().format('YYYY-MM-DD');
         let timeNow = moment().format('HH:mm:ss'); // ดึงเวลาปัจจุบัน
-        
+
         if (!req.body.national_id) return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน!' });
 
         const bytes = CryptoJS.AES.decrypt(req.body.national_id, process.env.PASS_KEY);
