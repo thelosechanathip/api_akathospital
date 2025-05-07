@@ -14,10 +14,12 @@ const { getAllDataDepartments, syncDataDepartments } = require('../../controller
 const { getAllDataPrefixes, syncDataPrefixes } = require('../../controllers/publicAPI/prefixController');
 const { getAllDataPositions, syncDataPositions } = require('../../controllers/publicAPI/positionController');
 
-const { getEmployeeSystemRequests } = require('../../controllers/publicAPI/employeeSystemRequestController');
+const { getEmployeeSystemRequests, createEmployeeSystemRequest, removeEmployeeSystemRequest } = require('../../controllers/publicAPI/employeeSystemRequestController');
 
 // EmployeeSystemRequest
 router.get('/getEmployeeSystemRequests', getEmployeeSystemRequests);
+router.post('/createEmployeeSystemRequest', createEmployeeSystemRequest);
+router.delete('/removeEmployeeSystemRequest/:id', removeEmployeeSystemRequest);
 
 // Complaints
 router.get('/getComplaints', authCheckToken, getAllDataComplaints);

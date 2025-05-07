@@ -11,6 +11,7 @@ const { authAdminDoc } = require("./middleware/auth/authAdmin");
 const { msg } = require("../src/utils/message");
 const pm = require('../src/config/prisma');
 const bodyParser = require('body-parser');
+const listEndpoints = require('express-list-endpoints');
 require("dotenv").config();
 
 // สร้าง instance ของ Express application
@@ -42,9 +43,7 @@ app.get(
   }
 );
 
-app.get("/api/docs/swagger/:text", authAdminDoc, async (req, res) => {
-  res.sendFile(__dirname + "/swagger.json");
-});
+app.get("/api/docs/swagger/:text", authAdminDoc, async (req, res) => { res.sendFile(__dirname + "/swagger.json"); });
 
 // กำหนดตัวแปรสำหรับจัดการเส้นทางของ routes
 const routesRootPath = path.join(__dirname, "routes");
@@ -112,7 +111,7 @@ async function checkBlackListTokensExpired() {
     console.error("Error checkBlackListTokensExpired: ", error.message);
     process.exit(1);
   }
-}
+};
 
 // Function ในการตรวจสอบ is_active, expires_at บน Table auth_tokens
 async function checkAuthTokensExpired() {
@@ -157,7 +156,7 @@ async function checkAuthTokensExpired() {
     console.error("Error checkAuthTokensExpired: ", error.message);
     process.exit(1);
   }
-}
+};
 
 // เริ่มการตรวจสอบ
 function startBlacklistScheduler() {
@@ -166,16 +165,19 @@ function startBlacklistScheduler() {
   checkBlackListTokensExpired();
 
   schedule.scheduleJob('0 * * * *', async () => {
-      console.log('Scheduled blacklist update starting...');
-      await checkAuthTokensExpired();
-      await checkBlackListTokensExpired();
+    console.log('Scheduled blacklist update starting...');
+    await checkAuthTokensExpired();
+    await checkBlackListTokensExpired();
   });
-}
+};
 
 startBlacklistScheduler();
 
-app.use('*', (req, res) => {
-  msg(res, 404, "404 Not found!!!!");
-});
+// const endpoints = listEndpoints(app);
+// for (const i of endpoints) {
+//   console.log(i.path + ' || ' + i.methods);
+// }
+
+app.use('*', (req, res) => { msg(res, 404, "404 Not found!!!!"); });
 
 module.exports = app;

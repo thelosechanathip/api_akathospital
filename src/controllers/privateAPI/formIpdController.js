@@ -1,6 +1,6 @@
-const pm = require('../../../config/prisma');
-const { msg } = require('../../../utils/message');
-const db_h = require('../../../config/db_h');
+const pm = require('../../config/prisma');
+const { msg } = require('../../utils/message');
+const db_h = require('../../config/db_h');
 const bcrypt = require('bcryptjs');
 
 // Function ในการบันทึกหรืออัพเดทข้อมูล Medical Record Audit ไปยัง Database

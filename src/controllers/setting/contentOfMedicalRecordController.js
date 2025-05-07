@@ -13,6 +13,7 @@ exports.getAllDataContentOfMedicalRecords = async (req, res) => {
                 patient_service_id: false,
                 patient_services: {
                     select: {
+                        patient_service_id: true,
                         patient_service_name_english: true,
                         patient_service_name_thai: true
                     }
