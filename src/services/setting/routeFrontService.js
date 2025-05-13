@@ -41,14 +41,8 @@ exports.createData = async (data, fullname, logPayload) => {
     }
     if (duplicateMessages.length > 0) return { status: Math.max(...duplicateStatus), message: duplicateMessages.join(" AND ") }
 
-    const payload = {
-        ...data,
-        created_by: fullname,
-        updated_by: fullname
-    };
-
     const startTime = Date.now();
-    const createData = await models.createData(payload);
+    const createData = await models.createData(data);
     const endTime = Date.now() - startTime;
 
     logPayload.execution_time = endTime;
