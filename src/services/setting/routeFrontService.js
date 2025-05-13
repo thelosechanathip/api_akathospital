@@ -15,7 +15,7 @@ exports.fetchAllData = async (logPayload) => {
     return { status: 200, data: fetchDataResult };
 };
 
-exports.createData = async (data, fullname, logPayload) => {
+exports.createData = async ({body}, fullname, logPayload) => {
     // ตรวจสอบค่าซ้ำ โดยเก็บค่า duplicate message ไว้ก่อน
     const duplicateStatus = [];
     const duplicateMessages = [];
@@ -42,7 +42,7 @@ exports.createData = async (data, fullname, logPayload) => {
     if (duplicateMessages.length > 0) return { status: Math.max(...duplicateStatus), message: duplicateMessages.join(" AND ") }
 
     const startTime = Date.now();
-    const createData = await models.createData(data);
+    const createData = await models.createData(body);
     const endTime = Date.now() - startTime;
 
     logPayload.execution_time = endTime;

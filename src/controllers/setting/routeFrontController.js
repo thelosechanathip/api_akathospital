@@ -18,7 +18,7 @@ exports.fetchRouteFrontsController = async (req, res, next) => {
 exports.createRouteFrontController = async (req, res, next) => {
     try {
         const logPayload = await buildLogPayload(req, req.user);
-        const result = await services.createData(req.body, req.user.fullname_thai, logPayload);
+        const result = await services.createData(req, req.user.fullname_thai, logPayload);
         const payload = result.data ? { data: result.data } : { message: result.message }
         return msg(res, result.status, payload);
     } catch (err) {
