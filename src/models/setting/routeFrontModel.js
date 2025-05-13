@@ -16,7 +16,7 @@ exports.fetchNamePath = async (key, value) => {
 
 // บันทึกข้อมูล
 exports.createData = async (data) => {
-    return await pm.route_fronts.create({
+    return await pm.route_fronts.createMany({
         data: { ...data }
     });
 };
