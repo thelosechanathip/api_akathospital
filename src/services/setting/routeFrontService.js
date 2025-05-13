@@ -15,13 +15,13 @@ exports.fetchAllData = async (logPayload) => {
     return { status: 200, data: fetchDataResult };
 };
 
-exports.createData = async ({body}, fullname, logPayload) => {
+exports.createData = async ({ body }, fullname, logPayload) => {
     // ตรวจสอบค่าซ้ำ โดยเก็บค่า duplicate message ไว้ก่อน
     const duplicateStatus = [];
     const duplicateMessages = [];
     let hasEmptyValue = false; // Flag สำหรับตรวจสอบค่าที่ว่าง
 
-    for (const [key, value] of Object.entries(data)) {
+    for (const [key, value] of Object.entries(body)) {
         // ถ้าพบค่าว่าง ให้ตั้งค่า flag เป็น true
         if (['route_front_name', 'route_front_path'].includes(key) && !value) hasEmptyValue = true;
 
@@ -56,7 +56,7 @@ exports.createData = async ({body}, fullname, logPayload) => {
 exports.updateData = async (id, data, fullname, logPayload) => {
     // ส่ง ID ไปค้นหาข้อมูล
     const resultFetchOne = await models.fetchOneData(id);
-    if(!resultFetchOne) return { status: 404, message: 'ไม่มีข้อมูล!' };
+    if (!resultFetchOne) return { status: 404, message: 'ไม่มีข้อมูล!' };
 
     // ตรวจสอบค่าซ้ำ โดยเก็บค่า duplicate message ไว้ก่อน
     const duplicateStatus = [];
@@ -95,7 +95,7 @@ exports.updateData = async (id, data, fullname, logPayload) => {
 exports.removeData = async (id, logPayload) => {
     // ส่ง ID ไปค้นหาข้อมูล
     const resultFetchOne = await models.fetchOneData(id);
-    if(!resultFetchOne) return { status: 404, message: 'ไม่มีข้อมูล!' };
+    if (!resultFetchOne) return { status: 404, message: 'ไม่มีข้อมูล!' };
 
     const resultCheckForeignKey = await models.checkForeignKey();
 
