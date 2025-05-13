@@ -27,7 +27,7 @@ exports.createData = async (data, fullname, logPayload) => {
 
         if (['fiscal_year_name'].includes(key) && value) {
             const checkFiscalYearNameUnique = await models.fetchFiscalYearName(key, value);
-            if(checkFiscalYearNameUnique) {
+            if (checkFiscalYearNameUnique) {
                 duplicateStatus.push(409);
                 duplicateMessages.push(`${value} มีข้อมูลแล้วไม่สามารถบันทึกข้อมูลซ้ำได้!`);
             }
@@ -62,7 +62,7 @@ exports.createData = async (data, fullname, logPayload) => {
 exports.updateData = async (id, data, fullname, logPayload) => {
     // ส่ง ID ไปค้นหาข้อมูล
     const resultFetchOne = await models.fetchOneData(id);
-    if(!resultFetchOne) return { status: 404, message: 'ไม่มีข้อมูล!' };
+    if (!resultFetchOne) return { status: 404, message: 'ไม่มีข้อมูล!' };
 
     // ตรวจสอบค่าซ้ำ โดยเก็บค่า duplicate message ไว้ก่อน
     const duplicateStatus = [];
@@ -72,7 +72,7 @@ exports.updateData = async (id, data, fullname, logPayload) => {
     for (const [key, value] of Object.entries(data)) {
         if (['fiscal_year_name'].includes(key) && value) {
             const checkFiscalYearNameUnique = await models.fetchFiscalYearName(key, value);
-            if(checkFiscalYearNameUnique) {
+            if (checkFiscalYearNameUnique) {
                 duplicateStatus.push(409);
                 duplicateMessages.push(`${value} มีข้อมูลแล้วไม่สามารถบันทึกข้อมูลซ้ำได้!`);
             }
@@ -102,7 +102,32 @@ exports.updateData = async (id, data, fullname, logPayload) => {
 exports.removeData = async (id, logPayload) => {
     // ส่ง ID ไปค้นหาข้อมูล
     const resultFetchOne = await models.fetchOneData(id);
-    if(!resultFetchOne) return { status: 404, message: 'ไม่มีข้อมูล!' };
+    if (!resultFetchOne) return { status: 404, message: 'ไม่มีข้อมูล!' };
+
+    const resultCheckForeignKey = await models.checkForeignKey();
+
+    if (resultCheckForeignKey.length > 0) {
+        let hasReference = false;
+        let referencedTables = [];
+
+        // ตรวจสอบแต่ละตารางว่ามีข้อมูลอ้างอิงอยู่หรือไม่
+        for (const row of resultCheckForeignKey) {
+            const tableName = row.TABLE_NAME;
+            const columnName = row.COLUMN_NAME;
+
+            const checkData = await models.checkForeignKeyData(tableName, columnName, id);
+
+            if (checkData.length > 0) {
+                hasReference = true;
+                referencedTables.push(tableName);
+            }
+        }
+
+        // ถ้ามีตารางที่อ้างอิงอยู่ → ห้ามลบ
+        if (hasReference) {
+            return { status: 400, message: `ไม่สามารถลบได้ เนื่องจาก fiscal_year_id ถูกใช้งานอยู่ในตาราง: ${referencedTables.join(', ')} กรุณาลบข้อมูลที่เกี่ยวข้องก่อน!` };
+        }
+    }
 
     const startTime = Date.now();
     const removeData = await models.removeData(id);

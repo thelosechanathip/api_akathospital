@@ -7,25 +7,7 @@ exports.createLog = async (logData) => {
 
 // Fetch ข้อมูลทั้งหมด
 exports.fetchAllData = async () => {
-    return await pm.route_fronts.findMany({
-        include: {
-            departments: {
-                select: {
-                    department_id: true,
-                    department_name: true
-                }
-            },
-            users: {
-                select: {
-                    user_id: true,
-                    fullname_thai: true
-                }
-            },
-            department_id: false,
-            user_id: false
-        },
-        orderBy: { route_front_id: 'desc' }
-    });
+    return await pm.route_fronts.findMany();
 };
 
 exports.fetchNamePath = async (key, value) => {
@@ -34,7 +16,7 @@ exports.fetchNamePath = async (key, value) => {
 
 // บันทึกข้อมูล
 exports.createData = async (data) => {
-    return await pm.route_fronts.create({
+    return await pm.route_fronts.createMany({
         data: { ...data }
     });
 };
@@ -47,6 +29,24 @@ exports.fetchOneData = async (id) => {
 // Update ข้อมูลของ ID ที่ถูกส่งมา
 exports.updateData = async (id, data) => {
     return await pm.route_fronts.update({ where: { route_front_id: Number(id) }, data: { ...data } });
+};
+
+exports.checkForeignKey = async () => {
+    return await pm.$queryRaw`
+        SELECT TABLE_NAME, COLUMN_NAME
+        FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+        WHERE REFERENCED_TABLE_NAME = 'route_fronts'
+        AND REFERENCED_COLUMN_NAME = 'route_front_id'
+        AND EXISTS (
+            SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = KEY_COLUMN_USAGE.TABLE_NAME
+        )
+    `;
+};
+
+exports.checkForeignKeyData = async (tableName, columnName, id) => {
+    return await pm.$queryRawUnsafe(`
+        SELECT 1 FROM ${tableName} WHERE ${columnName} = ${Number(id)} LIMIT 1
+    `);
 };
 
 // Delete ข้อมูลของ ID ที่ถูกส่งมา

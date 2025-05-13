@@ -25,27 +25,33 @@ exports.createData = async (data, fullname, logPayload) => {
         // ถ้าพบค่าว่าง ให้ตั้งค่า flag เป็น true
         if (['route_front_id'].includes(key) && !value) hasEmptyValue = true;
         if (['route_front_id'].includes(key) && value) {
-            const checkRouteFrontIdResult = await models.fetchOneRouteFront(key, routeFrontId);
+            const checkRouteFrontIdResult = await models.fetchOneRouteFront(key, value);
             if (!checkRouteFrontIdResult) {
                 duplicateStatus.push(404);
                 duplicateMessages.push(`ไม่มีข้อมูล Route path นี้อยู่ในระบบ!`);
             }
+            const routeFrontid = Number(value);
+            data.route_front_id = routeFrontid;
         }
 
         if (['department_id'].includes(key) && value) {
-            const checkDepartmentIdResult = await models.fetchOneDepartment(key, departmentId);
+            const checkDepartmentIdResult = await models.fetchOneDepartment(key, value);
             if (!checkDepartmentIdResult) {
                 duplicateStatus.push(404);
                 duplicateMessages.push(`ไม่มีข้อมูลแผนกนี้อยู่ในระบบ!`);
             }
+            const departmentId = Number(value);
+            data.department_id = departmentId;
         }
 
         if (['user_id'].includes(key) && value) {
-            const checkUserIdResult = await models.fetchOneUser(key, userId);
+            const checkUserIdResult = await models.fetchOneUser(key, value);
             if (!checkUserIdResult) {
                 duplicateStatus.push(404);
                 duplicateMessages.push(`ไม่มีข้อมูลผู้ใช้งานนี้อยู่ในระบบ!`);
             }
+            const userId = Number(value);
+            data.user_id = userId;
         }
     }
 

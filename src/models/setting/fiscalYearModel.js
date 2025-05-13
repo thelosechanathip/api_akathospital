@@ -30,6 +30,24 @@ exports.updateData = async (id, data) => {
     return await pm.fiscal_years.update({ where: { fiscal_year_id: Number(id) }, data: { ...data } });
 };
 
+exports.checkForeignKey = async () => {
+    return await pm.$queryRaw`
+        SELECT TABLE_NAME, COLUMN_NAME
+        FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+        WHERE REFERENCED_TABLE_NAME = 'fiscal_years'
+        AND REFERENCED_COLUMN_NAME = 'fiscal_year_id'
+        AND EXISTS (
+            SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = KEY_COLUMN_USAGE.TABLE_NAME
+        )
+    `;
+};
+
+exports.checkForeignKeyData = async (tableName, columnName, id) => {
+    return await pm.$queryRawUnsafe(`
+        SELECT 1 FROM ${tableName} WHERE ${columnName} = ${Number(id)} LIMIT 1
+    `);
+};
+
 // Delete ข้อมูลของ ID ที่ถูกส่งมา
 exports.removeData = async (id) => {
     await pm.fiscal_years.delete({ where: { fiscal_year_id: Number(id) } });
