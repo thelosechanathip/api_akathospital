@@ -1,20 +1,20 @@
 const express = require('express');
 const router = express.Router();
 
-const { getAllDataCarousels, getCarouselImage } = require('../../controllers/publicAPI/carouselController');
+const { getAllDataCarousels, getCarouselImage } = require('../../controllers/public/carouselController');
 
-const { getAllDataHcodes } = require('../../controllers/publicAPI/hcodeController');
+const { getAllDataHcodes } = require('../../controllers/public/hcodeController');
 
 const { authCheckToken, authCheckTokenParams, authCheckTokenAdmin } = require('../../middleware/auth/authAdmin');
-const { getAllDataComplaints, insertDataComplaint, removeDataComplaint } = require('../../controllers/publicAPI/complaintController');
-const { getSignatureImage, fetchDataAllAttendanceRecord, searchDateAttendanceRecord, searchAttendanceRecords, fetchHolidays, checkIn, checkInVerifyOtp, checkOut } = require('../../controllers/publicAPI/attendanceRecordController');
+const { getAllDataComplaints, insertDataComplaint, removeDataComplaint } = require('../../controllers/public/complaintController');
+const { getSignatureImage, fetchDataAllAttendanceRecord, searchDateAttendanceRecord, searchAttendanceRecords, fetchHolidays, checkIn, checkInVerifyOtp, checkOut } = require('../../controllers/public/attendanceRecordController');
 
 // Sycn Setting
-const { getAllDataDepartments, syncDataDepartments } = require('../../controllers/publicAPI/departmentController');
-const { getAllDataPrefixes, syncDataPrefixes } = require('../../controllers/publicAPI/prefixController');
-const { getAllDataPositions, syncDataPositions } = require('../../controllers/publicAPI/positionController');
+const { getAllDataDepartments, syncDataDepartments } = require('../../controllers/public/departmentController');
+const { getAllDataPrefixes, syncDataPrefixes } = require('../../controllers/public/prefixController');
+const { getAllDataPositions, syncDataPositions } = require('../../controllers/public/positionController');
 
-const { getEmployeeSystemRequests, createEmployeeSystemRequest, removeEmployeeSystemRequest } = require('../../controllers/publicAPI/employeeSystemRequestController');
+const { getEmployeeSystemRequests, createEmployeeSystemRequest, removeEmployeeSystemRequest } = require('../../controllers/public/employeeSystemRequestController');
 
 // EmployeeSystemRequest
 router.get('/getEmployeeSystemRequests', getEmployeeSystemRequests);

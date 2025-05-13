@@ -1,4 +1,4 @@
-const services = require('../../services/privateAPI/hospitalProfileService');
+const services = require('../../services/private/hospitalProfileService');
 const { msg } = require('../../utils/message');
 const { buildLogPayload } = require('../../utils/settingLog');
 

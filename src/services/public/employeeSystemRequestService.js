@@ -1,4 +1,4 @@
-const models = require('../../models/publicAPI/employeeSystemRequestModel');
+const models = require('../../models/public/employeeSystemRequestModel');
 const allCheck = require('../../utils/allCheck');
 const bcrypt = require('bcryptjs');
 require("dotenv").config();
