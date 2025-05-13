@@ -16,7 +16,7 @@ exports.fetchNamePath = async (key, value) => {
 
 // บันทึกข้อมูล
 exports.createData = async (data) => {
-    return await pm.route_fronts.createMany({ data });
+    return await pm.route_fronts.createMany(data);
 };
 
 // Fetch ข้อมูล RouteFront ด้วย ID ที่ถูกส่งมา
