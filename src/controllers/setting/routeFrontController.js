@@ -1,4 +1,4 @@
-const services = require('../../services/setting/routeFrontService');
+const services = require('../../services/setting/routeFront.service');
 const { msg } = require('../../utils/message');
 const { buildLogPayload } = require('../../utils/settingLog');
 

@@ -1,4 +1,4 @@
-const models = require('../../models/setting/accessibilityModel');
+const models = require('../../models/setting/accessibility.model');
 
 exports.fetchAllData = async (logPayload) => {
     const startTime = Date.now();

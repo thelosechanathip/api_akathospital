@@ -1,4 +1,4 @@
-const services = require('../../services/public/employeeSystemRequestService');
+const services = require('../../services/public/employeeSystemRequest.service');
 const { msg } = require('../../utils/message');
 
 // Fetch all data employeeSystemRequests

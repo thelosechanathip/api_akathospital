@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { authCheckToken, authCheckTokenAdmin } = require('../../middleware/auth/authAdmin');
-const { fetchDataAll, authRegister, authLogin, authVerifyOtp, authVerifyToken, generateSignature, fetchSignature, fetchImage, editUser, removeUser, authLogout } = require('../../controllers/auth/authController'); // require AuthController
+const { fetchDataAll, authRegister, authLogin, authVerifyOtp, authVerifyToken, generateSignature, fetchSignature, fetchImage, editUser, removeUser, authLogout } = require('../../controllers/auth/auth.controller'); // require AuthController
 
 // @ENDPOINT = http://localhost:3715/api_m/
 router.get('/fetchDataAll', authCheckToken, fetchDataAll);

@@ -1,4 +1,4 @@
-const services = require('../../services/setting/accessibilityService');
+const services = require('../../services/setting/accessibility.service');
 const { msg } = require('../../utils/message');
 const { buildLogPayload } = require('../../utils/settingLog');
 

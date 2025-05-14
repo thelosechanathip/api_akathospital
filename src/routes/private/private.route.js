@@ -4,19 +4,19 @@ const { authCheckToken, authCheckTokenAdmin } = require('../../middleware/auth/a
 const { 
     insertFormIpd, 
     removeFormIpd 
-} = require('../../controllers/private/formIpdController');
+} = require('../../controllers/private/formIpd.controller');
 const { 
     fetchHospitalProfileController, 
     createHospitalProfileController, 
     updateHospitalProfileController,
     removeHospitalProfileController
-} = require('../../controllers/private/hospitalProfileController');
+} = require('../../controllers/private/hospitalProfile.controller');
 const {
     fetchDirectorBiographiesController,
     createDirectorBiographieController,
     updateDirectorBiographieController,
     removeDirectorBiographieController
-} = require('../../controllers/private/directorBiographieController');
+} = require('../../controllers/private/directorBiographie.controller');
 
 const baseMedicalRecordAudit = 'medicalRecordAudit';
 router.post(`/${baseMedicalRecordAudit}`, authCheckToken, insertFormIpd);

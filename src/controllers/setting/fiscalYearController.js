@@ -1,4 +1,4 @@
-const services = require('../../services/setting/fiscalYearService');
+const services = require('../../services/setting/fiscalYear.service');
 const { msg } = require('../../utils/message');
 const { buildLogPayload } = require('../../utils/settingLog');
 

@@ -1,7 +1,7 @@
 const pm = require('../../config/prisma');
 const moment = require("moment");
 const { msg } = require('../../utils/message');
-const { fetchAllDataHolidyOnHoSXP } = require('../../models/setting/holidayModel');
+const { fetchAllDataHolidyOnHoSXP } = require('../../models/setting/holiday.model');
 
 // Function สำหรับ FetchAll ข้อมูลจาก Database
 exports.getAllDataHolidays = async (req, res) => {

@@ -1,4 +1,4 @@
-const models = require('../../models/setting/routeFrontModel');
+const models = require('../../models/private/directorBiographie.model');
 
 exports.fetchAllData = async (logPayload) => {
     const startTime = Date.now();
@@ -15,22 +15,31 @@ exports.fetchAllData = async (logPayload) => {
     return { status: 200, data: fetchDataResult };
 };
 
-exports.createData = async ({ body }, fullname, logPayload) => {
+exports.createData = async (data, fullname, logPayload) => {
     // ตรวจสอบค่าซ้ำ โดยเก็บค่า duplicate message ไว้ก่อน
     const duplicateStatus = [];
     const duplicateMessages = [];
     let hasEmptyValue = false; // Flag สำหรับตรวจสอบค่าที่ว่าง
 
-    for (const [key, value] of Object.entries(body)) {
+    for (const [key, value] of Object.entries(data)) {
         // ถ้าพบค่าว่าง ให้ตั้งค่า flag เป็น true
-        if (['route_front_name', 'route_front_path'].includes(key) && !value) hasEmptyValue = true;
+        if (['user_id', 'director_biographie_description'].includes(key) && !value) hasEmptyValue = true;
 
-        if (['route_front_name', 'route_front_path'].includes(key) && value) {
-            const checkNamePathResult = await models.fetchNamePath(key, value);
-            if (checkNamePathResult) {
-                duplicateStatus.push(409);
-                duplicateMessages.push(`${value} มีข้อมูลอยู่แล้วในระบบไม่สามารถบันทึกซ้ำได้!`);
+        if (['user_id'].includes(key) && value) {
+            const userId = Number(value);
+            const checkUserId = await models.fetchOneUser(userId);
+            if (!checkUserId) {
+                duplicateStatus.push(404);
+                duplicateMessages.push(`ไม่มีข้อมูล User นี้อยู่ในระบบ!`);
             }
+
+            const checkUserUnique = await models.fetchOneDirectorBiographie(userId);
+            if (checkUserUnique) {
+                duplicateStatus.push(409);
+                duplicateMessages.push(`ไม่สามารถมีผู้อำนวยการซ้ำคนเดิมได้!`);
+            }
+
+            data.user_id = userId;
         }
     }
 
@@ -41,8 +50,16 @@ exports.createData = async ({ body }, fullname, logPayload) => {
     }
     if (duplicateMessages.length > 0) return { status: Math.max(...duplicateStatus), message: duplicateMessages.join(" AND ") }
 
+    data.user_id = Number(data.user_id)
+
+    const payload = {
+        ...data,
+        created_by: fullname,
+        updated_by: fullname
+    };
+
     const startTime = Date.now();
-    const createData = await models.createData(body);
+    const createData = await models.createData(payload);
     const endTime = Date.now() - startTime;
 
     logPayload.execution_time = endTime;
@@ -56,19 +73,17 @@ exports.createData = async ({ body }, fullname, logPayload) => {
 exports.updateData = async (id, data, fullname, logPayload) => {
     // ส่ง ID ไปค้นหาข้อมูล
     const resultFetchOne = await models.fetchOneData(id);
-    if (!resultFetchOne) return { status: 404, message: 'ไม่มีข้อมูล!' };
+    if(!resultFetchOne) return { status: 404, message: 'ไม่มีข้อมูล!' };
 
     // ตรวจสอบค่าซ้ำ โดยเก็บค่า duplicate message ไว้ก่อน
     const duplicateStatus = [];
     const duplicateMessages = [];
+    let hasEmptyValue = false; // Flag สำหรับตรวจสอบค่าที่ว่าง
 
     for (const [key, value] of Object.entries(data)) {
-        if (['route_front_name', 'route_front_path'].includes(key) && value) {
-            const checkNamePathResult = await models.fetchNamePath(key, value);
-            if (checkNamePathResult) {
-                duplicateStatus.push(409);
-                duplicateMessages.push(`${value} มีข้อมูลอยู่แล้วในระบบไม่สามารถบันทึกซ้ำได้!`);
-            }
+        if (['user_id'].includes(key) && value) {
+            duplicateStatus.push(400);
+            duplicateMessages.push(`ไม่สามารถเปลี่ยนผู้อำนวยการได้!`);
         }
     }
 
@@ -95,32 +110,7 @@ exports.updateData = async (id, data, fullname, logPayload) => {
 exports.removeData = async (id, logPayload) => {
     // ส่ง ID ไปค้นหาข้อมูล
     const resultFetchOne = await models.fetchOneData(id);
-    if (!resultFetchOne) return { status: 404, message: 'ไม่มีข้อมูล!' };
-
-    const resultCheckForeignKey = await models.checkForeignKey();
-
-    if (resultCheckForeignKey.length > 0) {
-        let hasReference = false;
-        let referencedTables = [];
-
-        // ตรวจสอบแต่ละตารางว่ามีข้อมูลอ้างอิงอยู่หรือไม่
-        for (const row of resultCheckForeignKey) {
-            const tableName = row.TABLE_NAME;
-            const columnName = row.COLUMN_NAME;
-
-            const checkData = await models.checkForeignKeyData(tableName, columnName, id);
-
-            if (checkData.length > 0) {
-                hasReference = true;
-                referencedTables.push(tableName);
-            }
-        }
-
-        // ถ้ามีตารางที่อ้างอิงอยู่ → ห้ามลบ
-        if (hasReference) {
-            return { status: 400, message: `ไม่สามารถลบได้ เนื่องจาก route_front_id ถูกใช้งานอยู่ในตาราง: ${referencedTables.join(', ')} กรุณาลบข้อมูลที่เกี่ยวข้องก่อน!` };
-        }
-    }
+    if(!resultFetchOne) return { status: 404, message: 'ไม่มีข้อมูล!' };
 
     const startTime = Date.now();
     const removeData = await models.removeData(id);

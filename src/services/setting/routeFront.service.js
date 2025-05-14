@@ -1,4 +1,4 @@
-const models = require('../../models/setting/fiscalYearModel');
+const models = require('../../models/setting/routeFront.model');
 
 exports.fetchAllData = async (logPayload) => {
     const startTime = Date.now();
@@ -15,21 +15,21 @@ exports.fetchAllData = async (logPayload) => {
     return { status: 200, data: fetchDataResult };
 };
 
-exports.createData = async (data, fullname, logPayload) => {
+exports.createData = async ({ body }, fullname, logPayload) => {
     // ตรวจสอบค่าซ้ำ โดยเก็บค่า duplicate message ไว้ก่อน
     const duplicateStatus = [];
     const duplicateMessages = [];
     let hasEmptyValue = false; // Flag สำหรับตรวจสอบค่าที่ว่าง
 
-    for (const [key, value] of Object.entries(data)) {
+    for (const [key, value] of Object.entries(body)) {
         // ถ้าพบค่าว่าง ให้ตั้งค่า flag เป็น true
-        if (['fiscal_year_name'].includes(key) && !value) hasEmptyValue = true;
+        if (['route_front_name', 'route_front_path'].includes(key) && !value) hasEmptyValue = true;
 
-        if (['fiscal_year_name'].includes(key) && value) {
-            const checkFiscalYearNameUnique = await models.fetchFiscalYearName(key, value);
-            if (checkFiscalYearNameUnique) {
+        if (['route_front_name', 'route_front_path'].includes(key) && value) {
+            const checkNamePathResult = await models.fetchNamePath(key, value);
+            if (checkNamePathResult) {
                 duplicateStatus.push(409);
-                duplicateMessages.push(`${value} มีข้อมูลแล้วไม่สามารถบันทึกข้อมูลซ้ำได้!`);
+                duplicateMessages.push(`${value} มีข้อมูลอยู่แล้วในระบบไม่สามารถบันทึกซ้ำได้!`);
             }
         }
     }
@@ -41,14 +41,8 @@ exports.createData = async (data, fullname, logPayload) => {
     }
     if (duplicateMessages.length > 0) return { status: Math.max(...duplicateStatus), message: duplicateMessages.join(" AND ") }
 
-    const payload = {
-        ...data,
-        created_by: fullname,
-        updated_by: fullname
-    };
-
     const startTime = Date.now();
-    const createData = await models.createData(payload);
+    const createData = await models.createData(body);
     const endTime = Date.now() - startTime;
 
     logPayload.execution_time = endTime;
@@ -67,14 +61,13 @@ exports.updateData = async (id, data, fullname, logPayload) => {
     // ตรวจสอบค่าซ้ำ โดยเก็บค่า duplicate message ไว้ก่อน
     const duplicateStatus = [];
     const duplicateMessages = [];
-    let hasEmptyValue = false; // Flag สำหรับตรวจสอบค่าที่ว่าง
 
     for (const [key, value] of Object.entries(data)) {
-        if (['fiscal_year_name'].includes(key) && value) {
-            const checkFiscalYearNameUnique = await models.fetchFiscalYearName(key, value);
-            if (checkFiscalYearNameUnique) {
+        if (['route_front_name', 'route_front_path'].includes(key) && value) {
+            const checkNamePathResult = await models.fetchNamePath(key, value);
+            if (checkNamePathResult) {
                 duplicateStatus.push(409);
-                duplicateMessages.push(`${value} มีข้อมูลแล้วไม่สามารถบันทึกข้อมูลซ้ำได้!`);
+                duplicateMessages.push(`${value} มีข้อมูลอยู่แล้วในระบบไม่สามารถบันทึกซ้ำได้!`);
             }
         }
     }
@@ -125,7 +118,7 @@ exports.removeData = async (id, logPayload) => {
 
         // ถ้ามีตารางที่อ้างอิงอยู่ → ห้ามลบ
         if (hasReference) {
-            return { status: 400, message: `ไม่สามารถลบได้ เนื่องจาก fiscal_year_id ถูกใช้งานอยู่ในตาราง: ${referencedTables.join(', ')} กรุณาลบข้อมูลที่เกี่ยวข้องก่อน!` };
+            return { status: 400, message: `ไม่สามารถลบได้ เนื่องจาก route_front_id ถูกใช้งานอยู่ในตาราง: ${referencedTables.join(', ')} กรุณาลบข้อมูลที่เกี่ยวข้องก่อน!` };
         }
     }
 

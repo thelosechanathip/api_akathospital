@@ -1,4 +1,4 @@
-const services = require('../../services/private/directorBiographieService');
+const services = require('../../services/private/directorBiographie.service');
 const { msg } = require('../../utils/message');
 const { buildLogPayload } = require('../../utils/settingLog');
 
