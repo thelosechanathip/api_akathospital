@@ -1,0 +1,256 @@
+const pm = require('../../config/prisma');
+const db_h = require('../../config/db_h');
+
+// บันทึกข้อมูลไปยัง Log
+exports.createLog = async (logData) => {
+    return await pm.forms_log.create({ data: { ...logData } });
+};
+
+// ดึงข้อมูลทั้งหมด
+exports.fetchAllData = async () => {
+    return await pm.form_ipds.findMany({
+        include: {
+            patient_id: false,
+            patients: {
+                include: {
+                    hcode_id: false,
+                    hcodes: {
+                        select: {
+                            hcode_id: true,
+                            hcode_name: true
+                        }
+                    }
+                }
+            },
+            form_ipd_content_of_medical_record_results: {
+                include: {
+                    content_of_medical_record_id: false,
+                    content_of_medical_records: {
+                        select: {
+                            content_of_medical_record_id: true,
+                            content_of_medical_record_name: true
+                        }
+                    }
+                }
+            },
+            form_ipd_overall_finding_results: {
+                include: {
+                    overall_finding_id: false,
+                    overall_finding: {
+                        select: {
+                            overall_finding_id: true,
+                            overall_finding_name: true
+                        }
+                    }
+                }
+            },
+            form_ipd_review_status_results: {
+                include: {
+                    review_status_id: false,
+                    review_status: {
+                        select: {
+                            review_status_id: true,
+                            review_status_name: true
+                        }
+                    }
+                }
+            }
+        }
+    });
+};
+
+// ดึงข้อมูล patient_id ในตาราง patients
+exports.fetchOnePatientIdInPatient = async (an) => {
+    return await pm.patients.findFirst({ where: { patient_an: an }, select: { patient_id: true } })
+};
+
+// ดึงข้อมูลจาก patient_id ที่ส่งเข้ามา
+exports.fetchOneData = async (patient_id) => {
+    return await pm.form_ipds.findMany({
+        where: {
+            patient_id: patient_id
+        },
+        include: {
+            patient_id: false,
+            patients: {
+                include: {
+                    hcode_id: false,
+                    hcodes: {
+                        select: {
+                            hcode_id: true,
+                            hcode_name: true
+                        }
+                    }
+                }
+            },
+            form_ipd_content_of_medical_record_results: {
+                include: {
+                    content_of_medical_record_id: false,
+                    content_of_medical_records: {
+                        select: {
+                            content_of_medical_record_id: true,
+                            content_of_medical_record_name: true
+                        }
+                    }
+                }
+            },
+            form_ipd_overall_finding_results: {
+                include: {
+                    overall_finding_id: false,
+                    overall_finding: {
+                        select: {
+                            overall_finding_id: true,
+                            overall_finding_name: true
+                        }
+                    }
+                }
+            },
+            form_ipd_review_status_results: {
+                include: {
+                    review_status_id: false,
+                    review_status: {
+                        select: {
+                            review_status_id: true,
+                            review_status_name: true
+                        }
+                    }
+                }
+            }
+        }
+    });
+};
+
+// ดึงข้อมูล hcode_id ในตาราง hcodes
+exports.fetchHcode = async () => {
+    return await pm.hcodes.findFirst({ select: { hcode_id: true } });
+};
+
+// ดึงข้อมูล patient_it ในตาราง patients
+exports.fetchPatientInAkatData = async (key, value) => {
+    return await pm.patients.findFirst({ where: { [key]: value }, select: { patient_id: true } });
+};
+
+// ดึงข้อมูลคนไข้จากระบบ HoSXP ด้วย AN ที่ส่ง Request เข้ามา
+exports.fetchPatientInHos = async (patient_an) => {
+    return await db_h.query(
+        `
+                SELECT 
+                    CONCAT(pt.pname, pt.fname, ' ', pt.lname) AS fullname,
+                    o.hn,
+                    o.vn,
+                    i.an,
+                    o.vstdate,
+                    i.regdate,
+                    i.dchdate
+                FROM ovst AS o
+                LEFT OUTER JOIN ipt AS i ON o.vn = i.vn
+                LEFT OUTER JOIN patient AS pt ON i.hn = pt.hn
+                WHERE 
+                    i.an = ?
+            `,
+        [patient_an]
+    );
+};
+
+// บันทึกข้อมูลไปยังตาราง patients
+exports.createPatient = async (data) => {
+    return await pm.patients.create({ data: { ...data } });
+};
+
+// บันทึกข้อมูลไปยังตาราง form_ipds
+exports.createFormIpd = async (data) => {
+    return await pm.form_ipds.create({ data: { ...data } });
+};
+
+// บันทึกข้อมูลไปยังตาราง content_of_medical_records
+exports.fetchComrId = async (value) => {
+    return await pm.content_of_medical_records.findFirst({
+        where: { content_of_medical_record_id: Number(value) },
+        select: { content_of_medical_record_id: true }
+    });
+};
+
+// บันทึกข้อมูลไปยังตาราง form_ipd_content_of_medical_record_results
+exports.createFormIpdContentOfMedicalRecordResult = async (data) => {
+    return await pm.form_ipd_content_of_medical_record_results.create({ data: data });
+};
+
+// บันทึกข้อมูลไปยังตาราง form_ipd_overall_finding_results
+exports.createFormIpdOverallFindingResult = async (data) => {
+    return await pm.form_ipd_overall_finding_results.create({ data: data });
+};
+
+// บันทึกข้อมูลไปยังตาราง form_ipd_review_status_results
+exports.createFormIpdReviewStatusResult = async (data) => {
+    return await pm.form_ipd_review_status_results.create({ data: data });
+};
+
+// ดึงข้อมูล password ในตาราง users
+exports.fetchPasswordInUser = async (user_id) => {
+    return await pm.users.findFirst({ where: { user_id: Number(user_id) }, select: { password: true } });
+};
+
+// ดึงข้อมูล patient_id ในตาราง patients
+exports.fetchAnInPatient = async (an) => {
+    return await pm.patients.findFirst({ where: { patient_an: an }, select: { patient_id: true } })
+};
+
+// ดึงข้อมูล form_ipd_id ในตาราง form_ipds
+exports.fetchPatientIdInFormIpd = async (patient_id) => {
+    return await pm.form_ipds.findFirst({ where: { patient_id: Number(patient_id) }, select: { form_ipd_id: true } });
+};
+
+// ลบข้อมูลในตาราง form_ipd_review_status_results ด้วย form_ipd_id
+exports.removeFormIpdReviewStatusResult = async (form_ipd_id) => {
+    await pm.form_ipd_review_status_results.deleteMany({ where: { form_ipd_id: Number(form_ipd_id) } });
+
+    // ดึงค่า MAX(form_ipd_review_status_result_id)
+    const maxIdFormIpdReviewStatusResult = await pm.$queryRaw`SELECT COALESCE(MAX(form_ipd_review_status_result_id), 0) + 1 AS nextId FROM form_ipd_review_status_results`;
+
+    // รีเซ็ตค่า AUTO_INCREMENT
+    return await pm.$executeRawUnsafe(`ALTER TABLE form_ipd_review_status_results AUTO_INCREMENT = ${maxIdFormIpdReviewStatusResult[0].nextId}`);
+};
+
+// ลบข้อมูลในตาราง form_ipd_overall_finding_results ด้วย form_ipd_id
+exports.removeFormIpdOverallFindingResult = async (form_ipd_id) => {
+    await pm.form_ipd_overall_finding_results.deleteMany({ where: { form_ipd_id: Number(form_ipd_id) } });
+
+    // ดึงค่า MAX(form_ipd_overall_finding_result_id)
+    const maxIdFormIpdOverallFindingResult = await pm.$queryRaw`SELECT COALESCE(MAX(form_ipd_overall_finding_result_id), 0) + 1 AS nextId FROM form_ipd_overall_finding_results`;
+
+    // รีเซ็ตค่า AUTO_INCREMENT
+    return await pm.$executeRawUnsafe(`ALTER TABLE form_ipd_overall_finding_results AUTO_INCREMENT = ${maxIdFormIpdOverallFindingResult[0].nextId}`);
+};
+
+// ลบข้อมูลในตาราง form_ipd_content_of_medical_record_results ด้วย form_ipd_id
+exports.removeFormIpdContentOfMedicalRecordResult = async (form_ipd_id) => {
+    await pm.form_ipd_content_of_medical_record_results.deleteMany({ where: { form_ipd_id: Number(form_ipd_id) } });
+
+    // ดึงค่า MAX(form_ipd_content_of_medical_record_result_id)
+    const maxIdFormIpdContentOfMedicalRecordResult = await pm.$queryRaw`SELECT COALESCE(MAX(form_ipd_content_of_medical_record_result_id), 0) + 1 AS nextId FROM form_ipd_content_of_medical_record_results`;
+
+    // รีเซ็ตค่า AUTO_INCREMENT
+    return await pm.$executeRawUnsafe(`ALTER TABLE form_ipd_content_of_medical_record_results AUTO_INCREMENT = ${maxIdFormIpdContentOfMedicalRecordResult[0].nextId}`);
+};
+
+// ลบข้อมูลในตาราง form_ipds ด้วย form_ipd_id
+exports.removeFormIpd = async (form_ipd_id) => {
+    await pm.form_ipds.delete({ where: { form_ipd_id: form_ipd_id } });
+
+    // ดึงค่า MAX(form_ipd_id)
+    const maxIdFormIpdResult = await pm.$queryRaw`SELECT COALESCE(MAX(form_ipd_id), 0) + 1 AS nextId FROM form_ipds`;
+
+    // รีเซ็ตค่า AUTO_INCREMENT
+    return await pm.$executeRawUnsafe(`ALTER TABLE form_ipds AUTO_INCREMENT = ${maxIdFormIpdResult[0].nextId}`);
+};
+
+// ลบข้อมูลในตาราง patients ด้วย an
+exports.removePatient = async (an) => {
+    await pm.patients.delete({ where: { patient_an: an }, select: { patient_id: true } });
+
+    // ดึงค่า MAX(patient_id)
+    const maxIdPatientResult = await pm.$queryRaw`SELECT COALESCE(MAX(patient_id), 0) + 1 AS nextId FROM patients`;
+
+    // รีเซ็ตค่า AUTO_INCREMENT
+    return await pm.$executeRawUnsafe(`ALTER TABLE patients AUTO_INCREMENT = ${maxIdPatientResult[0].nextId}`);
+};
