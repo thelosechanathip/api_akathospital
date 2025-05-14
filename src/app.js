@@ -47,7 +47,7 @@ app.get("/api/docs/swagger/:text", authAdminDoc, async (req, res) => { res.sendF
 
 // กำหนดตัวแปรสำหรับจัดการเส้นทางของ routes
 const routesRootPath = path.join(__dirname, "routes");
-const BASE_PATH = process.env.BASE_PATH || "akatApi";
+const BASE_PATH = process.env.BASE_PATH || "api";
 
 if (fs.existsSync(routesRootPath)) {
   readdirSync(routesRootPath, { withFileTypes: true })
