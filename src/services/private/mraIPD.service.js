@@ -57,12 +57,12 @@ exports.fetchOneData = async (...agrs) => {
 exports.fethcOnePatientData = async (an) => {
     try {
         const [patientResult] = await models.fetchPatientInHos(an);
-        if (!patientResult || patientResult.length === 0) return { status: 400, message: `${an} ไม่มีข้อมูลอยู่ในระบบ` }
+        if (!patientResult || patientResult.length === 0) return { status: 400, message: `${an} นี้ไม่มีข้อมูลอยู่ในระบบ!` }
 
         patientResult[0].vstdate = moment(patientResult[0].vstdate).format('YYYY-MM-DD');
         patientResult[0].regdate = moment(patientResult[0].vstdate).format('YYYY-MM-DD');
         patientResult[0].dchdate = moment(patientResult[0].vstdate).format('YYYY-MM-DD');
-        
+
         return { status: 200, data: patientResult };
     } catch (err) {
         throw err;

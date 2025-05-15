@@ -19,7 +19,13 @@ const app = express();
 
 // Middleware
 app.use(morgan("dev"));
-app.use(cors());
+const allow = ['https://akathos.moph.go.th', 'http://localhost:5173']
+app.use(
+  cors({
+    origin: (o, cb) => cb(null, allow.includes(o) || !o),
+    credentials: true
+  })
+)
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
