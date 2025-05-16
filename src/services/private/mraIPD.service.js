@@ -373,112 +373,95 @@ exports.updateForm = async (...agrs) => {
         if (formIpdData) {
             const { content } = data;
 
-            // // ตรวจสอบว่า content_of_medical_record_id ซ้ำกันหรือไม่
-            // const contentIds = content.map(item => item.content_of_medical_record_id);
-            // const uniqueContentIds = new Set(contentIds);
-            // if (uniqueContentIds.size !== contentIds.length) {
-            //     // ถ้าจำนวน unique IDs ไม่เท่ากับจำนวนทั้งหมด แปลว่ามีซ้ำ
-            //     await this.cleanupFailInsert(an, formIpdData.form_ipd_id);
-            //     return { status: 400, message: `ไม่สามารถบันทึก content_of_medical_record ซ้ำกันได้ใน 1 Form` };
-            // }
-            // // ตรวจสอบค่าซ้ำ โดยเก็บค่า duplicate message ไว้ก่อน
-            // const contentduplicateStatus = [];
-            // const contentDuplicateMessages = [];
-
-            // // เริ่มตรวจสอบ Request ที่ส่งเข้ามา
-            // for (const [key, value] of Object.entries(contentIds)) {
-            //     const existingRecord = await models.fetchComrId(value);
-
-            //     if (!existingRecord) {
-            //         contentduplicateStatus.push(404);
-            //         contentDuplicateMessages.push(`( ${value} ) ไม่มีข้อมูลในระบบ!`);
-            //         await this.cleanupFailInsert(an, formIpdData.form_ipd_id);
-            //     }
-            // }
-
-            // // ถ้ามีข้อมูลซ้ำหรือค่าที่ว่าง ให้ส่ง response กลับครั้งเดียว
-            // if (contentDuplicateMessages.length > 0) return { status: Math.max(...contentduplicateStatus), message: contentDuplicateMessages.join(" AND ") }
-
             // คีย์ที่ไม่ต้องการให้รวมในการคำนวณ (ยกเว้น point_deducted ที่จะลบทีหลัง)
             const excludedKeys = [
+                "form_ipd_content_of_medical_record_result_id",
                 "content_of_medical_record_id",
+                "na",
+                "missing",
+                "no",
                 "comment",
                 "total_score", // ถ้ามีอยู่ในข้อมูลเดิม จะไม่รวม
                 "point_deducted" // จะแยกไปลบทีหลัง
             ];
 
             const resultFormIpdContentOfMedicalRecord = content.map(item => {
-                // ดึงทุก key จาก item และกรองเอาเฉพาะที่ไม่ใช่ excludedKeys
-                const itemSum = Object.keys(item)
-                    .filter(key => !excludedKeys.includes(key))
-                    .reduce((acc, key) => acc + (Number(item[key]) || 0), 0);
+                const keys = Object.keys(item).filter(k => !excludedKeys.includes(k));
 
-                // ลบด้วย point_deducted (ถ้ามีค่า ถ้าไม่มีให้เป็น 0)
-                const totalScore = itemSum - (Number(item.point_deducted) || 0);
+                let totalScore;
 
-                // คืนค่า item พร้อม totalScore
+                // 1) ถ้าต้องการเซตทุกค่านอก excludedKeys เป็น 0 เมื่อ na/missing/no เป็น true
+                if (item.na || item.missing || item.no) {
+                    keys.forEach(k => item[k] = 0);
+                    item.point_deducted = 0;
+                    totalScore = 0;
+                } else {
+                    const itemSum = keys.reduce((acc, k) => acc + (Number(item[k]) || 0), 0);
+                    // ลบ point_deducted
+                    totalScore = itemSum - (Number(item.point_deducted) || 0);
+                }
+
                 return {
                     ...item,
                     total_score: totalScore,
                     ...fullnamePayload
                 };
             });
-            console.log(resultFormIpdContentOfMedicalRecord);
 
-            // const updatePromisesFICOMR = resultFormIpdContentOfMedicalRecord.map(i =>
-            //     models.updateFormIpdContentOfMedicalRecordResult(i, content.content_of_medical_record_id, formIpdData.form_ipd_id)
-            // );
+            const updatePromisesFICOMR = resultFormIpdContentOfMedicalRecord.map(i =>
+                models.updateFormIpdContentOfMedicalRecordResult(i, formIpdData.form_ipd_id)
+            );
 
-            // await Promise.all(updatePromisesFICOMR);
+            await Promise.all(updatePromisesFICOMR);
 
-            // if (updatePromisesFICOMR) {
-            //     const { overall } = data;
+            if (updatePromisesFICOMR) {
+                const { overall } = data;
 
-            //     // ตรวจสอบว่า content_of_medical_record_id ซ้ำกันหรือไม่
-            //     const overallIds = overall.map(item => item.overall_finding_id);
-            //     const uniqueOverallIds = new Set(overallIds);
-            //     if (uniqueOverallIds.size !== overallIds.length) {
-            //         // ถ้าจำนวน unique IDs ไม่เท่ากับจำนวนทั้งหมด แปลว่ามีซ้ำ
-            //         await this.cleanupFailInsert(an, formIpdData.form_ipd_id);
-            //         return { status: 400, message: `ไม่สามารถบันทึก overall_finding ซ้ำกันได้ใน 1 Form` };
-            //     }
+                const resultFormIpdOverallFinding = overall.map(item => {
+                    return {
+                        ...item,
+                        ...fullnamePayload
+                    };
+                });
 
-            //     const resultFormIpdOverallFinding = overall.map(item => {
-            //         return {
-            //             form_ipd_id: formIpdData.form_ipd_id,
-            //             ...item,
-            //             ...fullnamePayload
-            //         };
-            //     });
+                const createPromisesFIOF = resultFormIpdOverallFinding.map(i =>
+                    models.updateFormIpdOverallFindingResult(i, formIpdData.form_ipd_id)
+                );
 
-            //     const createPromisesFIOF = resultFormIpdOverallFinding.map(i =>
-            //         models.createFormIpdOverallFindingResult(i)
-            //     );
+                await Promise.all(createPromisesFIOF);
 
-            //     await Promise.all(createPromisesFIOF);
+                if (createPromisesFIOF) {
+                    const { content, overall, ...reviewStatusData } = data;
+                    fullnamePayload.created_by = fullname;
 
-            //     if (createPromisesFIOF) {
-            //         const { patient_an, content, overall, ...reviewStatusData } = data;
+                    const checkTypeReviewStatusResult = await models.checkTypeReviewStatusResult(reviewStatusData.review_status_id);
+                    if(checkTypeReviewStatusResult.review_status_type) {
+                        if(reviewStatusData.review_status_comment === null || reviewStatusData.review_status_comment === '') {
+                            return { status: 400, message: 'กรุณากรอกความคิดเห็น' };
+                        }
+                    }
 
-            //         reviewStatusData.form_ipd_id = formIpdData.form_ipd_id;
+                    const checkUniqueFormIpdId = await models.checkUniqueFormIpdId(formIpdData.form_ipd_id);
+                    if(checkUniqueFormIpdId) return { status: 400, message: 'มีข้อมูลอยู่ในระบบแล้ว ไม่สามารถมีข้อมูลซ้ำได้' };
 
-            //         const FIRSRPayload = {
-            //             ...reviewStatusData,
-            //             ...fullnamePayload
-            //         }
+                    // const FIRSRPayload = {
+                    //     form_ipd_id: formIpdData.form_ipd_id,
+                    //     ...reviewStatusData,
+                    //     ...fullnamePayload
+                    // }
 
-            //         await models.createFormIpdReviewStatusResult(FIRSRPayload);
-            //     }
-            // }
+                    // var createFIRSR = await models.creatFormIpdReviewStatusResult(FIRSRPayload);
+                }
+            }
         }
 
-        // const endTime = Date.now() - startTime;
-        // // บันทึก Log
-        // logPayload.execution_time = endTime;
-        // logPayload.row_count = cpResult ? 1 : 0;
-        // logPayload.status = cpResult ? 'Success' : 'No Data';
+        const endTime = Date.now() - startTime;
+        // บันทึก Log
+        logPayload.execution_time = endTime;
+        logPayload.row_count = createFIRSR ? 1 : 0;
+        logPayload.status = createFIRSR ? 'Success' : 'No Data';
 
-        // await models.createLog(logPayload);
+        await models.createLog(logPayload);
 
         return { status: 200, message: 'อัพเดทข้อมูลเสร็จสิ้น!' };
     } catch (err) {

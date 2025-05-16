@@ -434,9 +434,9 @@ model form_ipd_content_of_medical_record_results {
   form_ipd_content_of_medical_record_result_id Int                        @id @default(autoincrement())
   form_ipd_id                                  Int
   content_of_medical_record_id                 Int
-  na                                           Int?
-  missing                                      Int?
-  no                                           Int?
+  na                                           Boolean?
+  missing                                      Boolean?
+  no                                           Boolean?
   criterion_number_1                           Int?
   criterion_number_2                           Int?
   criterion_number_3                           Int?

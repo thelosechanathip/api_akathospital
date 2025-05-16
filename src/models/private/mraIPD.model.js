@@ -60,7 +60,7 @@ exports.fetchAllData = async () => {
 };
 
 // ดึงข้อมูล patient_id ในตาราง patients
-exports.fetchOnePatientIdInPatientAn= async (an) => {
+exports.fetchOnePatientIdInPatientAn = async (an) => {
     return await pm.patients.findFirst({ where: { patient_an: an }, select: { patient_id: true } })
 };
 
@@ -184,24 +184,75 @@ exports.createFormIpdContentOfMedicalRecordResult = async (data) => {
     return await pm.form_ipd_content_of_medical_record_results.createMany({ data: data });
 };
 
-exports.updateFormIpdContentOfMedicalRecordResult = async (data, content_of_medical_record_id, form_ipd_id) => {
-    return await pm.form_ipd_content_of_medical_record_results.update({ 
-        data: data, 
+exports.updateFormIpdContentOfMedicalRecordResult = async (row, formIpdId) => {
+    // เตรียม payload ตัด field ที่อาจเป็น undefined ออก
+    const data = {
+        na: row.na,
+        missing: row.missing,
+        no: row.no,
+        criterion_number_1: row.criterion_number_1,
+        criterion_number_2: row.criterion_number_2,
+        criterion_number_3: row.criterion_number_3,
+        criterion_number_4: row.criterion_number_4,
+        criterion_number_5: row.criterion_number_5,
+        criterion_number_6: row.criterion_number_6,
+        criterion_number_7: row.criterion_number_7,
+        criterion_number_8: row.criterion_number_8,
+        criterion_number_9: row.criterion_number_9,
+        point_deducted: row.point_deducted,
+        total_score: row.total_score,
+        comment: row.comment,
+        updated_by: row.updated_by,
+    };
+
+    // ลบ key ที่เป็น undefined
+    Object.keys(data).forEach(k => data[k] === undefined && delete data[k]);
+
+    return pm.form_ipd_content_of_medical_record_results.update({
         where: {
-            content_of_medical_record_id: Number(content_of_medical_record_id),
-            form_ipd_id: Number(form_ipd_id)
-        } 
+            form_ipd_id: Number(formIpdId),
+            content_of_medical_record_id: Number(row.content_of_medical_record_id),
+            form_ipd_content_of_medical_record_result_id: Number(row.form_ipd_content_of_medical_record_result_id),
+        },
+        data,
     });
-}
+};
 
 // บันทึกข้อมูลไปยังตาราง form_ipd_overall_finding_results
 exports.createFormIpdOverallFindingResult = async (data) => {
     return await pm.form_ipd_overall_finding_results.createMany({ data: data });
 };
 
-// บันทึกข้อมูลไปยังตาราง form_ipd_review_status_results
-exports.createFormIpdReviewStatusResult = async (data) => {
-    return await pm.form_ipd_review_status_results.create({ data: data });
+exports.updateFormIpdOverallFindingResult = async (row, formIpdId) => {
+    const data = {
+        overall_finding_result: row.overall_finding_result,
+        updated_by: row.updated_by,
+    };
+
+    // ลบ key ที่เป็น undefined
+    Object.keys(data).forEach(k => data[k] === undefined && delete data[k]);
+
+    return pm.form_ipd_overall_finding_results.update({
+        where: {
+            form_ipd_id: Number(formIpdId),
+            overall_finding_id: Number(row.overall_finding_id),
+            form_ipd_overall_finding_result_id: Number(row.form_ipd_overall_finding_result_id),
+        },
+        data,
+    });
+};
+
+exports.checkTypeReviewStatusResult = async (rsId) => {
+    return await pm.review_status.findFirst({ where: { review_status_id: Number(rsId) }, select: { review_status_type: true } });
+};
+
+exports.checkUniqueFormIpdId = async (fiId) => {
+    return await pm.form_ipd_review_status_results.findFirst({ where: { form_ipd_id: Number(fiId) }, select: { form_ipd_id: true } });
+};
+
+// บันทึกหรืออัพเดทข้อมูลไปยังตาราง form_ipd_review_status_results
+exports.creatFormIpdReviewStatusResult = async (data) => {
+    return await pm.form_ipd_review_status_results.create({ data: data })
 };
 
 // ดึงข้อมูล password ในตาราง users
