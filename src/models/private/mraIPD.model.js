@@ -60,8 +60,12 @@ exports.fetchAllData = async () => {
 };
 
 // ดึงข้อมูล patient_id ในตาราง patients
-exports.fetchOnePatientIdInPatient = async (an) => {
+exports.fetchOnePatientIdInPatientAn= async (an) => {
     return await pm.patients.findFirst({ where: { patient_an: an }, select: { patient_id: true } })
+};
+
+exports.fetchOneFormIpdIdInPatientId = async (patient_id) => {
+    return await pm.form_ipds.findFirst({ where: { patient_id: Number(patient_id) }, select: { form_ipd_id: true } });
 };
 
 // ดึงข้อมูลจาก patient_id ที่ส่งเข้ามา
@@ -86,34 +90,19 @@ exports.fetchOneData = async (patient_id) => {
             form_ipd_content_of_medical_record_results: {
                 include: {
                     content_of_medical_record_id: false,
-                    content_of_medical_records: {
-                        select: {
-                            content_of_medical_record_id: true,
-                            content_of_medical_record_name: true
-                        }
-                    }
+                    content_of_medical_records: {}
                 }
             },
             form_ipd_overall_finding_results: {
                 include: {
                     overall_finding_id: false,
-                    overall_finding: {
-                        select: {
-                            overall_finding_id: true,
-                            overall_finding_name: true
-                        }
-                    }
+                    overall_finding: {}
                 }
             },
             form_ipd_review_status_results: {
                 include: {
                     review_status_id: false,
-                    review_status: {
-                        select: {
-                            review_status_id: true,
-                            review_status_name: true
-                        }
-                    }
+                    review_status: {}
                 }
             }
         }
@@ -194,6 +183,16 @@ exports.fetchComrId = async (value) => {
 exports.createFormIpdContentOfMedicalRecordResult = async (data) => {
     return await pm.form_ipd_content_of_medical_record_results.create({ data: data });
 };
+
+exports.updateFormIpdContentOfMedicalRecordResult = async (data, content_of_medical_record_id, form_ipd_id) => {
+    return await pm.form_ipd_content_of_medical_record_results.update({ 
+        data: data, 
+        where: {
+            content_of_medical_record_id: Number(content_of_medical_record_id),
+            form_ipd_id: Number(form_ipd_id)
+        } 
+    });
+}
 
 // บันทึกข้อมูลไปยังตาราง form_ipd_overall_finding_results
 exports.createFormIpdOverallFindingResult = async (data) => {

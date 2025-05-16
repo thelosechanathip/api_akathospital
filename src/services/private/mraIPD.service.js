@@ -34,7 +34,7 @@ exports.fetchData = async (logPayload) => {
 exports.fetchOneData = async (...agrs) => {
     const [an, logPayload] = agrs;
     try {
-        const patientResult = await models.fetchOnePatientIdInPatient(an);
+        const patientResult = await models.fetchOnePatientIdInPatientAn(an);
         if (!patientResult || patientResult.length === 0) return { status: 400, message: `${an} ไม่มีข้อมูลอยู่ในระบบ` }
 
         const startTime = Date.now();
@@ -60,7 +60,7 @@ exports.fetchOnePatientData = async (an) => {
         if (!patientResult || patientResult.length === 0) return { status: 400, message: `${an} นี้ไม่มีข้อมูลอยู่ในระบบ!` }
 
         const patientInMraResult = await models.fetchPatientInMra(an);
-        if(patientInMraResult) return { status: 409, message: `${an} นี้มีข้อมูลอยู่ในระบบ MRA แล้วไม่สามารถบันทึกซ้ำได้` }
+        if (patientInMraResult) return { status: 409, message: `${an} นี้มีข้อมูลอยู่ในระบบ MRA แล้วไม่สามารถบันทึกซ้ำได้` }
 
         patientResult[0].vstdate = moment(patientResult[0].vstdate).format('YYYY-MM-DD');
         patientResult[0].regdate = moment(patientResult[0].vstdate).format('YYYY-MM-DD');
@@ -359,6 +359,134 @@ exports.createData = async (...agrs) => {
         await models.createLog(logPayload);
 
         return { status: 200, message: "บันทึกข้อมูลเรียบร้อย!" };
+    } catch (err) {
+        throw err;
+    }
+};
+
+exports.updateForm = async (...agrs) => {
+    const [an, data, fullname, logPayload] = agrs;
+    const fullnamePayload = {
+        updated_by: fullname
+    }
+    try {
+        const startTime = Date.now();
+        const patientData = await models.fetchOnePatientIdInPatientAn(an);
+        if (!patientData || patientData.length === 0) return { status: 400, message: `${an} ไม่มีข้อมูลอยู่ในระบบ` };
+
+        const formIpdData = await models.fetchOneFormIpdIdInPatientId(patientData.patient_id);
+
+        if (formIpdData) {
+            const { content } = data;
+
+            // // ตรวจสอบว่า content_of_medical_record_id ซ้ำกันหรือไม่
+            // const contentIds = content.map(item => item.content_of_medical_record_id);
+            // const uniqueContentIds = new Set(contentIds);
+            // if (uniqueContentIds.size !== contentIds.length) {
+            //     // ถ้าจำนวน unique IDs ไม่เท่ากับจำนวนทั้งหมด แปลว่ามีซ้ำ
+            //     await this.cleanupFailInsert(an, formIpdData.form_ipd_id);
+            //     return { status: 400, message: `ไม่สามารถบันทึก content_of_medical_record ซ้ำกันได้ใน 1 Form` };
+            // }
+            // // ตรวจสอบค่าซ้ำ โดยเก็บค่า duplicate message ไว้ก่อน
+            // const contentduplicateStatus = [];
+            // const contentDuplicateMessages = [];
+
+            // // เริ่มตรวจสอบ Request ที่ส่งเข้ามา
+            // for (const [key, value] of Object.entries(contentIds)) {
+            //     const existingRecord = await models.fetchComrId(value);
+
+            //     if (!existingRecord) {
+            //         contentduplicateStatus.push(404);
+            //         contentDuplicateMessages.push(`( ${value} ) ไม่มีข้อมูลในระบบ!`);
+            //         await this.cleanupFailInsert(an, formIpdData.form_ipd_id);
+            //     }
+            // }
+
+            // // ถ้ามีข้อมูลซ้ำหรือค่าที่ว่าง ให้ส่ง response กลับครั้งเดียว
+            // if (contentDuplicateMessages.length > 0) return { status: Math.max(...contentduplicateStatus), message: contentDuplicateMessages.join(" AND ") }
+
+            // คีย์ที่ไม่ต้องการให้รวมในการคำนวณ (ยกเว้น point_deducted ที่จะลบทีหลัง)
+            const excludedKeys = [
+                "content_of_medical_record_id",
+                "comment",
+                "total_score", // ถ้ามีอยู่ในข้อมูลเดิม จะไม่รวม
+                "point_deducted" // จะแยกไปลบทีหลัง
+            ];
+
+            const resultFormIpdContentOfMedicalRecord = content.map(item => {
+                // ดึงทุก key จาก item และกรองเอาเฉพาะที่ไม่ใช่ excludedKeys
+                const itemSum = Object.keys(item)
+                    .filter(key => !excludedKeys.includes(key))
+                    .reduce((acc, key) => acc + (Number(item[key]) || 0), 0);
+
+                // ลบด้วย point_deducted (ถ้ามีค่า ถ้าไม่มีให้เป็น 0)
+                const totalScore = itemSum - (Number(item.point_deducted) || 0);
+
+                // คืนค่า item พร้อม totalScore
+                return {
+                    ...item,
+                    total_score: totalScore,
+                    ...fullnamePayload
+                };
+            });
+            console.log(resultFormIpdContentOfMedicalRecord);
+
+            // const updatePromisesFICOMR = resultFormIpdContentOfMedicalRecord.map(i =>
+            //     models.updateFormIpdContentOfMedicalRecordResult(i, content.content_of_medical_record_id, formIpdData.form_ipd_id)
+            // );
+
+            // await Promise.all(updatePromisesFICOMR);
+
+            // if (updatePromisesFICOMR) {
+            //     const { overall } = data;
+
+            //     // ตรวจสอบว่า content_of_medical_record_id ซ้ำกันหรือไม่
+            //     const overallIds = overall.map(item => item.overall_finding_id);
+            //     const uniqueOverallIds = new Set(overallIds);
+            //     if (uniqueOverallIds.size !== overallIds.length) {
+            //         // ถ้าจำนวน unique IDs ไม่เท่ากับจำนวนทั้งหมด แปลว่ามีซ้ำ
+            //         await this.cleanupFailInsert(an, formIpdData.form_ipd_id);
+            //         return { status: 400, message: `ไม่สามารถบันทึก overall_finding ซ้ำกันได้ใน 1 Form` };
+            //     }
+
+            //     const resultFormIpdOverallFinding = overall.map(item => {
+            //         return {
+            //             form_ipd_id: formIpdData.form_ipd_id,
+            //             ...item,
+            //             ...fullnamePayload
+            //         };
+            //     });
+
+            //     const createPromisesFIOF = resultFormIpdOverallFinding.map(i =>
+            //         models.createFormIpdOverallFindingResult(i)
+            //     );
+
+            //     await Promise.all(createPromisesFIOF);
+
+            //     if (createPromisesFIOF) {
+            //         const { patient_an, content, overall, ...reviewStatusData } = data;
+
+            //         reviewStatusData.form_ipd_id = formIpdData.form_ipd_id;
+
+            //         const FIRSRPayload = {
+            //             ...reviewStatusData,
+            //             ...fullnamePayload
+            //         }
+
+            //         await models.createFormIpdReviewStatusResult(FIRSRPayload);
+            //     }
+            // }
+        }
+
+        // const endTime = Date.now() - startTime;
+        // // บันทึก Log
+        // logPayload.execution_time = endTime;
+        // logPayload.row_count = cpResult ? 1 : 0;
+        // logPayload.status = cpResult ? 'Success' : 'No Data';
+
+        // await models.createLog(logPayload);
+
+        return { status: 200, message: 'อัพเดทข้อมูลเสร็จสิ้น!' };
     } catch (err) {
         throw err;
     }

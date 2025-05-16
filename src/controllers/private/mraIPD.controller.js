@@ -49,6 +49,17 @@ exports.generateFormMraIpdController = async (req, res, next) => {
     }
 };
 
+exports.updateFormMraIpdController = async (req, res, next) => {
+    try {
+        const logPayload = await buildLogPayload(req, req.user);
+        const result = await services.updateForm(req.params.an, req.body, req.user.fullname_thai, logPayload);
+        const payload = result.data ? { data: result.data } : { message: result.message };
+        return msg(res, result.status, payload);
+    } catch (err) {
+        return msg(res, 500, { message: err.message });
+    }
+}
+
 // Function ในการลบข้อมูล Medical Record Audit บน Database
 exports.removeMraIpdController = async (req, res, next) => {
     try {
