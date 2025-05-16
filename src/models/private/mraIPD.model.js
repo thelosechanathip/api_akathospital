@@ -152,6 +152,10 @@ exports.fetchPatientInHos = async (patient_an) => {
     );
 };
 
+exports.fetchPatientInMra = async (patient_an) => {
+    return await pm.patients.findFirst({ where: { patient_an: patient_an }, select: { patient_id: true } });
+}
+
 // บันทึกข้อมูลไปยังตาราง patients
 exports.createPatient = async (data) => {
     return await pm.patients.create({ data: { ...data } });
@@ -162,7 +166,23 @@ exports.createFormIpd = async (data) => {
     return await pm.form_ipds.create({ data: { ...data } });
 };
 
-// บันทึกข้อมูลไปยังตาราง content_of_medical_records
+exports.fetchContentOfMedicalRecordId = async () => {
+    return await pm.content_of_medical_records.findMany({
+        where: { patient_service_id: Number(2) },
+        select: { content_of_medical_record_id: true },
+        orderBy: { content_of_medical_record_id: 'asc' }
+    })
+};
+
+exports.fetchOverallFindingId = async () => {
+    return await pm.overall_finding.findMany({
+        where: { patient_service_id: Number(2) },
+        select: { overall_finding_id: true },
+        orderBy: { overall_finding_id: 'asc' }
+    })
+};
+
+// Fetchข้อมูล จากตาราง content_of_medical_records
 exports.fetchComrId = async (value) => {
     return await pm.content_of_medical_records.findFirst({
         where: { content_of_medical_record_id: Number(value) },

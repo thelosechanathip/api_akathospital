@@ -30,20 +30,19 @@ exports.fetchOneMraIpdController = async (req, res, next) => {
 exports.fetchPatientDataController = async (req, res, next) => {
     try {
         const logPayload = await buildLogPayload(req, req.user);
-        const result = await services.fethcOnePatientData(req.params.an, logPayload);
-        const payload = result.data ? { data: result.data } : { message: result.message }
+        const result = await services.fetchOnePatientData(req.params.an, logPayload);
+        const payload = result.data ? { data: result.data } : { message: result.message };
         return msg(res, result.status, payload);
     } catch (err) {
         next(err);
     }
-}
+};
 
-// Function ในการบันทึกหรืออัพเดทข้อมูล Medical Record Audit ไปยัง Database
-exports.createMraIpdController = async (req, res, next) => {
+exports.generateFormMraIpdController = async (req, res, next) => {
     try {
         const logPayload = await buildLogPayload(req, req.user);
-        const result = await services.createData(req.body, req.user.fullname_thai, logPayload);
-        const payload = result.data ? { data: result.data } : { message: result.message }
+        const result = await services.generateForm(req.body, req.user.fullname_thai, logPayload);
+        const payload = result.data ? { data: result.data } : { message: result.message };
         return msg(res, result.status, payload);
     } catch (err) {
         next(err);
@@ -51,7 +50,7 @@ exports.createMraIpdController = async (req, res, next) => {
 };
 
 // Function ในการลบข้อมูล Medical Record Audit บน Database
-exports.removeMraIpdController = async (req, res) => {
+exports.removeMraIpdController = async (req, res, next) => {
     try {
         const logPayload = await buildLogPayload(req, req.user);
         const result = await services.removeData(req.params.an, req.body, req.user, logPayload);

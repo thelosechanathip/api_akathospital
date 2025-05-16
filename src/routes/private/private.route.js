@@ -1,13 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { authCheckToken, authCheckTokenAdmin } = require('../../middleware/auth/authAdmin');
-const { 
-    fetchMraIpdController,
-    fetchOneMraIpdController,
-    fetchPatientDataController,
-    createMraIpdController, 
-    removeMraIpdController 
-} = require('../../controllers/private/mraIPD.controller');
+const mraIPDController = require('../../controllers/private/mraIPD.controller');
 const { 
     fetchHospitalProfileController, 
     createHospitalProfileController, 
@@ -22,11 +16,11 @@ const {
 } = require('../../controllers/private/directorBiographie.controller');
 
 const baseMedicalRecordAudit = 'mraIPD';
-router.get(`/${baseMedicalRecordAudit}`, authCheckToken, fetchMraIpdController);
-router.get(`/${baseMedicalRecordAudit}/:an`, authCheckToken, fetchOneMraIpdController);
-router.get(`/${baseMedicalRecordAudit}/fetchPatient/:an`, authCheckToken, fetchPatientDataController);
-router.post(`/${baseMedicalRecordAudit}`, authCheckToken, createMraIpdController);
-router.delete(`/${baseMedicalRecordAudit}/:an`, authCheckToken, removeMraIpdController);
+router.get(`/${baseMedicalRecordAudit}`, authCheckToken, mraIPDController.fetchMraIpdController);
+router.get(`/${baseMedicalRecordAudit}/:an`, authCheckToken, mraIPDController.fetchOneMraIpdController);
+router.get(`/${baseMedicalRecordAudit}/fetchPatient/:an`, authCheckToken, mraIPDController.fetchPatientDataController);
+router.post(`/${baseMedicalRecordAudit}`, authCheckToken, mraIPDController.generateFormMraIpdController);
+router.delete(`/${baseMedicalRecordAudit}/:an`, authCheckToken, mraIPDController.removeMraIpdController);
 
 const baseHospitalProfile = 'hospitalProfile';
 router.get(`/${baseHospitalProfile}`, authCheckToken, fetchHospitalProfileController);

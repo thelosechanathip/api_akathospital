@@ -54,16 +54,128 @@ exports.fetchOneData = async (...agrs) => {
     }
 };
 
-exports.fethcOnePatientData = async (an) => {
+exports.fetchOnePatientData = async (an) => {
     try {
         const [patientResult] = await models.fetchPatientInHos(an);
         if (!patientResult || patientResult.length === 0) return { status: 400, message: `${an} นี้ไม่มีข้อมูลอยู่ในระบบ!` }
+
+        const patientInMraResult = await models.fetchPatientInMra(an);
+        if(patientInMraResult) return { status: 409, message: `${an} นี้มีข้อมูลอยู่ในระบบ MRA แล้วไม่สามารถบันทึกซ้ำได้` }
 
         patientResult[0].vstdate = moment(patientResult[0].vstdate).format('YYYY-MM-DD');
         patientResult[0].regdate = moment(patientResult[0].vstdate).format('YYYY-MM-DD');
         patientResult[0].dchdate = moment(patientResult[0].vstdate).format('YYYY-MM-DD');
 
         return { status: 200, data: patientResult };
+    } catch (err) {
+        throw err;
+    }
+};
+
+exports.generateForm = async (...agrs) => {
+    const [data, fullname, logPayload] = agrs;
+    try {
+        const fhResult = await models.fetchHcode();
+        const fullnamePayload = {
+            created_by: fullname,
+            updated_by: fullname
+        }
+
+        // ตรวจสอบค่าซ้ำ โดยเก็บค่า duplicate message ไว้ก่อน
+        const duplicateStatus = [];
+        const duplicateMessages = [];
+        let hasEmptyValue = false; // Flag สำหรับตรวจสอบค่าที่ว่าง
+
+        // เริ่มตรวจสอบ Request ที่ส่งเข้ามา
+        for (const [key, value] of Object.entries(data)) {
+            // ถ้าพบค่าว่าง ให้ตั้งค่า flag เป็น true
+            if (['patient_an'].includes(key) && !value) hasEmptyValue = true;
+
+            // ตรวจสอบค่าซ้ำเฉพาะ field ที่ไม่ว่าง
+            if (['patient_an'].includes(key) && value) {
+                const existingRecord = await models.fetchPatientInAkatData(key, value);
+
+                if (existingRecord) {
+                    duplicateStatus.push(409);
+                    duplicateMessages.push(`( ${value} ) มีข้อมูลในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!`);
+                }
+            }
+        }
+
+        // ถ้ามีค่าที่ว่าง ให้เพิ่มข้อความแค่ครั้งเดียว
+        if (hasEmptyValue) {
+            duplicateMessages.unshift("กรุณากรอกข้อมูลให้ครบถ้วน!");
+            return { status: 400, message: duplicateMessages[0] };
+        }
+        if (duplicateMessages.length > 0) return { status: Math.max(...duplicateStatus), message: duplicateMessages.join(" AND ") }
+
+        // ดึงข้อมูลคนไข้มาจาก Database ของ HoSXP
+        const [fetchPatient] = await models.fetchPatientInHos(data.patient_an);
+
+        // บันทึกข้อมูลไปยังตาราง patients ใน Database akathospital
+        const patientPayload = {
+            hcode_id: Number(fhResult.hcode_id),
+            patient_fullname: fetchPatient[0].fullname,
+            patient_hn: fetchPatient[0].hn,
+            patient_vn: fetchPatient[0].vn,
+            patient_an: fetchPatient[0].an,
+            patient_date_service: fetchPatient[0].vstdate,
+            patient_date_admitted: fetchPatient[0].regdate,
+            patient_date_discharged: fetchPatient[0].dchdate,
+            ...fullnamePayload
+        };
+
+        const startTime = Date.now();
+        const cpResult = await models.createPatient(patientPayload);
+        if (cpResult) {
+            const fiPayload = {
+                patient_id: Number(cpResult.patient_id),
+                ...fullnamePayload
+            };
+
+            const cfiResult = await models.createFormIpd(fiPayload);
+            if (cfiResult) {
+                const fetchCom = await models.fetchContentOfMedicalRecordId();
+                const setComPayload = fetchCom.map(item => {
+                    return {
+                        form_ipd_id: cfiResult.form_ipd_id,
+                        ...item,
+                        ...fullnamePayload
+                    };
+                })
+                const createPromissesFICOMRR = setComPayload.map(i =>
+                    models.createFormIpdContentOfMedicalRecordResult(i)
+                );
+
+                const createFICOMRRResult = await Promise.all(createPromissesFICOMRR);
+                if (createFICOMRRResult) {
+                    const fetchOf = await models.fetchOverallFindingId();
+                    const setOfPayload = fetchOf.map(item => {
+                        return {
+                            form_ipd_id: cfiResult.form_ipd_id,
+                            ...item,
+                            ...fullnamePayload
+                        };
+                    })
+                    const createPromissesFIOF = setOfPayload.map(i =>
+                        models.createFormIpdOverallFindingResult(i)
+                    );
+                    await Promise.all(createPromissesFIOF);
+                }
+            }
+        }
+
+        const endTime = Date.now() - startTime;
+        // บันทึก Log
+        logPayload.execution_time = endTime;
+        logPayload.row_count = cpResult ? 1 : 0;
+        logPayload.status = cpResult ? 'Success' : 'No Data';
+
+        await models.createLog(logPayload);
+
+        const fodResult = await models.fetchOneData(cpResult.patient_id);
+
+        return { status: 200, data: fodResult };
     } catch (err) {
         throw err;
     }
@@ -246,7 +358,6 @@ exports.createData = async (...agrs) => {
 
         await models.createLog(logPayload);
 
-        // await models.$transaction.commit();
         return { status: 200, message: "บันทึกข้อมูลเรียบร้อย!" };
     } catch (err) {
         throw err;
