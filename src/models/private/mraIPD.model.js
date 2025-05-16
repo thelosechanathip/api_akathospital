@@ -181,7 +181,7 @@ exports.fetchComrId = async (value) => {
 
 // บันทึกข้อมูลไปยังตาราง form_ipd_content_of_medical_record_results
 exports.createFormIpdContentOfMedicalRecordResult = async (data) => {
-    return await pm.form_ipd_content_of_medical_record_results.create({ data: data });
+    return await pm.form_ipd_content_of_medical_record_results.createMany({ data: data });
 };
 
 exports.updateFormIpdContentOfMedicalRecordResult = async (data, content_of_medical_record_id, form_ipd_id) => {
@@ -196,7 +196,7 @@ exports.updateFormIpdContentOfMedicalRecordResult = async (data, content_of_medi
 
 // บันทึกข้อมูลไปยังตาราง form_ipd_overall_finding_results
 exports.createFormIpdOverallFindingResult = async (data) => {
-    return await pm.form_ipd_overall_finding_results.create({ data: data });
+    return await pm.form_ipd_overall_finding_results.createMany({ data: data });
 };
 
 // บันทึกข้อมูลไปยังตาราง form_ipd_review_status_results

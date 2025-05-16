@@ -143,12 +143,9 @@ exports.generateForm = async (...agrs) => {
                         ...fullnamePayload
                     };
                 })
-                const createPromissesFICOMRR = setComPayload.map(i =>
-                    models.createFormIpdContentOfMedicalRecordResult(i)
-                );
+                const createFICOMRResult = await models.createFormIpdContentOfMedicalRecordResult(setComPayload)
 
-                const createFICOMRRResult = await Promise.all(createPromissesFICOMRR);
-                if (createFICOMRRResult) {
+                if (createFICOMRResult) {
                     const fetchOf = await models.fetchOverallFindingId();
                     const setOfPayload = fetchOf.map(item => {
                         return {
@@ -157,10 +154,7 @@ exports.generateForm = async (...agrs) => {
                             ...fullnamePayload
                         };
                     })
-                    const createPromissesFIOF = setOfPayload.map(i =>
-                        models.createFormIpdOverallFindingResult(i)
-                    );
-                    await Promise.all(createPromissesFIOF);
+                    models.createFormIpdOverallFindingResult(setOfPayload)
                 }
             }
         }
@@ -506,7 +500,7 @@ exports.removeData = async (...agrs) => {
 
     const startTime = Date.now();
     const faipResult = await models.fetchAnInPatient(an);
-    if (!faipResult) return msg(res, 404, { message: `ไม่มีข้อมูล ${an} อยู่ในระบบกรุณาตรวจสอบ ${an} เพื่อความถูกต้อง!` });
+    if (!faipResult) return { status: 404, message: `ไม่มีข้อมูล ${an} อยู่ในระบบกรุณาตรวจสอบ ${an} เพื่อความถูกต้อง!` };
 
     const fetchFormIpd = await models.fetchPatientIdInFormIpd(faipResult.patient_id);
 
