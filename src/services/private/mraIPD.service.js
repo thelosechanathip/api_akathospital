@@ -444,13 +444,13 @@ exports.updateForm = async (...agrs) => {
                     const checkUniqueFormIpdId = await models.checkUniqueFormIpdId(formIpdData.form_ipd_id);
                     if(checkUniqueFormIpdId) return { status: 400, message: 'มีข้อมูลอยู่ในระบบแล้ว ไม่สามารถมีข้อมูลซ้ำได้' };
 
-                    // const FIRSRPayload = {
-                    //     form_ipd_id: formIpdData.form_ipd_id,
-                    //     ...reviewStatusData,
-                    //     ...fullnamePayload
-                    // }
+                    const FIRSRPayload = {
+                        form_ipd_id: formIpdData.form_ipd_id,
+                        ...reviewStatusData,
+                        ...fullnamePayload
+                    }
 
-                    // var createFIRSR = await models.creatFormIpdReviewStatusResult(FIRSRPayload);
+                    var createFIRSR = await models.creatFormIpdReviewStatusResult(FIRSRPayload);
                 }
             }
         }
