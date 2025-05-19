@@ -59,6 +59,12 @@ exports.fetchAllData = async () => {
     });
 };
 
+exports.fetchTypeContentOfMedicalRecordId = async (id) => {
+    return await pm.content_of_medical_records.findFirst({
+        where: { content_of_medical_record_id: Number(id) }
+    })
+};
+
 // ดึงข้อมูล patient_id ในตาราง patients
 exports.fetchOnePatientIdInPatientAn = async (an) => {
     return await pm.patients.findFirst({ where: { patient_an: an }, select: { patient_id: true } })
@@ -214,7 +220,7 @@ exports.updateFormIpdContentOfMedicalRecordResult = async (row, formIpdId) => {
             content_of_medical_record_id: Number(row.content_of_medical_record_id),
             form_ipd_content_of_medical_record_result_id: Number(row.form_ipd_content_of_medical_record_result_id),
         },
-        data,
+        data: data,
     });
 };
 

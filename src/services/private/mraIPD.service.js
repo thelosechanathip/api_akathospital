@@ -16,16 +16,54 @@ exports.fetchData = async (logPayload) => {
     try {
         const startTime = Date.now();
         const fadResult = await models.fetchAllData();
-        if (!fadResult || fadResult.length === 0) return { status: 404, message: 'ไม่มีข้อมูลใน Database!' };
+        if (!fadResult || fadResult.length === 0) {
+            logPayload.execution_time = Date.now() - startTime;
+            logPayload.row_count = 0;
+            logPayload.status = 'No Data';
+            await models.createLog(logPayload);
+            return { status: 404, message: 'ไม่มีข้อมูลใน Database!' };
+        }
+
+        const resultsWithDefaultSum = [];
+
+        for (const data of fadResult) {
+            let totalDefaultSum = 0;
+            let totalScoreSum = 0;
+            for (const content of data.form_ipd_content_of_medical_record_results) {
+                if (content.na === false && content.missing === false && content.no === false) {
+                    const comrId = content.content_of_medical_records.content_of_medical_record_id;
+
+                    const checkType = await models.fetchTypeContentOfMedicalRecordId(comrId);
+                    const comrKeys = Object.keys(checkType).filter(k => k.startsWith("criterion_number_"));
+                    const itemSum = comrKeys.reduce((acc, key) => {
+                        const value = checkType[key];
+                        if (value === true) {
+                            return acc + 1;
+                        }
+                        return acc;
+                    }, 0);
+                    totalDefaultSum += itemSum;
+
+                    if (typeof content.total_score === 'number') {
+                        totalScoreSum += content.total_score;
+                    }
+                }
+            }
+            data.totalDefaultSum = totalDefaultSum;
+            data.totalScoreSum = totalScoreSum;
+            const resultSum = totalScoreSum / totalDefaultSum * 100;
+            const formattedResultSum = resultSum.toFixed(2);
+            data.formattedResultSum = parseFloat(formattedResultSum);
+            resultsWithDefaultSum.push(data);
+        }
+
         const endTime = Date.now() - startTime;
-
         logPayload.execution_time = endTime;
-        logPayload.row_count = fadResult ? 1 : 0;
-        logPayload.status = fadResult ? 'Success' : 'No Data';
-
+        logPayload.row_count = fadResult.length; // Correct row count
+        logPayload.status = 'Success';
         await models.createLog(logPayload);
 
-        return { status: 200, data: fadResult };
+        return { status: 200, data: resultsWithDefaultSum };
     } catch (err) {
         throw err;
     }
@@ -249,25 +287,27 @@ exports.updateForm = async (...agrs) => {
 
                 if (createPromisesFIOF) {
                     const { content, overall, ...reviewStatusData } = data;
-                    fullnamePayload.created_by = fullname;
+                    if (Object.keys(reviewStatusData).length > 0) {
+                        fullnamePayload.created_by = fullname;
 
-                    const checkTypeReviewStatusResult = await models.checkTypeReviewStatusResult(reviewStatusData.review_status_id);
-                    if(checkTypeReviewStatusResult.review_status_type) {
-                        if(reviewStatusData.review_status_comment === null || reviewStatusData.review_status_comment === '') {
-                            return { status: 400, message: 'กรุณากรอกความคิดเห็น' };
+                        const checkTypeReviewStatusResult = await models.checkTypeReviewStatusResult(reviewStatusData.review_status_id);
+                        if (checkTypeReviewStatusResult.review_status_type) {
+                            if (reviewStatusData.review_status_comment === null || reviewStatusData.review_status_comment === '') {
+                                return { status: 400, message: 'กรุณากรอกความคิดเห็น' };
+                            }
                         }
+
+                        const checkUniqueFormIpdId = await models.checkUniqueFormIpdId(formIpdData.form_ipd_id);
+                        if (checkUniqueFormIpdId) return { status: 400, message: 'มีข้อมูลอยู่ในระบบแล้ว ไม่สามารถมีข้อมูลซ้ำได้' };
+
+                        const FIRSRPayload = {
+                            form_ipd_id: formIpdData.form_ipd_id,
+                            ...reviewStatusData,
+                            ...fullnamePayload
+                        }
+
+                        await models.creatFormIpdReviewStatusResult(FIRSRPayload);
                     }
-
-                    const checkUniqueFormIpdId = await models.checkUniqueFormIpdId(formIpdData.form_ipd_id);
-                    if(checkUniqueFormIpdId) return { status: 400, message: 'มีข้อมูลอยู่ในระบบแล้ว ไม่สามารถมีข้อมูลซ้ำได้' };
-
-                    const FIRSRPayload = {
-                        form_ipd_id: formIpdData.form_ipd_id,
-                        ...reviewStatusData,
-                        ...fullnamePayload
-                    }
-
-                    var createFIRSR = await models.creatFormIpdReviewStatusResult(FIRSRPayload);
                 }
             }
         }
@@ -275,8 +315,8 @@ exports.updateForm = async (...agrs) => {
         const endTime = Date.now() - startTime;
         // บันทึก Log
         logPayload.execution_time = endTime;
-        logPayload.row_count = createFIRSR ? 1 : 0;
-        logPayload.status = createFIRSR ? 'Success' : 'No Data';
+        logPayload.row_count = formIpdData ? 1 : 0;
+        logPayload.status = formIpdData ? 'Success' : 'No Data';
 
         await models.createLog(logPayload);
 

@@ -58,7 +58,7 @@ exports.updateFormMraIpdController = async (req, res, next) => {
     } catch (err) {
         return msg(res, 500, { message: err.message });
     }
-}
+};
 
 // Function ในการลบข้อมูล Medical Record Audit บน Database
 exports.removeMraIpdController = async (req, res, next) => {
