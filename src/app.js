@@ -10,8 +10,9 @@ const path = require("path");
 const { authAdminDoc } = require("./middleware/auth/authAdmin");
 const { msg } = require("../src/utils/message");
 const pm = require('../src/config/prisma');
-const bodyParser = require('body-parser');
-const listEndpoints = require('express-list-endpoints');
+// const bodyParser = require('body-parser');
+// const listEndpoints = require('express-list-endpoints');
+const { chatBot } = require('./controllers/auth/chatBot.controller')
 require("dotenv").config();
 
 // สร้าง instance ของ Express application
@@ -169,14 +170,11 @@ function startBlacklistScheduler() {
     await checkAuthTokensExpired();
     await checkBlackListTokensExpired();
   });
+
+  chatBot()
 };
 
 startBlacklistScheduler();
-
-// const endpoints = listEndpoints(app);
-// for (const i of endpoints) {
-//   console.log(i.path + ' || ' + i.methods);
-// }
 
 app.use('*', (req, res) => { msg(res, 404, "404 Not found!!!!"); });
 

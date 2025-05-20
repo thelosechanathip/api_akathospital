@@ -131,11 +131,18 @@ exports.generateForm = async (...agrs) => {
 
             // ตรวจสอบค่าซ้ำเฉพาะ field ที่ไม่ว่าง
             if (['patient_an'].includes(key) && value) {
-                const existingRecord = await models.fetchPatientInAkatData(key, value);
+                const patientData = await models.fetchPatientInAkatData(key, value);
+                if (patientData) {
+                    const formData = await models.fetchOneFormIpdIdInPatientId(patientData.patient_id);
+                    const formIRSR = await models.fetchFormIRSRInAkatData(formData.form_ipd_id);
 
-                if (existingRecord) {
-                    duplicateStatus.push(409);
-                    duplicateMessages.push(`( ${value} ) มีข้อมูลในระบบแล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!`);
+                    if (formIRSR) {
+                        duplicateStatus.push(409);
+                        duplicateMessages.push(`( ${value} ) มีข้อมูลในระบบที่สมบูรณ์แล้ว ไม่อนุญาตให้บันทึกข้อมูลซ้ำ!`);
+                    } else if (formIRSR === null || formIRSR === '') {
+                        const result = await models.fetchOneData(patientData.patient_id);
+                        return { status: 200, data: result };
+                    }
                 }
             }
         }

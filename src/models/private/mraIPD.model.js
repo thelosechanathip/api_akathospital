@@ -65,7 +65,7 @@ exports.fetchTypeContentOfMedicalRecordId = async (id) => {
     })
 };
 
-// ดึงข้อมูล patient_id ในตาราง patients
+// ดึงข้อมูล patient_id ด้วย an ที่ส่งเข้ามา ในตาราง patients
 exports.fetchOnePatientIdInPatientAn = async (an) => {
     return await pm.patients.findFirst({ where: { patient_an: an }, select: { patient_id: true } })
 };
@@ -120,9 +120,16 @@ exports.fetchHcode = async () => {
     return await pm.hcodes.findFirst({ select: { hcode_id: true } });
 };
 
-// ดึงข้อมูล patient_it ในตาราง patients
+// ดึงข้อมูล patient_id ในตาราง patients
 exports.fetchPatientInAkatData = async (key, value) => {
     return await pm.patients.findFirst({ where: { [key]: value }, select: { patient_id: true } });
+};
+
+exports.fetchFormIRSRInAkatData = async (form_ipd_id) => {
+    return await pm.form_ipd_review_status_results.findFirst({
+        where: { form_ipd_id: form_ipd_id },
+        select: { review_status_id: true }
+    })
 };
 
 // ดึงข้อมูลคนไข้จากระบบ HoSXP ด้วย AN ที่ส่ง Request เข้ามา
@@ -149,7 +156,7 @@ exports.fetchPatientInHos = async (patient_an) => {
 
 exports.fetchPatientInMra = async (patient_an) => {
     return await pm.patients.findFirst({ where: { patient_an: patient_an }, select: { patient_id: true } });
-}
+};
 
 // บันทึกข้อมูลไปยังตาราง patients
 exports.createPatient = async (data) => {
