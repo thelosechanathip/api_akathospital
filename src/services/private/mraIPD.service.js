@@ -271,6 +271,7 @@ exports.updateForm = async (...agrs) => {
             // คีย์ที่ไม่ต้องการให้รวมในการคำนวณ (ยกเว้น point_deducted ที่จะลบทีหลัง)
             const excludedKeys = [
                 "form_ipd_content_of_medical_record_result_id",
+                "form_ipd_id",
                 "content_of_medical_record_id",
                 "na",
                 "missing",
