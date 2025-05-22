@@ -76,17 +76,50 @@ exports.fetchOneData = async (...agrs) => {
         if (!patientResult || patientResult.length === 0) return { status: 400, message: `${an} ไม่มีข้อมูลอยู่ในระบบ` }
 
         const startTime = Date.now();
-        const fodResult = await models.fetchOneData(patientResult.patient_id);
-        if (!fodResult || fodResult.length === 0) return { status: 404, message: `ไม่มีข้อมูลใน Database กรุณาตรวจสอบ!` };
+        const fadResult = await models.fetchOneData(patientResult.patient_id);
+        if (!fadResult || fadResult.length === 0) return { status: 404, message: `ไม่มีข้อมูลใน Database กรุณาตรวจสอบ!` };
         const endTime = Date.now() - startTime;
 
+        const resultsWithDefaultSum = [];
+
+        for (const data of fadResult) {
+            let totalDefaultSum = 0;
+            let totalScoreSum = 0;
+            for (const content of data.form_ipd_content_of_medical_record_results) {
+                if (content.na === false && content.missing === false && content.no === false) {
+                    const comrId = content.content_of_medical_records.content_of_medical_record_id;
+
+                    const checkType = await models.fetchTypeContentOfMedicalRecordId(comrId);
+                    const comrKeys = Object.keys(checkType).filter(k => k.startsWith("criterion_number_"));
+                    const itemSum = comrKeys.reduce((acc, key) => {
+                        const value = checkType[key];
+                        if (value === true) {
+                            return acc + 1;
+                        }
+                        return acc;
+                    }, 0);
+                    totalDefaultSum += itemSum;
+
+                    if (typeof content.total_score === 'number') {
+                        totalScoreSum += content.total_score;
+                    }
+                }
+            }
+            data.totalDefaultSum = totalDefaultSum;
+            data.totalScoreSum = totalScoreSum;
+            const resultSum = totalScoreSum / totalDefaultSum * 100;
+            const formattedResultSum = resultSum.toFixed(2);
+            data.formattedResultSum = parseFloat(formattedResultSum);
+            resultsWithDefaultSum.push(data);
+        }
+
         logPayload.execution_time = endTime;
-        logPayload.row_count = fodResult ? 1 : 0;
-        logPayload.status = fodResult ? 'Success' : 'No Data';
+        logPayload.row_count = fadResult ? 1 : 0;
+        logPayload.status = fadResult ? 'Success' : 'No Data';
 
         await models.createLog(logPayload);
 
-        return { status: 200, data: fodResult };
+        return { status: 200, data: resultsWithDefaultSum };
     } catch (err) {
         throw err;
     }

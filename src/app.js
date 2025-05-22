@@ -81,7 +81,7 @@ async function checkBlackListTokensExpired() {
     });
 
     if (fetchAllTokenBlacklist.length === 0) {
-      console.log('TokenBlacklistErrors: No tokens found in database');
+      // console.log('TokenBlacklistErrors: No tokens found in database');
       return;
     }
 
@@ -95,7 +95,7 @@ async function checkBlackListTokensExpired() {
           where: { token: tokenBlacklist.token }
         });
 
-        console.log(`Removed expired token: ${tokenBlacklist.token}`);
+        // console.log(`Removed expired token: ${tokenBlacklist.token}`);
       }
     }
 
@@ -106,7 +106,7 @@ async function checkBlackListTokensExpired() {
 
     // รีเซ็ต AUTO_INCREMENT
     await pm.$executeRawUnsafe(`ALTER TABLE token_blacklist AUTO_INCREMENT = ${nextId}`);
-    console.log(`AUTO_INCREMENT has been reset to ${nextId}`);
+    // console.log(`AUTO_INCREMENT has been reset to ${nextId}`);
 
   } catch (error) {
     console.error("Error checkBlackListTokensExpired: ", error.message);
@@ -126,7 +126,7 @@ async function checkAuthTokensExpired() {
     });
 
     if (fetchAllAuthTokens.length === 0) {
-      console.log('AuthTokenErrors: No tokens found in database');
+      // console.log('AuthTokenErrors: No tokens found in database');
       return;
     }
 
@@ -140,7 +140,7 @@ async function checkAuthTokensExpired() {
           where: { token: authTokens.token }
         });
 
-        console.log(`Removed expired token: ${authTokens.token}`);
+        // console.log(`Removed expired token: ${authTokens.token}`);
       }
     }
 
@@ -151,7 +151,7 @@ async function checkAuthTokensExpired() {
 
     // รีเซ็ต AUTO_INCREMENT
     await pm.$executeRawUnsafe(`ALTER TABLE auth_tokens AUTO_INCREMENT = ${nextId}`);
-    console.log(`AUTO_INCREMENT has been reset to ${nextId}`);
+    // console.log(`AUTO_INCREMENT has been reset to ${nextId}`);
 
   } catch (error) {
     console.error("Error checkAuthTokensExpired: ", error.message);
@@ -166,7 +166,7 @@ function startBlacklistScheduler() {
   checkBlackListTokensExpired();
 
   schedule.scheduleJob('0 * * * *', async () => {
-    console.log('Scheduled blacklist update starting...');
+    // console.log('Scheduled blacklist update starting...');
     await checkAuthTokensExpired();
     await checkBlackListTokensExpired();
   });

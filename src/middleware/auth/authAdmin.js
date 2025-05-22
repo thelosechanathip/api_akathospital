@@ -12,7 +12,7 @@ exports.authAdminDoc = async (req, res, next) => {
             return msg(res, 400, { message: "กรุณาป้อนรหัสผ่าน" });
         }
 
-        // // ถอดรหัส text
+        // ถอดรหัส text
         const bytes = CryptoJS.AES.decrypt(text, process.env.PASS_KEY);
         const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
 
