@@ -78,6 +78,7 @@ exports.authCheckToken = async (req, res, next) => {
         };
         
         req.user = fetchOneDataUser;
+        req.fullname = fetchOneDataUser.prefixes.prefix_name + fetchOneDataUser.fullname_thai;
 
         next();
 

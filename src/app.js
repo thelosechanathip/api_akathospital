@@ -171,7 +171,7 @@ function startBlacklistScheduler() {
     await checkBlackListTokensExpired();
   });
 
-  chatBot()
+  // chatBot()
 };
 
 startBlacklistScheduler();
