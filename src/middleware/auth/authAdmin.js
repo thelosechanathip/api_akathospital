@@ -65,6 +65,8 @@ exports.authCheckToken = async (req, res, next) => {
             },
             select: {
                 user_id: true,
+                prefix_id: false,
+                prefixes: { select: { prefix_id: true, prefix_name: true } },
                 fullname_thai: true,
                 password: true,
                 status: true
@@ -192,6 +194,8 @@ exports.authCheckTokenAdmin = async (req, res, next) => {
             },
             select: {
                 user_id: true,
+                prefix_id: false,
+                prefixes: { select: { prefix_id: true, prefix_name: true } },
                 fullname_thai: true,
                 password: true,
                 status: true
