@@ -151,7 +151,7 @@ exports.fetchPatientInHos = async (patient_an) => {
                 LEFT OUTER JOIN ward AS w ON i.ward = w.ward
                 LEFT OUTER JOIN patient AS pt ON i.hn = pt.hn 
             WHERE
-                i.an = '530004992'
+                i.an = ?
         `,
         [patient_an]
     );
