@@ -434,9 +434,9 @@ model form_ipd_content_of_medical_record_results {
   form_ipd_content_of_medical_record_result_id Int                        @id @default(autoincrement())
   form_ipd_id                                  Int
   content_of_medical_record_id                 Int
-  na                                           Boolean?
-  missing                                      Boolean?
-  no                                           Boolean?
+  na                                           Boolean?                   @default(false)
+  missing                                      Boolean?                   @default(false)
+  no                                           Boolean?                   @default(false)
   criterion_number_1                           Int?
   criterion_number_2                           Int?
   criterion_number_3                           Int?
@@ -624,6 +624,7 @@ model patients {
   patient_hn              String      @db.VarChar(255)
   patient_vn              String?     @unique(map: "vn") @db.VarChar(255)
   patient_an              String?     @unique(map: "an") @db.VarChar(255)
+  patient_ward            String?     @db.VarChar(100)
   patient_date_service    DateTime?   @db.Date
   patient_date_admitted   DateTime?   @db.Date
   patient_date_discharged DateTime?   @db.Date

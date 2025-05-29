@@ -197,6 +197,7 @@ exports.generateForm = async (...agrs) => {
             patient_hn: fetchPatient[0].hn,
             patient_vn: fetchPatient[0].vn,
             patient_an: fetchPatient[0].an,
+            patient_ward: fetchPatient[0].ward_name,
             patient_date_service: fetchPatient[0].vstdate,
             patient_date_admitted: fetchPatient[0].regdate,
             patient_date_discharged: fetchPatient[0].dchdate,

@@ -136,20 +136,23 @@ exports.fetchFormIRSRInAkatData = async (form_ipd_id) => {
 exports.fetchPatientInHos = async (patient_an) => {
     return await db_h.query(
         `
-                SELECT 
-                    CONCAT(pt.pname, pt.fname, ' ', pt.lname) AS fullname,
-                    o.hn,
-                    o.vn,
-                    i.an,
-                    o.vstdate,
-                    i.regdate,
-                    i.dchdate
-                FROM ovst AS o
+            SELECT
+                CONCAT(pt.pname, pt.fname, ' ', pt.lname) AS fullname,
+                o.hn,
+                o.vn,
+                i.an,
+                w.name AS ward_name,
+                o.vstdate,
+                i.regdate,
+                i.dchdate 
+            FROM
+                ovst AS o
                 LEFT OUTER JOIN ipt AS i ON o.vn = i.vn
-                LEFT OUTER JOIN patient AS pt ON i.hn = pt.hn
-                WHERE 
-                    i.an = ?
-            `,
+                LEFT OUTER JOIN ward AS w ON i.ward = w.ward
+                LEFT OUTER JOIN patient AS pt ON i.hn = pt.hn 
+            WHERE
+                i.an = '530004992'
+        `,
         [patient_an]
     );
 };
