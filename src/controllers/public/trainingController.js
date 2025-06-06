@@ -27,25 +27,15 @@ exports.AddTraining = async (req, res) => {
         const checkUserInTrainingByNationalId = await pm.training.findFirst({
             where: { training_name: fetchFullnameByNationalId[0].fullname }
         })
-        if (checkUserInTrainingByNationalId) return msg(res, 409, {
-            message: 'มีการลงทะเบียนเข้าอบรมแล้วไม่สามารถลงซ้ำได้ ขอบคุณครับ/คะ!'
-        })
+        if (checkUserInTrainingByNationalId) 
+            return msg(res, 409, { message: 'มีการลงทะเบียนเข้าอบรมแล้วไม่สามารถลงทะเบียนซ้ำได้ ขอบคุณครับ/คะ!' })
 
         const fetchEnrollee = await pm.enrollee.findFirst({
             where: { fullname: fetchFullnameByNationalId[0].fullname }
         })
 
-        let payload = {}
-        if (!fetchEnrollee) {
-            payload = {
-                training_name: fetchFullnameByNationalId[0].fullname,
-                training_break: false
-            }
-        } else {
-            payload = {
-                training_name: fetchFullnameByNationalId[0].fullname,
-                training_break: true
-            }
+        payload = {
+            training_name: fetchFullnameByNationalId[0].fullname
         }
 
         await pm.training.create({ data: payload })
@@ -57,32 +47,49 @@ exports.AddTraining = async (req, res) => {
 
 exports.updateTraining = async (req, res) => {
     try {
-        const { training_name, training_break } = req.body
+        const { training_name } = req.body
 
         const checkTraining = await pm.training.findFirst({
-            where: { training_name, training_break }
+            where: { training_name }
         })
-        if (!checkTraining || checkTraining.length === 0) return msg(res, 404, { message: "คุณยังไม่ได้ลงทะเบียนเข้าอบรม" })
+        if (!checkTraining) return msg(res, 404, { message: "คุณยังไม่ได้ลงทะเบียนเข้าอบรม" })
+
+        if (checkTraining.training_break === false) return msg(res, 400, { message: "คุณไม่ได้ลงทะเบียนเข้าอบรมล่วงหน้า!" })
 
         // const timeNow = moment().format('HH:mm:ss')
         const timeNow = '09:30:00'
+        const messageBreak = ""
 
         if (timeNow >= '08:30:00' && timeNow <= '12:00:00') {
-            if (checkTraining.training_morning === false) return msg(res, 400, { message: "คุณไม่ได้ลงทะเบียนเข้าอบรมล่วงหน้า" })
+            if (checkTraining.training_morning === true)
+                return msg(res, 400, { message: "คุณได้รับ Break ภาคเช้าแล้วไม่สามารถรับซ้ำได้!" })
+
             await pm.training.update({
                 where: { training_name },
-                data: {
-                    training_morning: true
-                }
+                data: { training_morning: true }
             })
-            return msg(res, 200, { message: "ลงทะเบียนรับ Break เช้าเสร็จสิ้น" })
+            messageBreak = "ลงทะเบียนรับ Break ภาคเช้าเสร็จสิ้น"
         } else if (timeNow >= '12:00:00' && timeNow <= '13:00:00') {
-            if (checkTraining.training_noon === false) return msg(res, 400, { message: "คุณไม่ได้ลงทะเบียนเข้าอบรมล่วงหน้า" })
+            if (checkTraining.training_noon === true)
+                return msg(res, 400, { message: "คุณได้รับอาหารเที่ยงแล้วไม่สามารถรับซ้ำได้!" })
+
+            await pm.training.update({
+                where: { training_name },
+                data: { training_noon: true }
+            })
+            messageBreak = "ลงทะเบียนรับอาหารเที่ยงเสร็จสิ้น"
         } else if (timeNow >= '13:30:00' && timeNow <= '16:30:00') {
-            if (checkTraining.training_afternoon === false) return msg(res, 400, { message: "คุณไม่ได้ลงทะเบียนเข้าอบรมล่วงหน้า" })
+            if (checkTraining.training_afternoon === true)
+                return msg(res, 400, { message: "คุณได้รับ Break ภาคบ่ายแล้วไม่สามารถรับซ้ำได้!" })
+
+            await pm.training.update({
+                where: { training_name },
+                data: { training_afternoon: true }
+            })
+            messageBreak = "ลงทะเบียนรับ Break ภาคบ่ายเสร็จสิ้น"
         }
 
-        return msg(res, 200, { data: timeNow })
+        return msg(res, 200, { message: messageBreak })
     } catch (err) {
         console.error("Internal error: ", err.message)
     }
