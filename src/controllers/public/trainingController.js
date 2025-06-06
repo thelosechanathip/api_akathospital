@@ -2,10 +2,69 @@ const pm = require('../../config/prisma')
 const { msg } = require('../../utils/message');
 const db_b = require('../../config/db_b');
 const moment = require('moment')
+const fs = require('fs');
+const path = require('path');
+const { validateThaiID } = require('../../utils/allCheck');
+
+function getPersistentUniqueRandomNumbers(count, max) {
+    const filePath = path.join(__dirname, 'randomState.json');
+    let state = { lastRun: moment().format('YYYY-MM-DD'), usedNumbers: [] };
+
+    try {
+        const fileContent = fs.readFileSync(filePath, 'utf8');
+        if (fileContent) {
+            state = JSON.parse(fileContent);
+        }
+    } catch (e) {
+        // ไฟล์ยังไม่มีหรืออ่านไม่ได้
+    }
+
+    // ตรวจสอบว่าวันที่เปลี่ยนไปหรือไม่
+    const currentDate = moment().format('YYYY-MM-DD'); // หรือใช้ moment().format('YYYY-MM-DD') สำหรับวันที่จริง
+    if (state.lastRun !== currentDate) {
+        // ล้างข้อมูลทั้งหมด
+        state = { lastRun: currentDate, usedNumbers: [] };
+    }
+
+    // ตรวจสอบว่าสุ่มเลขครบ max แล้วหรือยัง
+    if (state.usedNumbers.length >= max) {
+        return { success: false, message: 'จำนวนที่นั่งเต็มแล้ว', numbers: [] };
+    }
+
+    const usedNumbers = new Set(state.usedNumbers);
+    const result = [];
+
+    while (result.length < count && usedNumbers.size < max) {
+        const num = Math.floor(Math.random() * max) + 1;
+        if (!usedNumbers.has(num)) {
+            usedNumbers.add(num);
+            result.push(num);
+        }
+    }
+
+    state.usedNumbers = [...usedNumbers];
+    fs.writeFileSync(filePath, JSON.stringify(state));
+
+    return {
+        success: true,
+        message: usedNumbers.size >= max ? 'จำนวนที่นั่งใกล้เต็มแล้ว' : 'สำเร็จ',
+        numbers: result
+    };
+}
+
+exports.clearRandomStateJson = (req, res) => {
+    const filePath = path.join(__dirname, 'randomState.json');
+    state = {}
+    fs.writeFileSync(filePath, JSON.stringify(state))
+    return msg(res, 200, { message: 'ลบค่าในไฟล์ randomState.json สําเร็จ' })
+}
 
 exports.AddTraining = async (req, res) => {
     try {
         const { national_id } = req.body
+
+        if (!validateThaiID(national_id))
+            return msg(res, 400, { message: 'เลขบัตรประชาชนไม่ถูกต้อง' })
 
         const [fetchFullnameByNationalId] = await db_b.query(
             `
@@ -43,7 +102,10 @@ exports.AddTraining = async (req, res) => {
         }
 
         await pm.training.create({ data: payload })
-        return msg(res, 200, { training_name: fetchFullnameByNationalId[0].fullname })
+
+        const result = getPersistentUniqueRandomNumbers(1, 80)
+
+        return msg(res, 200, { training_name: fetchFullnameByNationalId[0].fullname, result: result })
     } catch (err) {
         console.error("Internal error: ", err.message)
     }

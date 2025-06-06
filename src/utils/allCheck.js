@@ -85,3 +85,24 @@ exports.normalizeToCE = (dateStr) => {
     // ถ้า format แปลกไป คืนเป็น Date fallback
     return new Date(dateStr);
 };
+
+exports.validateThaiID = (idNumber) => {
+    // ตรวจสอบความยาวต้องมี 13 หลักและเป็นตัวเลขทั้งหมด
+    if (!/^\d{13}$/.test(idNumber)) {
+        return false;
+    }
+
+    // แปลง string เป็น array ของตัวเลข
+    const digits = idNumber.split('').map(Number);
+
+    // คำนวณ checksum
+    let sum = 0;
+    for (let i = 0; i < 12; i++) {
+        sum += digits[i] * (13 - i);
+    }
+
+    const checksum = (11 - (sum % 11)) % 10;
+
+    // ตรวจสอบว่า checksum ตรงกับหลักสุดท้ายหรือไม่
+    return digits[12] === checksum;
+}
