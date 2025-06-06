@@ -59,11 +59,11 @@ exports.updateTraining = async (req, res) => {
         if (!checkTraining) return msg(res, 404, { message: "คุณยังไม่ได้ลงทะเบียนเข้าอบรม" })
 
         if (checkTraining.training_break === false)
-            return msg(res, 400, { message: "คุณไม่ได้ลงทะเบียนเข้าอบรมล่วงหน้า!" })
+            return msg(res, 400, { message: "คุณไม่ได้ลงทะเบียนเข้าอบรมล่วงหน้า จึงไม่สามารถรับ Break ได้!" })
 
         // const timeNow = moment().format('HH:mm:ss')
-        const timeNow = '09:30:00'
-        const messageBreak = ""
+        const timeNow = '13:30:00'
+        let messageBreak
 
         if (timeNow >= '08:30:00' && timeNow <= '12:00:00') {
             if (checkTraining.training_morning === true)
