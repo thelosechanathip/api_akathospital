@@ -27,19 +27,23 @@ exports.AddTraining = async (req, res) => {
         const checkUserInTrainingByNationalId = await pm.training.findFirst({
             where: { training_name: fetchFullnameByNationalId[0].fullname }
         })
-        if (checkUserInTrainingByNationalId) 
+        if (checkUserInTrainingByNationalId)
             return msg(res, 409, { message: 'มีการลงทะเบียนเข้าอบรมแล้วไม่สามารถลงทะเบียนซ้ำได้ ขอบคุณครับ/คะ!' })
 
         const fetchEnrollee = await pm.enrollee.findFirst({
             where: { fullname: fetchFullnameByNationalId[0].fullname }
         })
 
+        let training_break = true
+        if (!fetchEnrollee) training_break = false
+
         payload = {
-            training_name: fetchFullnameByNationalId[0].fullname
+            training_name: fetchFullnameByNationalId[0].fullname,
+            training_break
         }
 
         await pm.training.create({ data: payload })
-        return msg(res, 200, payload)
+        return msg(res, 200, { training_name: fetchFullnameByNationalId[0].fullname })
     } catch (err) {
         console.error("Internal error: ", err.message)
     }
@@ -54,7 +58,8 @@ exports.updateTraining = async (req, res) => {
         })
         if (!checkTraining) return msg(res, 404, { message: "คุณยังไม่ได้ลงทะเบียนเข้าอบรม" })
 
-        if (checkTraining.training_break === false) return msg(res, 400, { message: "คุณไม่ได้ลงทะเบียนเข้าอบรมล่วงหน้า!" })
+        if (checkTraining.training_break === false)
+            return msg(res, 400, { message: "คุณไม่ได้ลงทะเบียนเข้าอบรมล่วงหน้า!" })
 
         // const timeNow = moment().format('HH:mm:ss')
         const timeNow = '09:30:00'
