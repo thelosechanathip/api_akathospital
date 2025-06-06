@@ -63,7 +63,8 @@ router.post('/checkOut', checkOut);
 
 // Trainin Start
     const training = 'training'
-    router.post(`/${training}`, trainingController.AddTraining)
+    router.get(`/${training}`, trainingController.fetchAllDataSum)
+    router.post(`/${training}`, trainingController.addTraining)
     router.put(`/${training}`, trainingController.updateTraining)
     router.delete(`/${training}/clearRandomStateJson`, trainingController.clearRandomStateJson)
 // Trainin End

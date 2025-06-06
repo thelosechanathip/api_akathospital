@@ -59,7 +59,28 @@ exports.clearRandomStateJson = (req, res) => {
     return msg(res, 200, { message: 'ลบค่าในไฟล์ randomState.json สําเร็จ' })
 }
 
-exports.AddTraining = async (req, res) => {
+exports.fetchAllDataSum = async (req, res) => {
+    try {
+        const dateNow = moment().startOf('day'); // เริ่มต้นของวัน (เวลา 00:00:00)
+        const dateTomorrow = moment(dateNow).add(1, 'day'); // วันถัดไป (สำหรับเงื่อนไขน้อยกว่า)
+
+        const result = await pm.training.count({
+            where: {
+                created_at: {
+                    gte: dateNow.toISOString(), // มากกว่าหรือเท่ากับวันนี้เวลา 00:00:00
+                    lt: dateTomorrow.toISOString() // น้อยกว่าวันพรุ่งนี้เวลา 00:00:00
+                }
+            }
+        });
+
+        return msg(res, 200, { sumResult: result });
+    } catch (err) {
+        console.error("Internal error: ", err.message);
+        return msg(res, 500, { message: "Internal server error" });
+    }
+}
+
+exports.addTraining = async (req, res) => {
     try {
         const { national_id } = req.body
 
