@@ -1,0 +1,89 @@
+const pm = require('../../config/prisma')
+const { msg } = require('../../utils/message');
+const db_b = require('../../config/db_b');
+const moment = require('moment')
+
+exports.AddTraining = async (req, res) => {
+    try {
+        const { national_id } = req.body
+
+        const [fetchFullnameByNationalId] = await db_b.query(
+            `
+                SELECT 
+                    u.name AS fullname
+                FROM users AS u
+                INNER JOIN hrd_person AS hp ON u.PERSON_ID = hp.id
+                INNER JOIN hrd_prefix AS hpr ON hp.HR_PREFIX_ID = hpr.HR_PREFIX_ID
+                INNER JOIN hrd_position AS hpo ON hp.HR_POSITION_ID = hpo.HR_POSITION_ID
+                INNER JOIN hrd_department AS hd ON hp.HR_DEPARTMENT_ID = hd.HR_DEPARTMENT_ID
+                INNER JOIN hrd_department_sub AS hds ON hp.HR_DEPARTMENT_SUB_ID = hds.HR_DEPARTMENT_SUB_ID
+                INNER JOIN hrd_department_sub_sub AS hdss ON hds.HR_DEPARTMENT_SUB_ID = hdss.HR_DEPARTMENT_SUB_ID
+                WHERE hp.HR_CID = ?
+                LIMIT 1
+            `,
+            [national_id]
+        )
+
+        const checkUserInTrainingByNationalId = await pm.training.findFirst({
+            where: { training_name: fetchFullnameByNationalId[0].fullname }
+        })
+        if (checkUserInTrainingByNationalId) return msg(res, 409, {
+            message: 'มีการลงทะเบียนเข้าอบรมแล้วไม่สามารถลงซ้ำได้ ขอบคุณครับ/คะ!'
+        })
+
+        const fetchEnrollee = await pm.enrollee.findFirst({
+            where: { fullname: fetchFullnameByNationalId[0].fullname }
+        })
+
+        let payload = {}
+        if (!fetchEnrollee) {
+            payload = {
+                training_name: fetchFullnameByNationalId[0].fullname,
+                training_break: false
+            }
+        } else {
+            payload = {
+                training_name: fetchFullnameByNationalId[0].fullname,
+                training_break: true
+            }
+        }
+
+        await pm.training.create({ data: payload })
+        return msg(res, 200, payload)
+    } catch (err) {
+        console.error("Internal error: ", err.message)
+    }
+}
+
+exports.updateTraining = async (req, res) => {
+    try {
+        const { training_name, training_break } = req.body
+
+        const checkTraining = await pm.training.findFirst({
+            where: { training_name, training_break }
+        })
+        if (!checkTraining || checkTraining.length === 0) return msg(res, 404, { message: "คุณยังไม่ได้ลงทะเบียนเข้าอบรม" })
+
+        // const timeNow = moment().format('HH:mm:ss')
+        const timeNow = '09:30:00'
+
+        if (timeNow >= '08:30:00' && timeNow <= '12:00:00') {
+            if (checkTraining.training_morning === false) return msg(res, 400, { message: "คุณไม่ได้ลงทะเบียนเข้าอบรมล่วงหน้า" })
+            await pm.training.update({
+                where: { training_name },
+                data: {
+                    training_morning: true
+                }
+            })
+            return msg(res, 200, { message: "ลงทะเบียนรับ Break เช้าเสร็จสิ้น" })
+        } else if (timeNow >= '12:00:00' && timeNow <= '13:00:00') {
+            if (checkTraining.training_noon === false) return msg(res, 400, { message: "คุณไม่ได้ลงทะเบียนเข้าอบรมล่วงหน้า" })
+        } else if (timeNow >= '13:30:00' && timeNow <= '16:30:00') {
+            if (checkTraining.training_afternoon === false) return msg(res, 400, { message: "คุณไม่ได้ลงทะเบียนเข้าอบรมล่วงหน้า" })
+        }
+
+        return msg(res, 200, { data: timeNow })
+    } catch (err) {
+        console.error("Internal error: ", err.message)
+    }
+}

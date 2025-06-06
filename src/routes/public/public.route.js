@@ -16,6 +16,8 @@ const { getAllDataPositions, syncDataPositions } = require('../../controllers/pu
 
 const { getEmployeeSystemRequests, createEmployeeSystemRequest, removeEmployeeSystemRequest } = require('../../controllers/public/employeeSystemRequestController');
 
+const trainingController = require('../../controllers/public/trainingController')
+
 // EmployeeSystemRequest
 router.get('/getEmployeeSystemRequests', getEmployeeSystemRequests);
 router.post('/createEmployeeSystemRequest', createEmployeeSystemRequest);
@@ -58,5 +60,11 @@ router.post('/checkOut', checkOut);
         router.get('/getPositions', getAllDataPositions);
         router.post('/syncPositions', syncDataPositions);
 // Sycn Setting End
+
+// Trainin Start
+    const training = 'training'
+    router.post(`/${training}`, trainingController.AddTraining)
+    router.put(`/${training}`, trainingController.updateTraining)
+// Trainin End
 
 module.exports = router;

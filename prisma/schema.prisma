@@ -1145,3 +1145,20 @@ model accessibilities_log {
   status               String   @db.VarChar(100)
   created_at           DateTime @default(now()) @db.Timestamp(0)
 }
+
+model training {
+  training_id        Int       @id @default(autoincrement())
+  training_name      String    @unique(map: "training_name") @db.VarChar(100)
+  training_break     Boolean?
+  training_morning   Boolean?  @default(false)
+  training_noon      Boolean?
+  training_afternoon Boolean?  @default(false)
+  created_at         DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model enrollee {
+  id         Int    @id @default(autoincrement())
+  fullname   String @db.VarChar(255)
+  position   String @db.VarChar(255)
+  department String @db.VarChar(255)
+}
