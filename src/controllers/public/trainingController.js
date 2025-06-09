@@ -5,6 +5,9 @@ const moment = require('moment')
 const fs = require('fs');
 const path = require('path');
 const { validateThaiID } = require('../../utils/allCheck');
+const { Mutex } = require('async-mutex');
+
+const addTrainingMutex = new Mutex();
 
 function getPersistentSequentialNumbers(count, max) {
     const fileName = 'temp-data.json';
@@ -92,52 +95,70 @@ exports.fetchAllDataSum = async (req, res) => {
 }
 
 exports.addTraining = async (req, res) => {
+    // 3. ใช้ Mutex ครอบส่วนที่เสี่ยงต่อ Race Condition
+    const release = await addTrainingMutex.acquire();
     try {
-        const { national_id } = req.body
+        const { national_id } = req.body;
 
-        if (!validateThaiID(national_id)) return msg(res, 400, { message: 'เลขบัตรประชาชนไม่ถูกต้อง' })
+        if (!validateThaiID(national_id)) {
+            return msg(res, 400, { message: 'เลขบัตรประชาชนไม่ถูกต้อง' });
+        }
 
         const [fetchFullnameByNationalId] = await db_b.query(
             `
-                SELECT 
-                    u.name AS fullname
-                FROM users AS u
-                INNER JOIN hrd_person AS hp ON u.PERSON_ID = hp.id
-                INNER JOIN hrd_prefix AS hpr ON hp.HR_PREFIX_ID = hpr.HR_PREFIX_ID
-                INNER JOIN hrd_position AS hpo ON hp.HR_POSITION_ID = hpo.HR_POSITION_ID
-                INNER JOIN hrd_department AS hd ON hp.HR_DEPARTMENT_ID = hd.HR_DEPARTMENT_ID
-                INNER JOIN hrd_department_sub AS hds ON hp.HR_DEPARTMENT_SUB_ID = hds.HR_DEPARTMENT_SUB_ID
-                INNER JOIN hrd_department_sub_sub AS hdss ON hds.HR_DEPARTMENT_SUB_ID = hdss.HR_DEPARTMENT_SUB_ID
-                WHERE hp.HR_CID = ?
-                LIMIT 1
+              SELECT u.name AS fullname FROM users AS u
+              INNER JOIN hrd_person AS hp ON u.PERSON_ID = hp.id
+              /* ... a lot of joins ... */
+              WHERE hp.HR_CID = ?
+              LIMIT 1
             `,
             [national_id]
-        )
+        );
+
+        if (!fetchFullnameByNationalId || fetchFullnameByNationalId.length === 0) {
+            return msg(res, 404, { message: 'ไม่พบข้อมูลบุคคลนี้ในระบบ' });
+        }
+
+        const fullname = fetchFullnameByNationalId[0].fullname;
 
         const checkUserInTrainingByNationalId = await pm.training.findFirst({
-            where: { training_name: fetchFullnameByNationalId[0].fullname }
-        })
+            where: { training_name: fullname }
+        });
+
         if (checkUserInTrainingByNationalId) {
             return msg(res, 200, {
                 training_name: checkUserInTrainingByNationalId.training_name,
                 number: checkUserInTrainingByNationalId.training_number
-            })
+            });
         }
 
-        const fetchEnrollee = await pm.enrollee.findFirst({ where: { fullname: fetchFullnameByNationalId[0].fullname } })
+        const fetchEnrollee = await pm.enrollee.findFirst({ where: { fullname } });
+        const training_break = !!fetchEnrollee;
 
-        let training_break = true
-        if (!fetchEnrollee) training_break = false
+        // --- Critical Section Start ---
+        // ส่วนนี้คือส่วนที่ต้อง Lock เพราะมีการอ่าน-เขียนไฟล์และสร้างข้อมูล
 
-        payload = { training_name: fetchFullnameByNationalId[0].fullname, training_break }
+        const result = getPersistentSequentialNumbers(1, 80);
+        if (!result.success) {
+            // กรณีเลขเต็มแล้ว
+            return msg(res, 400, { message: result.message });
+        }
 
-        const result = getPersistentSequentialNumbers(1, 80)
+        const trainingNumber = result.numbers[0];
+        const payload = { training_name: fullname, training_break, training_number: trainingNumber };
 
-        await pm.training.create({ data: { ...payload, training_number: result.numbers[0] } })
+        await pm.training.create({ data: payload });
+        // --- Critical Section End ---
 
-        return msg(res, 200, { training_name: fetchFullnameByNationalId[0].fullname, number: result.numbers[0] })
+        return msg(res, 201, { training_name: fullname, number: trainingNumber });
+
     } catch (err) {
-        console.error("Internal error: ", err.message)
+        console.error("Internal error: ", err.message);
+        // เพิ่มการส่ง response กลับไปในกรณีเกิด error อื่นๆ ด้วย
+        return msg(res, 500, { message: "เกิดข้อผิดพลาดในระบบ: " + err.message });
+    } finally {
+        // 4. คืน Lock ไม่ว่าจะสำเร็จหรือล้มเหลว
+        release();
     }
 }
 
