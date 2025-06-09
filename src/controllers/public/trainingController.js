@@ -118,7 +118,7 @@ exports.addTraining = async (req, res) => {
         if (!fetchFullnameByNationalId || fetchFullnameByNationalId.length === 0) {
             return msg(res, 404, { message: 'ไม่พบข้อมูลบุคคลนี้ในระบบ' });
         }
-
+        
         const fullname = fetchFullnameByNationalId[0].fullname;
 
         const checkUserInTrainingByNationalId = await pm.training.findFirst({
@@ -137,20 +137,20 @@ exports.addTraining = async (req, res) => {
 
         // --- Critical Section Start ---
         // ส่วนนี้คือส่วนที่ต้อง Lock เพราะมีการอ่าน-เขียนไฟล์และสร้างข้อมูล
-
+        
         const result = getPersistentSequentialNumbers(1, 80);
         if (!result.success) {
             // กรณีเลขเต็มแล้ว
             return msg(res, 400, { message: result.message });
         }
-
+        
         const trainingNumber = result.numbers[0];
         const payload = { training_name: fullname, training_break, training_number: trainingNumber };
 
         await pm.training.create({ data: payload });
         // --- Critical Section End ---
 
-        return msg(res, 201, { training_name: fullname, number: trainingNumber });
+        return msg(res, 200, { training_name: fullname, number: trainingNumber });
 
     } catch (err) {
         console.error("Internal error: ", err.message);
