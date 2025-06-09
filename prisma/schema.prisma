@@ -1153,6 +1153,7 @@ model training {
   training_morning   Boolean? @default(false)
   training_noon      Boolean? @default(false)
   training_afternoon Boolean? @default(false)
+  training_number    Int
   created_at         DateTime @default(now()) @db.Timestamp(0)
   updated_at         DateTime @default(now()) @db.Timestamp(0)
 }
@@ -1162,4 +1163,5 @@ model enrollee {
   fullname   String @db.VarChar(255)
   position   String @db.VarChar(255)
   department String @db.VarChar(255)
+  created_at String @default(dbgenerated("(current_timestamp())")) @db.LongText
 }

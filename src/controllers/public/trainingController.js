@@ -1,55 +1,68 @@
-const pm = require('../../config/prisma')
+const pm = require('../../config/prisma');
 const { msg } = require('../../utils/message');
 const db_b = require('../../config/db_b');
 const moment = require('moment')
 const fs = require('fs');
 const path = require('path');
 const { validateThaiID } = require('../../utils/allCheck');
+const fetch = require('node-fetch');
+const { off } = require('process');
 
-function getPersistentUniqueRandomNumbers(count, max) {
-    const filePath = path.join(__dirname, 'randomState.json');
-    let state = { lastRun: moment().format('YYYY-MM-DD'), usedNumbers: [] };
+function getPersistentSequentialNumbers(count, max) {
+    const fileName = 'temp-data.json';
+    const filePath = path.join(__dirname, fileName);
+    const currentDate = moment().format('YYYY-MM-DD');
+    // const currentDate = '2025-06-10';
+    let payload;
+
+    // --- ส่วนที่แก้ไข ---
+    try {
+        // 1. พยายามอ่านและแปลงไฟล์ JSON
+        const dataFromFile = fs.readFileSync(filePath, 'utf-8');
+        const parsedData = JSON.parse(dataFromFile);
+
+        // 2. ตรวจสอบวันที่จากข้อมูลในไฟล์
+        if (parsedData.dataNow === currentDate) {
+            // ถ้าเป็นวันเดียวกัน ให้ใช้ข้อมูลเดิม
+            payload = parsedData;
+        } else {
+            // ถ้าเป็นวันใหม่ ให้รีเซ็ต payload
+            payload = { dataNow: currentDate, numbers: [] };
+        }
+    } catch (err) {
+        // 3. หากเกิด Error (เช่น ไฟล์ยังไม่มี, ไฟล์ว่าง) ให้สร้าง payload ใหม่
+        payload = { dataNow: currentDate, numbers: [] };
+    }
+    // --- สิ้นสุดส่วนที่แก้ไข ---
 
     try {
-        const fileContent = fs.readFileSync(filePath, 'utf8');
-        if (fileContent) {
-            state = JSON.parse(fileContent);
+        if (payload.numbers.length >= max) {
+            return { success: false, message: 'หมายเลขถูกใช้งานครบแล้ว', numbers: [] };
         }
-    } catch (e) {
-        // ไฟล์ยังไม่มีหรืออ่านไม่ได้
-    }
 
-    // ตรวจสอบว่าวันที่เปลี่ยนไปหรือไม่
-    const currentDate = moment().format('YYYY-MM-DD'); // หรือใช้ moment().format('YYYY-MM-DD') สำหรับวันที่จริง
-    if (state.lastRun !== currentDate) {
-        // ล้างข้อมูลทั้งหมด
-        state = { lastRun: currentDate, usedNumbers: [] };
-    }
-
-    // ตรวจสอบว่าสุ่มเลขครบ max แล้วหรือยัง
-    if (state.usedNumbers.length >= max) {
-        return { success: false, message: 'จำนวนที่นั่งเต็มแล้ว', numbers: [] };
-    }
-
-    const usedNumbers = new Set(state.usedNumbers);
-    const result = [];
-
-    while (result.length < count && usedNumbers.size < max) {
-        const num = Math.floor(Math.random() * max) + 1;
-        if (!usedNumbers.has(num)) {
-            usedNumbers.add(num);
-            result.push(num);
+        // สร้างหมายเลขใหม่ (ส่วนนี้ถูกต้องอยู่แล้ว)
+        const result = [];
+        const startNumber = payload.numbers.length + 1;
+        for (let i = 0; i < count; i++) {
+            const nextNumber = startNumber + i;
+            if (nextNumber > max) break;
+            result.push(nextNumber);
         }
+
+        // Update Payload และบันทึกไฟล์
+        if (result.length > 0) {
+            payload.numbers.push(...result);
+            // บันทึก payload ที่อัปเดตแล้วลงไฟล์
+            fs.writeFileSync(filePath, JSON.stringify(payload, null, 2));
+        }
+
+        // ต้อง return ค่าที่ถูกต้องหลังการทำงาน
+        return { success: true, message: 'สร้างหมายเลขสำเร็จ', numbers: result };
+
+    } catch (err) {
+        // เปลี่ยนการโยน Error ให้คืนค่าเป็น object ที่มีความหมายแทน
+        return { success: false, message: err.message, numbers: [] };
     }
-
-    state.usedNumbers = [...usedNumbers];
-    fs.writeFileSync(filePath, JSON.stringify(state));
-
-    return {
-        success: true,
-        message: usedNumbers.size >= max ? 'จำนวนที่นั่งใกล้เต็มแล้ว' : 'สำเร็จ',
-        numbers: result
-    };
 }
 
 exports.clearRandomStateJson = (req, res) => {
@@ -84,8 +97,7 @@ exports.addTraining = async (req, res) => {
     try {
         const { national_id } = req.body
 
-        if (!validateThaiID(national_id))
-            return msg(res, 400, { message: 'เลขบัตรประชาชนไม่ถูกต้อง' })
+        if (!validateThaiID(national_id)) return msg(res, 400, { message: 'เลขบัตรประชาชนไม่ถูกต้อง' })
 
         const [fetchFullnameByNationalId] = await db_b.query(
             `
@@ -107,26 +119,25 @@ exports.addTraining = async (req, res) => {
         const checkUserInTrainingByNationalId = await pm.training.findFirst({
             where: { training_name: fetchFullnameByNationalId[0].fullname }
         })
-        if (checkUserInTrainingByNationalId)
-            return msg(res, 409, { message: 'มีการลงทะเบียนเข้าอบรมแล้วไม่สามารถลงทะเบียนซ้ำได้ ขอบคุณครับ/คะ!' })
+        if (checkUserInTrainingByNationalId) {
+            return msg(res, 200, {
+                training_name: checkUserInTrainingByNationalId.training_name,
+                number: checkUserInTrainingByNationalId.training_number
+            })
+        }
 
-        const fetchEnrollee = await pm.enrollee.findFirst({
-            where: { fullname: fetchFullnameByNationalId[0].fullname }
-        })
+        const fetchEnrollee = await pm.enrollee.findFirst({ where: { fullname: fetchFullnameByNationalId[0].fullname } })
 
         let training_break = true
         if (!fetchEnrollee) training_break = false
 
-        payload = {
-            training_name: fetchFullnameByNationalId[0].fullname,
-            training_break
-        }
+        payload = { training_name: fetchFullnameByNationalId[0].fullname, training_break }
 
-        await pm.training.create({ data: payload })
+        const result = getPersistentSequentialNumbers(1, 80)
 
-        const result = getPersistentUniqueRandomNumbers(1, 80)
+        await pm.training.create({ data: { ...payload, training_number: result.numbers[0] } })
 
-        return msg(res, 200, { training_name: fetchFullnameByNationalId[0].fullname, result: result })
+        return msg(res, 200, { training_name: fetchFullnameByNationalId[0].fullname, number: result.numbers[0] })
     } catch (err) {
         console.error("Internal error: ", err.message)
     }
