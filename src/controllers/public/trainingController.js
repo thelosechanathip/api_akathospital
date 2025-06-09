@@ -5,8 +5,6 @@ const moment = require('moment')
 const fs = require('fs');
 const path = require('path');
 const { validateThaiID } = require('../../utils/allCheck');
-const fetch = require('node-fetch');
-const { off } = require('process');
 
 function getPersistentSequentialNumbers(count, max) {
     const fileName = 'temp-data.json';
