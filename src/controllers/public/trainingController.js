@@ -138,7 +138,7 @@ exports.addTraining = async (req, res) => {
         // --- Critical Section Start ---
         // ส่วนนี้คือส่วนที่ต้อง Lock เพราะมีการอ่าน-เขียนไฟล์และสร้างข้อมูล
         
-        const result = getPersistentSequentialNumbers(1, 80);
+        const result = getPersistentSequentialNumbers(1, 100);
         if (!result.success) {
             // กรณีเลขเต็มแล้ว
             return msg(res, 400, { message: result.message });
