@@ -338,7 +338,7 @@ exports.checkIn = async (req, res) => {
     try {
         let timeNow = moment().format('HH:mm:ss'); // ดึงเวลาปัจจุบัน
 
-        if (!req.body.national_id || !req.body.shift_type_id) return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน' });
+        if (!req.body.national_id || !req.body.shift_type_id || !req.body.shift_id) return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน' });
 
         const bytes = CryptoJS.AES.decrypt(req.body.national_id, process.env.PASS_KEY);
         const national_id = bytes.toString(CryptoJS.enc.Utf8);
@@ -379,7 +379,7 @@ exports.checkIn = async (req, res) => {
 
         if (req.body.shift_type_id === 1) { // เวลาปกติ
             const fetchDataOneShiftResult = await pm.shifts.findFirst({
-                where: { shift_starting: { lte: timeNow }, shift_ending: { gte: timeNow } },
+                where: { shift_id: Number(req.body.shift_id) },
                 select: {
                     shift_id: true,
                     shift_name: true,
@@ -389,6 +389,7 @@ exports.checkIn = async (req, res) => {
                 }
             });
             if (!fetchDataOneShiftResult) return msg(res, 400, { message: "ไม่พบกะการทำงานที่ตรงกับเวลาปัจจุบัน" });
+            if (timeNow <= fetchDataOneShiftResult.shift_starting) return msg(res, 400, { code: 400, result: false, message: `ยังไม่ถึงเวลากะนี้ กรุณารอเวลา ${fetchDataOneShiftResult.shift_starting.slice(0, 5)}น. เป็นต้นไป`, timeStamp: moment().add(543, "years").format('DD/MM/YYYY HH:mm:ss') });
             fetchDataOneShift = fetchDataOneShiftResult.shift_id
 
             fetchDataOneCheckInStatus = await pm.check_in_status.findFirst({
@@ -397,7 +398,7 @@ exports.checkIn = async (req, res) => {
             });
         } else if (req.body.shift_type_id === 2) {
             const fetchDataOneShiftResult = await pm.shifts.findFirst({
-                where: { shift_starting: { lte: timeNow }, shift_ending: { gte: timeNow } },
+                where: { shift_id: Number(req.body.shift_id) },
                 select: {
                     shift_id: true,
                     shift_name: true,
@@ -407,6 +408,7 @@ exports.checkIn = async (req, res) => {
                 }
             });
             if (!fetchDataOneShiftResult) return msg(res, 400, { message: "ไม่พบกะการทำงานที่ตรงกับเวลาปัจจุบัน" });
+            if (timeNow <= fetchDataOneShiftResult.shift_starting) return msg(res, 400, { code: 400, result: false, message: `ยังไม่ถึงเวลากะนี้ กรุณารอเวลา ${fetchDataOneShiftResult.shift_starting.slice(0, 5)}น. เป็นต้นไป`, timeStamp: moment().add(543, "years").format('DD/MM/YYYY HH:mm:ss') });
             fetchDataOneShift = fetchDataOneShiftResult.shift_id
 
             fetchDataOneCheckInStatus = await pm.check_in_status.findFirst({
@@ -606,6 +608,7 @@ exports.checkOut = async (req, res) => {
             where: { national_id },
             select: { user_id: true, fullname_thai: true }
         });
+
         const fullname = checkUser.fullname_thai;
         if (!checkUser) return msg(res, 404, { message: 'ไม่มี User นี้อยู่ในระบบ กรุณา Register ก่อนใช้งาน!' });
 
