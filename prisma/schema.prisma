@@ -957,6 +957,7 @@ model hospital_profiles {
   created_by                   String?  @default("admin") @db.VarChar(100)
   updated_at                   DateTime @default(now()) @db.Timestamp(0)
   updated_by                   String?  @default("admin") @db.VarChar(100)
+  hospital_profile_years       String   @db.VarChar(50)
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -1164,4 +1165,27 @@ model enrollee {
   position   String @db.VarChar(255)
   department String @db.VarChar(255)
   created_at String @default(dbgenerated("(current_timestamp())")) @db.LongText
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model main_vision_mission_statements_log {
+  main_vision_mission_statements_log_id Int      @id @default(autoincrement())
+  ip_address                            String   @db.VarChar(100)
+  name                                  String   @db.VarChar(100)
+  request_method                        String   @db.VarChar(100)
+  endpoint                              String   @db.VarChar(100)
+  execution_time                        Float    @db.Float
+  row_count                             Float    @db.Float
+  status                                String   @db.VarChar(100)
+  created_at                            DateTime @default(now()) @db.Timestamp(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model royal_blessings {
+  ryb_id          Int      @id @default(autoincrement())
+  ryb_name        String   @db.Char(100)
+  ryb_lastname    String   @db.Char(100)
+  ryb_event_title String   @db.VarChar(255)
+  ryb_royal_name  String   @db.VarChar(255)
+  created_at      DateTime @default(now()) @db.Timestamp(0)
 }

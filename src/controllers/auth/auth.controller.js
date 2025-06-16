@@ -589,7 +589,7 @@ exports.editUser = async (req, res) => {
         const fullname = req.user.fullname_thai;
         const { image, position_id, department_id, ...userData } = req.body;
 
-        if (!isBase64Png(userData.image)) return msg(res, 400, { message: `${image} ไม่ใช่รูปแบบ PNG base64 ที่ถูกต้อง` });
+        // if (!isBase64Png(userData.image)) return msg(res, 400, { message: `${image} ไม่ใช่รูปแบบ PNG base64 ที่ถูกต้อง` });
 
         // Remove the data URI prefix if it exists
         const base64String = image.replace(/^data:image\/\w+;base64,/, '');

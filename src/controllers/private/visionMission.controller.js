@@ -1,9 +1,9 @@
-const services = require('../../services/private/hospitalProfile.service');
+const services = require('../../services/private/visionMission.service');
 const { msg } = require('../../utils/message');
 const { buildLogPayload } = require('../../utils/settingLog');
 
-// fetchAllData on hospital_profiles
-exports.fetchHospitalProfileController = async (req, res, next) => {
+// fetchAllData on director_biographies
+exports.fetchVisionMissionsController = async (req, res, next) => {
     try {
         const logPayload = await buildLogPayload(req, req?.user?.fullname_thai);
         const result = await services.fetchAllData(logPayload);
@@ -14,8 +14,7 @@ exports.fetchHospitalProfileController = async (req, res, next) => {
     }
 };
 
-// CreateData on hospital_profiles
-exports.createHospitalProfileController = async (req, res, next) => {
+exports.createVisionMissionsController = async (req, res, next) => {
     try {
         const logPayload = await buildLogPayload(req, req?.user?.fullname_thai);
         const result = await services.createData(req.body, req?.user?.fullname_thai, logPayload);
@@ -26,11 +25,11 @@ exports.createHospitalProfileController = async (req, res, next) => {
     }
 };
 
-// UpdateData on hospital_profiles
-exports.updateHospitalProfileController = async (req, res, next) => {
+exports.updateVisionMissionsController = async (req, res, next) => {
+    let fullname = req?.user?.fullname_thai;
     try {
-        const logPayload = await buildLogPayload(req, req?.user?.fullname_thai);
-        const result = await services.updateData(req.params.id, req.body, req.user.fullname_thai, logPayload);
+        const logPayload = await buildLogPayload(req, fullname);
+        const result = await services.updateData(req.params.id, req.body, fullname, logPayload);
         const payload = result.data ? { data: result.data } : { message: result.message };
         return msg(res, result.status, payload);
     } catch (err) {
@@ -38,10 +37,11 @@ exports.updateHospitalProfileController = async (req, res, next) => {
     }
 };
 
-// RemoveData on hospital_profiles
-exports.removeHospitalProfileController = async (req, res, next) => {
+// RemoveData on director_biographies
+exports.removeVisionMissionsController = async (req, res, next) => {
+    let fullname = req?.user?.fullname_thai;
     try {
-        const logPayload = await buildLogPayload(req, req?.user?.fullname_thai);
+        const logPayload = await buildLogPayload(req, fullname);
         const result = await services.removeData(req.params.id, logPayload);
         const payload = result.data ? { data: result.data } : { message: result.message };
         return msg(res, result.status, payload);

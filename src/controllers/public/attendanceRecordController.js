@@ -827,3 +827,22 @@ exports.checkOut = async (req, res) => {
         return msg(res, 500, { message: "Internal Server Error" });
     }
 };
+
+// ดึงข้อมูลประเภทของเวลาเข้างาน
+exports.getShifts = async (req, res) => {
+    try {
+        const getAllDataShiftTypes = await pm.shifts.findMany({
+            select: {
+                shift_id: true,
+                shift_name: true
+            }, orderBy: {
+                shift_id: 'asc'
+            }
+        });
+
+        return msg(res, 200, { data: getAllDataShiftTypes });
+    } catch (error) {
+        console.error("Error checkIn:", error.message);
+        return msg(res, 500, { message: "Internal Server Error" });
+    }
+}

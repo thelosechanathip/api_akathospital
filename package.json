@@ -11,7 +11,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@prisma/client": "^6.5.0",
+    "@prisma/client": "^6.9.0",
     "@scalar/express-api-reference": "^0.4.193",
     "async-mutex": "^0.5.0",
     "axios": "^1.8.2",
