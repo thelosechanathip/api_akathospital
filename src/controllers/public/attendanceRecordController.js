@@ -375,7 +375,7 @@ exports.checkIn = async (req, res) => {
     try {
         let timeNow = moment().format('HH:mm:ss'); // ดึงเวลาปัจจุบัน
 
-        if (!req.body.national_id || !req.body.shift_type_id || !req.body.shift_id || !req.body.latitude || !req.body.longitude || !req.body.desc ) return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน' });
+        if (!req.body.national_id || !req.body.shift_type_id ) return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน' });
 
         const bytes = CryptoJS.AES.decrypt(req.body.national_id, process.env.PASS_KEY);
         const national_id = bytes.toString(CryptoJS.enc.Utf8);
@@ -415,6 +415,9 @@ exports.checkIn = async (req, res) => {
         let fetchDataOneShift = null;
 
         if (req.body.shift_type_id === 1) { // เวลาปกติ
+
+            if(!req.body.shift_id || !req.body.latitude || !req.body.longitude || !req.body.desc) return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน!' });
+
             const fetchDataOneShiftResult = await pm.shifts.findFirst({
                 where: { shift_id: Number(req.body.shift_id) },
                 select: {
