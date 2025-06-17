@@ -56,6 +56,7 @@ const {
     fetchAccessibilitiesController,
     createAccessibilityController
 } = require('../../controllers/setting/acessibilityController');
+const systemLocationsController = require('../../controllers/setting/systemLocationsController');
 
 // API Version Setting Start
 // ApiVersion
@@ -193,5 +194,12 @@ const baseAccessibility = 'accessibility';
 router.get(`/${baseAccessibility}`, authCheckTokenAdmin, fetchAccessibilitiesController);
 router.post(`/${baseAccessibility}`, authCheckTokenAdmin, createAccessibilityController);
 // Accessibility End
+
+// System_locations
+const baseSystem_locations = 'systemLocations';
+router.get(`/${baseSystem_locations}`, authCheckTokenAdmin, systemLocationsController?.fetchSystemLocations);
+router.post(`/${baseSystem_locations}`, authCheckTokenAdmin, systemLocationsController?.postSystemLocations);
+router.put(`/${baseSystem_locations}/:id`, authCheckTokenAdmin, systemLocationsController?.putSystemLocations);
+router.delete(`/${baseSystem_locations}/:id`, authCheckTokenAdmin, systemLocationsController?.removeSystemLocations);
 
 module.exports = router;

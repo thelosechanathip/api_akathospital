@@ -300,6 +300,25 @@ exports.searchAttendanceRecords = async (req, res) => {
     }
 };
 
+exports.fetchGps = async (req, res) => {
+    try {
+        const fetchGps = await pm.system_locations.findMany({
+            select: {
+                stl_id: true,
+                stl_name: true,
+                stl_lat: true,
+                stl_lon: true,
+                stl_radius: true,
+                stl_block: true
+            }
+        })
+        return msg(res, 200, { data: fetchGps });
+    } catch (error) {
+        console.error("Error fetchHolidays:", error.message);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+}
+
 // Function ในการตรวจสอบวันปัจจุบันว่าเป็นวันหยุดหรือไม่?
 exports.fetchHolidays = async (req, res) => {
     try {
