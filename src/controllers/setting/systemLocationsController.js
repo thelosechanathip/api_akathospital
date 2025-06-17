@@ -177,6 +177,10 @@ exports.removeSystemLocations = async (req, res) => {
             }
         });
 
+        const maxIdFormIpdResult = await pm.$queryRaw`SELECT COALESCE(MAX(stl_id), 0) + 1 AS nextId FROM system_locations`;
+
+        // รีเซ็ตค่า AUTO_INCREMENT
+        await pm.$executeRawUnsafe(`ALTER TABLE system_locations AUTO_INCREMENT = ${maxIdFormIpdResult[0].nextId}`);
         return msg(res, 200, { message: `ID: ${id} removed successfully!` });
     } catch (error) {
         console.log('removeSystemLocations : ', error);
