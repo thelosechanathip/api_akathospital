@@ -179,6 +179,12 @@ model attendance_records {
   created_by                                                                String            @default("admin") @db.VarChar(50)
   updated_at                                                                DateTime          @default(now()) @db.Timestamp(0)
   updated_by                                                                String            @default("admin") @db.VarChar(50)
+  location_lat_start                                                        Float?
+  location_lon_start                                                        Float?
+  desc_start                                                                String?           @db.VarChar(190)
+  desc_end                                                                  String?           @db.VarChar(190)
+  location_lat_end                                                          Float?
+  location_lon_end                                                          Float?
   check_in_status                                                           check_in_status?  @relation(fields: [check_in_status_id], references: [check_in_status_id], onDelete: Restrict, onUpdate: Restrict, map: "attendance_records_on_check_in_status")
   check_out_status                                                          check_out_status? @relation(fields: [check_out_status_id], references: [check_out_status_id], onDelete: Restrict, onUpdate: Restrict, map: "attendance_records_on_check_out_status")
   shift_types                                                               shift_types?      @relation(fields: [shift_type_id], references: [shift_type_id], onDelete: Restrict, onUpdate: Restrict, map: "attendance_records_on_shift_types")

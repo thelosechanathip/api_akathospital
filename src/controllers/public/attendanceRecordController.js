@@ -357,7 +357,7 @@ exports.checkIn = async (req, res) => {
     try {
         let timeNow = moment().format('HH:mm:ss'); // ดึงเวลาปัจจุบัน
 
-        if (!req.body.national_id || !req.body.shift_type_id || !req.body.shift_id) return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน' });
+        if (!req.body.national_id || !req.body.shift_type_id || !req.body.shift_id || !req.body.latitude || !req.body.longitude || !req.body.desc ) return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน' });
 
         const bytes = CryptoJS.AES.decrypt(req.body.national_id, process.env.PASS_KEY);
         const national_id = bytes.toString(CryptoJS.enc.Utf8);
@@ -466,6 +466,9 @@ exports.checkIn = async (req, res) => {
                 starting: timeNow,
                 starting_signature_id: fetchSignature.signature_user_id,
                 check_in_status_id: fetchDataOneCheckInStatus.check_in_status_id,
+                location_lat_start: parseFloat(req.body.latitude),
+                location_lon_start: parseFloat(req.body.longitude),
+                desc_start: req.body.desc,
                 created_by: fullname,
                 updated_by: fullname
             }
@@ -491,10 +494,10 @@ exports.checkIn = async (req, res) => {
                 userId: user_id,
                 fullname: fullname_thai,
                 telegramChatId: notify_user_token,
-                expiresIn: "20s"
+                expiresIn: "30s"
             },
             process.env.SECRET_KEY,
-            { expiresIn: "20s" }
+            { expiresIn: "30s" }
         );
 
         const otpCode = generateOtp(notify_user_token);
@@ -618,7 +621,7 @@ exports.checkOut = async (req, res) => {
         let dateNow = moment().format('YYYY-MM-DD');
         let timeNow = moment().format('HH:mm:ss'); // ดึงเวลาปัจจุบัน
 
-        if (!req.body.national_id) return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน!' });
+        if (!req.body.national_id || !req.body.latitude || !req.body.longitude || !req.body.desc) return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน!' });
 
         const bytes = CryptoJS.AES.decrypt(req.body.national_id, process.env.PASS_KEY);
         const national_id = bytes.toString(CryptoJS.enc.Utf8);
@@ -679,7 +682,10 @@ exports.checkOut = async (req, res) => {
                 data: {
                     ending: timeNow,
                     ending_signature_id: signature_user_id,
-                    check_out_status_id: fetchOneCheckOutStatus.check_out_status_id
+                    check_out_status_id: fetchOneCheckOutStatus.check_out_status_id,
+                    location_lat_end: parseFloat(req.body.latitude),
+                    location_lon_end: parseFloat(req.body.longitude),
+                    desc_end: req.body.desc
                 }
             });
             const endTime_1 = Date.now() - startTime_1;
@@ -714,7 +720,10 @@ exports.checkOut = async (req, res) => {
                 },
                 data: {
                     ending: timeNow,
-                    check_out_status_id: fetchOneCheckOutStatus.check_out_status_id
+                    check_out_status_id: fetchOneCheckOutStatus.check_out_status_id,
+                    location_lat_end: parseFloat(req.body.latitude),
+                    location_lon_end: parseFloat(req.body.longitude),
+                    desc_end: req.body.desc
                 }
             });
             const endTime_2 = Date.now() - startTime_2;
@@ -751,7 +760,10 @@ exports.checkOut = async (req, res) => {
                     data: {
                         ending: timeNow,
                         ending_signature_id: signature_user_id,
-                        check_out_status_id: fetchOneCheckOutStatus.check_out_status_id
+                        check_out_status_id: fetchOneCheckOutStatus.check_out_status_id,
+                        location_lat_end: parseFloat(req.body.latitude),
+                        location_lon_end: parseFloat(req.body.longitude),
+                        desc_end: req.body.desc
                     }
                 });
                 const endTime_3 = Date.now() - startTime_3;
@@ -786,7 +798,10 @@ exports.checkOut = async (req, res) => {
                     },
                     data: {
                         ending: timeNow,
-                        check_out_status_id: fetchOneCheckOutStatus.check_out_status_id
+                        check_out_status_id: fetchOneCheckOutStatus.check_out_status_id,
+                        location_lat_end: parseFloat(req.body.latitude),
+                        location_lon_end: parseFloat(req.body.longitude),
+                        desc_end: req.body.desc
                     }
                 });
                 const endTime_4 = Date.now() - startTime_4;
@@ -822,7 +837,10 @@ exports.checkOut = async (req, res) => {
                     data: {
                         ending: timeNow,
                         ending_signature_id: signature_user_id,
-                        check_out_status_id: fetchOneCheckOutStatus.check_out_status_id
+                        check_out_status_id: fetchOneCheckOutStatus.check_out_status_id,
+                        location_lat_end: parseFloat(req.body.latitude),
+                        location_lon_end: parseFloat(req.body.longitude),
+                        desc_end: req.body.desc
                     }
                 });
                 const endTime_5 = Date.now() - startTime_5;
