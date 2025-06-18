@@ -26,7 +26,7 @@ const sendTelegramMessage = async (chatId, otpCode) => {
     try {
         await axios.post(telegramApiUrl, {
             chat_id: chatId, // Chat ID ของผู้ใช้
-            text: `รหัส OTP สำหรับลงเวลาเข้าทำงานของคุณคือ: ${otpCode} รหัสจะหมดอายุภายใน 20 วินาที.`,
+            text: `รหัส OTP สำหรับลงเวลาเข้าทำงานของคุณคือ : ${otpCode} รหัสจะหมดอายุภายใน 30 วินาที.`,
         });
         console.log("Telegram message sent successfully");
     } catch (error) {
