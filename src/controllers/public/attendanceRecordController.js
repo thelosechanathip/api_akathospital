@@ -381,6 +381,8 @@ exports.checkIn = async (req, res) => {
             return msg(res, 400, { message: 'ไม่ได้รับข้อมูล Latitude และ Longitude' });
         }
 
+        console.log(req.body)
+
         const bytes = CryptoJS.AES.decrypt(req.body.national_id, process.env.PASS_KEY);
         const national_id = bytes.toString(CryptoJS.enc.Utf8);
 
