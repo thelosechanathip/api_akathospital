@@ -145,6 +145,78 @@ exports.fetchDataAllAttendanceRecord = async (req, res) => {
     }
 };
 
+exports.fetchAttendanceRecordById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const fullname = req.user.fullname_thai;
+
+        const startTime = Date.now();
+        const resultData = await pm.attendance_records.findMany({
+            where: {
+                attendance_record_id: parseInt(id)
+            },
+            select: {
+                attendance_record_id: true,
+                users: {
+                    select: {
+                        prefixes: { select: { prefix_name: true } },
+                        fullname_thai: true
+                    }
+                },
+                shift_types: { select: { shift_type_name: true } },
+                shifts: { select: { shift_name: true } },
+                starting: true,
+                starting_signature_id: true,
+                check_in_status: { select: { check_in_status_name: true } },
+                ending: true,
+                ending_signature_id: true,
+                check_out_status: { select: { check_out_status_name: true } },
+                location_lat_start: true,
+                location_lon_start: true,
+                desc_start: true,
+                location_lat_end: true,
+                location_lon_end: true,
+                desc_end: true, 
+                created_at: true,
+                created_by: true,
+                updated_at: true,
+                updated_by: true
+            }
+        });
+        const endTime = Date.now() - startTime;
+
+        const resultWithImageUrl = resultData.map((attendanceRecord) => {
+            const startImageBlobUrl = `/signatureShowImage/${attendanceRecord.starting_signature_id}`;
+            const endImageBlobUrl = `/signatureShowImage/${attendanceRecord.ending_signature_id}`;
+            return {
+                ...attendanceRecord,
+                starting_signature: startImageBlobUrl,
+                ending_signature: endImageBlobUrl
+            }
+        });
+
+        // บันทึกข้อมูลไปยัง attendance_records_log
+        await pm.attendance_records_log.create({
+            data: {
+                ip_address: req.headers['x-forwarded-for'] || req.ip,
+                name: fullname,
+                request_method: req.method,
+                endpoint: req.originalUrl,
+                execution_time: endTime,
+                row_count: resultData.length,
+                status: resultData.length > 0 ? 'Fetch data success' : 'No Data'
+            }
+        });
+
+        if (resultData.length === 0) return msg(res, 404, { message: 'ไม่มีข้อมูลบน Database!' });
+
+        return msg(res, 200, { data: resultWithImageUrl });
+    } catch (error) {
+        console.error("Error fetchDataAllAttendanceRecord:", error.message);
+        return msg(res, 500, { message: "Internal Server Error" });
+    }
+};
+
 // Function สำหรับการค้นหาด้วยวันที่
 exports.searchDateAttendanceRecord = async (req, res) => {
     try {

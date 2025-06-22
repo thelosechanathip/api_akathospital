@@ -7,7 +7,7 @@ const { getAllDataHcodes } = require('../../controllers/public/hcodeController')
 
 const { authCheckToken, authCheckTokenParams, authCheckTokenAdmin } = require('../../middleware/auth/authAdmin');
 const { getAllDataComplaints, insertDataComplaint, removeDataComplaint } = require('../../controllers/public/complaintController');
-const { getSignatureImage, fetchDataAllAttendanceRecord, searchDateAttendanceRecord, searchAttendanceRecords, fetchHolidays, checkIn, checkInVerifyOtp, checkOut, getShifts, fetchGps} = require('../../controllers/public/attendanceRecordController');
+const { getSignatureImage, fetchDataAllAttendanceRecord, searchDateAttendanceRecord, searchAttendanceRecords, fetchHolidays, checkIn, checkInVerifyOtp, checkOut, getShifts, fetchGps, fetchAttendanceRecordById} = require('../../controllers/public/attendanceRecordController');
 
 // Sycn Setting
 const { getAllDataDepartments, syncDataDepartments } = require('../../controllers/public/departmentController');
@@ -33,6 +33,7 @@ router.get('/signatureShowImage/:token/:signature_id', authCheckTokenParams, get
 router.get('/fetchDataAllAttendanceRecord', authCheckToken, fetchDataAllAttendanceRecord);
 router.get('/searchDateAttendanceRecord/:date_start/:date_end', authCheckToken, searchDateAttendanceRecord);
 router.get('/searchAttendanceRecords/:keyword', authCheckToken, searchAttendanceRecords);
+router.get('/fetchAttendanceRecordsById/:id', authCheckToken, fetchAttendanceRecordById);
 router.get('/fetchHolidays', fetchHolidays);
 router.get('/fetchGps', fetchGps);
 router.get("/fetchShifts", getShifts);
