@@ -377,6 +377,10 @@ exports.checkIn = async (req, res) => {
 
         if (!req.body.national_id || !req.body.shift_type_id ) return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน' });
 
+        if (!req.body.latitude || !req.body.longitude) {
+            return msg(res, 400, { message: 'ไม่ได้รับข้อมูล Latitude และ Longitude' });
+        }
+
         const bytes = CryptoJS.AES.decrypt(req.body.national_id, process.env.PASS_KEY);
         const national_id = bytes.toString(CryptoJS.enc.Utf8);
 
@@ -416,7 +420,7 @@ exports.checkIn = async (req, res) => {
 
         if (req.body.shift_type_id === 1) { // เวลาปกติ
 
-            if(!req.body.shift_id || !req.body.latitude || !req.body.longitude) return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน!' });
+            if(!req.body.shift_id) return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน!' });
 
             const fetchDataOneShiftResult = await pm.shifts.findFirst({
                 where: { shift_id: Number(req.body.shift_id) },
@@ -437,6 +441,9 @@ exports.checkIn = async (req, res) => {
                 select: { check_in_status_id: true, check_in_status_name: true }
             });
         } else if (req.body.shift_type_id === 2) {
+
+            if(!req.body.shift_id) return msg(res, 400, { message: 'กรุณากรอกข้อมูลให้ครบถ้วน!' });
+
             const fetchDataOneShiftResult = await pm.shifts.findFirst({
                 where: { shift_id: Number(req.body.shift_id) },
                 select: {
