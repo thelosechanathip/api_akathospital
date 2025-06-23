@@ -31,7 +31,7 @@ const sendTelegramMessage = async (chatId, otpCode) => {
         console.log("Telegram message sent successfully");
     } catch (error) {
         console.error("Error sending Telegram message:", error.message);
-        throw new Error("Failed to send Telegram message");
+        throw new Error(error?.response?.data?.description);
     }
 };
 
@@ -609,6 +609,9 @@ exports.checkIn = async (req, res) => {
 
     } catch (error) {
         console.error("Error checkIn:", error.message);
+        if(error.message.startsWith("Forbidden")){
+            return msg(res, 403, { message: error.message })
+        }
         return msg(res, 500, { message: "Internal Server Error" });
     }
 };
