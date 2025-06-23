@@ -511,14 +511,40 @@ exports.checkIn = async (req, res) => {
             // code เดิม
             // if (timeNow <= fetchDataOneShiftResult.shift_starting) return msg(res, 400, { code: 400, result: false, message: `ยังไม่ถึงเวลากะนี้ กรุณารอเวลา ${fetchDataOneShiftResult.shift_starting.slice(0, 5)}น. เป็นต้นไป`, timeStamp: moment().add(543, "years").format('DD/MM/YYYY HH:mm:ss') });
 
-            // ปรับแต่งการเช็คเวลาใหม่
-            if (moment(timeNow, "HH:mm:ss").isBefore(moment(fetchDataOneShiftResult.shift_starting, "HH:mm:ss").add(fetchDataOneShiftResult.shift_starting > fetchDataOneShiftResult.shift_late ? -1 : 0, 'day'))) {
-                return msg(res, 400, { 
-                    code: 400,
-                    result: false, 
-                    message: `ยังไม่ถึงเวลากะนี้ กรุณารอเวลา ${fetchDataOneShiftResult.shift_starting.slice(0, 5)}น. เป็นต้นไป`, 
-                    timeStamp: moment().add(543, "years").format('DD/MM/YYYY HH:mm:ss') 
-                });
+            // แปลงเวลากะเริ่ม และเวลาสิ้นสุด (และ late) เป็น moment โดยปรับวันให้เหมาะสม
+            let shiftStart = moment(fetchDataOneShiftResult.shift_starting, "HH:mm:ss");
+            let shiftLate = moment(fetchDataOneShiftResult.shift_late, "HH:mm:ss");
+            let shiftEnd = moment(fetchDataOneShiftResult.shift_ending, "HH:mm:ss");
+            let shiftEndLate = moment(fetchDataOneShiftResult.shift_early, "HH:mm:ss");
+
+            // ตรวจสอบกะข้ามวันหรือไม่ (ถ้าเวลาสิ้นสุด < เวลาเริ่มต้น => ข้ามวัน)
+            const isOvernight = shiftEnd.isBefore(shiftStart);
+
+            // ถ้ากะข้ามวัน ปรับเวลาสิ้นสุด และเวลาล่าช้า ให้เป็นวันถัดไป
+            if (isOvernight) {
+            shiftEnd.add(1, "day");
+            shiftEndLate.add(1, "day");
+            }
+
+            // สำหรับเปรียบเทียบเวลาปัจจุบันกับเวลากะเริ่มต้น  
+            // หากเวลาปัจจุบันน้อยกว่าเวลาที่เริ่มกะ (หรือ shiftStart)
+            // - กะข้ามวันต้องเช็คด้วยว่า ถ้าเวลาปัจจุบันน้อยกว่า shiftStart แปลว่าอาจอยู่วันถัดไป ก็ลด shiftStart ลง 1 วัน
+
+            if (isOvernight && timeNow.isBefore(shiftStart)) {
+            // กะดึกนี้เวลาปัจจุบันหลังเที่ยงคืน (วันถัดไป) แต่ shiftStart อยู่ก่อนเที่ยงคืน (วันก่อน)
+            // ดังนั้น shiftStart ควรเลื่อนเป็นวันก่อน
+            shiftStart.subtract(1, "day");
+            shiftLate.subtract(1, "day");
+            }
+
+            // เช็คว่าถึงเวลาที่จะลงกะหรือยัง
+            if (timeNow.isBefore(shiftStart)) {
+            return msg(res, 400, {
+                code: 400,
+                result: false,
+                message: `ยังไม่ถึงเวลากะนี้ กรุณารอเวลา ${fetchDataOneShiftResult.shift_starting.slice(0, 5)} น. เป็นต้นไป`,
+                timeStamp: moment().add(543, "years").format("DD/MM/YYYY HH:mm:ss"),
+            });
             }
 
             fetchDataOneShift = fetchDataOneShiftResult.shift_id
