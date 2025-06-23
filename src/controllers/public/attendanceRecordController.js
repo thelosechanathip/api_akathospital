@@ -508,7 +508,9 @@ exports.checkIn = async (req, res) => {
             });
             if (!fetchDataOneShiftResult) return msg(res, 400, { message: "ไม่พบกะการทำงานที่ตรงกับเวลาปัจจุบัน" });
 
-            if (timeNow <= fetchDataOneShiftResult.shift_starting) return msg(res, 400, { code: 400, result: false, message: `ยังไม่ถึงเวลากะนี้ กรุณารอเวลา ${fetchDataOneShiftResult.shift_starting.slice(0, 5)}น. เป็นต้นไป`, timeStamp: moment().add(543, "years").format('DD/MM/YYYY HH:mm:ss') });
+            // if (timeNow <= fetchDataOneShiftResult.shift_starting) return msg(res, 400, { code: 400, result: false, message: `ยังไม่ถึงเวลากะนี้ กรุณารอเวลา ${fetchDataOneShiftResult.shift_starting.slice(0, 5)}น. เป็นต้นไป`, timeStamp: moment().add(543, "years").format('DD/MM/YYYY HH:mm:ss') });
+
+            if (moment().isBefore(moment(fetchDataOneShiftResult.shift_starting, 'HH:mm').subtract(fetchDataOneShiftResult.shift_starting.slice(0,2) > 12 && moment().hour() < 6 ? 1 : 0, 'days').hour(moment(fetchDataOneShiftResult.shift_starting, 'HH:mm').hour()).minute(moment(fetchDataOneShiftResult.shift_starting, 'HH:mm').minute()))) return msg(res, 400, { code: 400, result: false, message: `ยังไม่ถึงเวลากะนี้ กรุณารอเวลา ${fetchDataOneShiftResult.shift_starting.slice(0, 5)}น. เป็นต้นไป`, timeStamp: moment().add(543, "years").format('DD/MM/YYYY HH:mm:ss') });
 
             fetchDataOneShift = fetchDataOneShiftResult.shift_id
 
