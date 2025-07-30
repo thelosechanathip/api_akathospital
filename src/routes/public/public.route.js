@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
+
 const { getAllDataCarousels, getCarouselImage } = require('../../controllers/public/carouselController');
 
 const { getAllDataHcodes } = require('../../controllers/public/hcodeController');
@@ -17,6 +20,30 @@ const { getAllDataPositions, syncDataPositions } = require('../../controllers/pu
 const { getEmployeeSystemRequests, createEmployeeSystemRequest, removeEmployeeSystemRequest } = require('../../controllers/public/employeeSystemRequestController');
 
 const trainingController = require('../../controllers/public/trainingController')
+
+router.get("/health", async (req, res) => {
+  try {
+    await prisma.$queryRawUnsafe("SELECT 1");
+    res.status(200).json({
+        statusCode: 200,
+        status: "success",
+        ok: true,
+        prisma: "connected",
+        api: "alive",
+        timestamp: new Date().toLocaleString("th-TH"),
+    });
+  } catch (error) {
+    res.status(500).json({
+        statusCode: 500,
+        status: "error",
+        ok: false,
+        prisma: "disconnected",
+        api: "alive",
+        error: error.message,
+        timestamp: new Date().toLocaleString("th-TH"),
+    });
+  }
+});
 
 // EmployeeSystemRequest
 router.get('/getEmployeeSystemRequests', getEmployeeSystemRequests);

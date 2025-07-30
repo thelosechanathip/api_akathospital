@@ -138,7 +138,7 @@ router.put('/updatePatientService/:id', authCheckTokenAdmin, updateDataPatientSe
 router.delete('/removePatientService/:id', authCheckTokenAdmin, removeDataPatientService);
 
 // ReviewStatus
-router.get('/getReviewStatus', authCheckTokenAdmin, getAllDataReviewStatus);
+router.get('/getReviewStatus', authCheckToken, getAllDataReviewStatus);
 router.post('/insertReviewStatus', authCheckTokenAdmin, insertDataReviewStatus);
 router.put('/updateReviewStatus/:id', authCheckTokenAdmin, updateDataReviewStatus);
 router.delete('/removeReviewStatus/:id', authCheckTokenAdmin, removeDataReviewStatus);
@@ -168,7 +168,7 @@ router.post('/clearLog', authCheckTokenAdmin, clearLog);
 // Log End
 
 // Hcode Start
-router.get('/getSettingHcodes', authCheckTokenAdmin, getAllDataHcodes);
+router.get('/getSettingHcodes', authCheckToken, getAllDataHcodes);
 router.post('/upsertSettingHcode', authCheckTokenAdmin, upsertDataHcode);
 router.delete('/removeSettingHcode/:id', authCheckTokenAdmin, removeDataHcode);
 // Hcode End
